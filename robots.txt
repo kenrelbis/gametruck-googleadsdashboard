@@ -1,0 +1,9 @@
+# Disallow all crawlers from indexing this site.
+# This is an internal PPC reporting tool — not intended for public discovery.
+User-agent: *
+Disallow: /
+
+# Note: robots.txt is a polite request, not an enforcement mechanism.
+# Honest crawlers (Google, Bing) honor it. Bad actors and scrapers don't.
+# Combined with the password gate and noindex meta tag, this gives reasonable privacy
+# for a static dashboard. For real security, a backend with proper auth would be needed.
