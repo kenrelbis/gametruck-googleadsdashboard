@@ -2880,6 +2880,7 @@
             <th data-sort="cpc">Avg CPC <span class="sort-indicator">↕</span></th>
             <th data-sort="conv">Conv <span class="sort-indicator">↕</span></th>
             <th data-sort="cpa">Cost/Conv <span class="sort-indicator">↕</span></th>
+            <th data-sort="paceRatio">Pace <span class="sort-indicator">↕</span></th>
             <th></th>
           </tr>
         </thead>
@@ -2894,6 +2895,27 @@
     <div class="meta">Per-account breakdown</div>
   </div>
   <div class="cards-grid" id="cardsGrid"></div>
+
+  <!-- SPEND PACING -->
+  <div class="section-head" style="margin-top: 64px;">
+    <h2>Spend Pacing</h2>
+    <div class="meta" id="pacingWindowLabel">How each account's spend compares to its Google Ads daily budget, pro-rated for the selected period</div>
+  </div>
+  <div class="table-wrap">
+    <table id="pacingTable">
+      <thead>
+        <tr>
+          <th>Account</th>
+          <th>Daily Budget</th>
+          <th>Spent</th>
+          <th>Expected by Now</th>
+          <th>Pace</th>
+          <th>Projected Period Total</th>
+        </tr>
+      </thead>
+      <tbody id="pacingTableBody"></tbody>
+    </table>
+  </div>
 
   <!-- CAMPAIGN OVERVIEW -->
   <div id="campaignOverviewSection" style="display:none; margin-top: 64px;">
@@ -3610,6 +3632,24 @@ const LOGO_FULL_B64 = "iVBORw0KGgoAAAANSUhEUgAAAZAAAABqCAIAAAAdo5BQAAABCGlDQ1BJQ
 // silently to whatever's already stored locally if the API isn't reachable
 // or isn't configured yet (e.g. running the file directly, or missing env vars).
 let lastLiveFetch = null;
+let pacingWindow = null; // { daysElapsed, daysInPeriod } from the live API, for the pacing section
+
+function paceStatus(ratio) {
+  // ratio is spend / expected-spend-to-date. 1.0 = perfectly on pace.
+  if (ratio == null) return { label: 'n/a', cls: 'health-none' };
+  if (ratio > 1.25) return { label: 'Overspending', cls: 'health-bad' };
+  if (ratio > 1.1) return { label: 'Ahead', cls: 'health-warn' };
+  if (ratio < 0.75) return { label: 'Underspending', cls: 'health-bad' };
+  if (ratio < 0.9) return { label: 'Behind', cls: 'health-warn' };
+  return { label: 'On Pace', cls: 'health-good' };
+}
+
+function paceBadge(ratio) {
+  const s = paceStatus(ratio);
+  if (ratio == null) return `<span class="health-badge health-none">n/a</span>`;
+  const pct = Math.round(ratio * 100);
+  return `<span class="health-badge ${s.cls}" title="${s.label}">${pct}%</span>`;
+}
 
 function scopeToApiParam(scope) {
   // dashboard's dateScope values line up 1:1 with the API's scope keyword,
@@ -3649,10 +3689,15 @@ async function fetchLiveDashboardData() {
           cpc: live.cpc,
           conv: live.conv,
           cpa: live.cpa,
+          dailyBudget: live.dailyBudget ?? null,
+          expectedSpendToDate: live.expectedSpendToDate ?? null,
+          projectedPeriodSpend: live.projectedPeriodSpend ?? null,
+          paceRatio: live.paceRatio ?? null,
         });
         byName.set(live.name, merged);
       });
       accounts = Array.from(byName.values());
+      pacingWindow = data.pacingWindow || null;
       await saveData();
       lastLiveFetch = new Date();
       if (statusEl) {
@@ -6899,7 +6944,55 @@ function render() {
   renderCampaignOverview();
   renderAlertsBanner();
   renderFocusPanel();
+  renderPacingTable();
   updateScopeBadge(scoped);
+}
+
+// Spend Pacing table — driven straight off the live `accounts` array (not
+// the history-scoped view) since pacing is inherently about "right now"
+// relative to the currently configured Google Ads daily budget, not a
+// historical snapshot. Accounts with no live budget data show "n/a".
+function renderPacingTable() {
+  const body = document.getElementById('pacingTableBody');
+  const label = document.getElementById('pacingWindowLabel');
+  if (!body) return;
+
+  if (label) {
+    label.textContent = pacingWindow
+      ? `Day ${pacingWindow.daysElapsed} of ${pacingWindow.daysInPeriod} in the selected period · pulled from live Google Ads daily budgets`
+      : `How each account's spend compares to its Google Ads daily budget \u2014 refresh live data to populate this`;
+  }
+
+  const withBudget = accounts.filter(a => a.dailyBudget != null && a.dailyBudget > 0);
+  if (withBudget.length === 0) {
+    body.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 32px; color: var(--ink-muted); font-family: 'Jost';">No live budget data yet. Click "🔄 Refresh Live Data" above.</td></tr>`;
+    return;
+  }
+
+  const sorted = [...withBudget].sort((a, b) => (b.paceRatio ?? 0) - (a.paceRatio ?? 0));
+
+  body.innerHTML = sorted.map(a => {
+    const pct = a.paceRatio != null ? Math.min(160, Math.round(a.paceRatio * 100)) : 0;
+    const s = paceStatus(a.paceRatio);
+    const barColor = { 'health-good': 'var(--good)', 'health-warn': 'var(--warn)', 'health-bad': 'var(--bad)', 'health-none': 'var(--muted)' }[s.cls];
+    return `
+      <tr>
+        <td>${escapeHtml(a.name)}</td>
+        <td>${fmt$(a.dailyBudget)}/day</td>
+        <td>${fmt$(a.cost)}</td>
+        <td>${a.expectedSpendToDate != null ? fmt$(a.expectedSpendToDate) : 'n/a'}</td>
+        <td>
+          <div style="display:flex; align-items:center; gap:8px;">
+            ${paceBadge(a.paceRatio)}
+            <div style="flex:1; min-width:60px; height:6px; border-radius:3px; background: var(--bg-soft); overflow:hidden;">
+              <div style="width:${pct}%; height:100%; background:${barColor};"></div>
+            </div>
+          </div>
+        </td>
+        <td>${a.projectedPeriodSpend != null ? fmt$(a.projectedPeriodSpend) : 'n/a'}</td>
+      </tr>
+    `;
+  }).join('');
 }
 
 // Returns the accounts list with metrics derived from history snapshots
@@ -8839,7 +8932,7 @@ function healthBadge(cpa) {
 function renderTable(list) {
   const body = document.getElementById('tableBody');
   if (list.length === 0) {
-    body.innerHTML = `<tr><td colspan="8" style="text-align:center; padding: 40px; color: var(--ink-muted); font-family: 'Jost';">No accounts match your filters.</td></tr>`;
+    body.innerHTML = `<tr><td colspan="9" style="text-align:center; padding: 40px; color: var(--ink-muted); font-family: 'Jost';">No accounts match your filters.</td></tr>`;
     renderPagination(0);
     return;
   }
@@ -8874,7 +8967,7 @@ function renderTable(list) {
 
       html += `
         <tr class="region-header">
-          <td colspan="8">
+          <td colspan="9">
             <span class="region-title">${escapeHtml(getRegionLabel(region))}</span>
             <span class="region-stats">
               ${rAccounts.length} account${rAccounts.length !== 1 ? 's' : ''}
@@ -8899,6 +8992,7 @@ function renderTable(list) {
             <td>${fmt$(a.cpc)}</td>
             <td>${fmtN(a.conv)}</td>
             <td class="cpa-cell ${h}">${fmt$(a.cpa)}</td>
+            <td>${paceBadge(a.paceRatio)}</td>
             <td>
               <div class="row-actions">
                 ${a.customerId ? `<button class="icon-btn ga-btn" onclick="openGoogleAds('${escapeHtml(a.customerId)}')" title="Open in Google Ads">↗</button>` : ''}
@@ -8938,6 +9032,7 @@ function renderTable(list) {
         <td>${fmt$(a.cpc)}</td>
         <td>${fmtN(a.conv)}</td>
         <td class="cpa-cell ${h}">${fmt$(a.cpa)}</td>
+            <td>${paceBadge(a.paceRatio)}</td>
         <td>
           <div class="row-actions">
             ${a.customerId ? `<button class="icon-btn ga-btn" onclick="openGoogleAds('${escapeHtml(a.customerId)}')" title="Open in Google Ads">↗</button>` : ''}
