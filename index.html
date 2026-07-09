@@ -2899,7 +2899,7 @@
   <!-- SPEND PACING -->
   <div class="section-head" style="margin-top: 64px;">
     <h2>Spend Pacing</h2>
-    <div class="meta" id="pacingWindowLabel">How each account's spend compares to its Google Ads daily budget, pro-rated for the selected period</div>
+    <div class="meta" id="pacingWindowLabel">Today / this week / this month spend vs. each account's live Google Ads daily budget</div>
   </div>
   <div class="table-wrap">
     <table id="pacingTable">
@@ -2907,10 +2907,10 @@
         <tr>
           <th>Account</th>
           <th>Daily Budget</th>
-          <th>Spent</th>
-          <th>Expected by Now</th>
-          <th>Pace</th>
-          <th>Projected Period Total</th>
+          <th>Today's Pace</th>
+          <th>This Week's Pace</th>
+          <th>This Month's Pace</th>
+          <th>Projected Month-End</th>
         </tr>
       </thead>
       <tbody id="pacingTableBody"></tbody>
@@ -3693,6 +3693,7 @@ async function fetchLiveDashboardData() {
           expectedSpendToDate: live.expectedSpendToDate ?? null,
           projectedPeriodSpend: live.projectedPeriodSpend ?? null,
           paceRatio: live.paceRatio ?? null,
+          pacing: live.pacing ?? null,
         });
         byName.set(live.name, merged);
       });
@@ -6948,51 +6949,58 @@ function render() {
   updateScopeBadge(scoped);
 }
 
+function paceCell(period) {
+  if (!period || period.paceRatio == null) return `<td>${paceBadge(null)}</td>`;
+  const pct = Math.min(160, Math.round(period.paceRatio * 100));
+  const s = paceStatus(period.paceRatio);
+  const barColor = { 'health-good': 'var(--good)', 'health-warn': 'var(--warn)', 'health-bad': 'var(--bad)', 'health-none': 'var(--muted)' }[s.cls];
+  return `
+    <td>
+      <div style="display:flex; align-items:center; gap:8px;">
+        ${paceBadge(period.paceRatio)}
+        <div style="flex:1; min-width:50px; height:6px; border-radius:3px; background: var(--bg-soft); overflow:hidden;">
+          <div style="width:${pct}%; height:100%; background:${barColor};"></div>
+        </div>
+      </div>
+      <div style="font-size:10px; color:var(--ink-muted); margin-top:2px;">${fmt$(period.spend)} / ${period.expected != null ? fmt$(period.expected) : 'n/a'}</div>
+    </td>
+  `;
+}
+
 // Spend Pacing table — driven straight off the live `accounts` array (not
 // the history-scoped view) since pacing is inherently about "right now"
 // relative to the currently configured Google Ads daily budget, not a
-// historical snapshot. Accounts with no live budget data show "n/a".
+// historical snapshot. Shows Daily/Weekly/Monthly pace side by side,
+// independent of whatever date-scope is selected up top, so over- and
+// under-spenders are visible at every time horizon at once.
 function renderPacingTable() {
   const body = document.getElementById('pacingTableBody');
-  const label = document.getElementById('pacingWindowLabel');
   if (!body) return;
 
-  if (label) {
-    label.textContent = pacingWindow
-      ? `Day ${pacingWindow.daysElapsed} of ${pacingWindow.daysInPeriod} in the selected period · pulled from live Google Ads daily budgets`
-      : `How each account's spend compares to its Google Ads daily budget \u2014 refresh live data to populate this`;
-  }
-
-  const withBudget = accounts.filter(a => a.dailyBudget != null && a.dailyBudget > 0);
+  const withBudget = accounts.filter(a => a.dailyBudget != null && a.dailyBudget > 0 && a.pacing);
   if (withBudget.length === 0) {
     body.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 32px; color: var(--ink-muted); font-family: 'Jost';">No live budget data yet. Click "🔄 Refresh Live Data" above.</td></tr>`;
     return;
   }
 
-  const sorted = [...withBudget].sort((a, b) => (b.paceRatio ?? 0) - (a.paceRatio ?? 0));
+  // Sort by whichever window is furthest off-pace (monthly, as the most
+  // consequential), overspenders and underspenders both floating to the top.
+  const sorted = [...withBudget].sort((a, b) => {
+    const da = Math.abs((a.pacing.monthly?.paceRatio ?? 1) - 1);
+    const db = Math.abs((b.pacing.monthly?.paceRatio ?? 1) - 1);
+    return db - da;
+  });
 
-  body.innerHTML = sorted.map(a => {
-    const pct = a.paceRatio != null ? Math.min(160, Math.round(a.paceRatio * 100)) : 0;
-    const s = paceStatus(a.paceRatio);
-    const barColor = { 'health-good': 'var(--good)', 'health-warn': 'var(--warn)', 'health-bad': 'var(--bad)', 'health-none': 'var(--muted)' }[s.cls];
-    return `
+  body.innerHTML = sorted.map(a => `
       <tr>
         <td>${escapeHtml(a.name)}</td>
         <td>${fmt$(a.dailyBudget)}/day</td>
-        <td>${fmt$(a.cost)}</td>
-        <td>${a.expectedSpendToDate != null ? fmt$(a.expectedSpendToDate) : 'n/a'}</td>
-        <td>
-          <div style="display:flex; align-items:center; gap:8px;">
-            ${paceBadge(a.paceRatio)}
-            <div style="flex:1; min-width:60px; height:6px; border-radius:3px; background: var(--bg-soft); overflow:hidden;">
-              <div style="width:${pct}%; height:100%; background:${barColor};"></div>
-            </div>
-          </div>
-        </td>
-        <td>${a.projectedPeriodSpend != null ? fmt$(a.projectedPeriodSpend) : 'n/a'}</td>
+        ${paceCell(a.pacing.daily)}
+        ${paceCell(a.pacing.weekly)}
+        ${paceCell(a.pacing.monthly)}
+        <td>${a.pacing.projectedMonthEnd != null ? fmt$(a.pacing.projectedMonthEnd) : 'n/a'}</td>
       </tr>
-    `;
-  }).join('');
+  `).join('');
 }
 
 // Returns the accounts list with metrics derived from history snapshots
