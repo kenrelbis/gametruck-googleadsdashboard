@@ -1,13 +1,14 @@
 import { getAllAccountMetrics } from './lib/googleAdsClient.js';
 import { getGa4Summary } from './lib/ga4Client.js';
 import { getPortalSummary } from './lib/portalClient.js';
-import { resolveDateRange } from './lib/dateRange.js';
+import { resolveDateRange, getPacingWindow } from './lib/dateRange.js';
 
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 's-maxage=120, stale-while-revalidate=300');
 
   const { startDate, endDate } = resolveDateRange(req.query);
-  const out = { startDate, endDate, fetchedAt: new Date().toISOString() };
+  const pacingWindow = getPacingWindow(startDate, endDate);
+  const out = { startDate, endDate, pacingWindow, fetchedAt: new Date().toISOString() };
 
   // --- Google Ads (primary data source for the account table) ---
   const adsConfig = {
@@ -23,7 +24,7 @@ export default async function handler(req, res) {
     out.googleAds = { configured: false, missing: adsMissing };
   } else {
     try {
-      const { accounts, errors } = await getAllAccountMetrics(adsConfig, { startDate, endDate });
+      const { accounts, errors } = await getAllAccountMetrics(adsConfig, { startDate, endDate, pacingWindow });
       out.googleAds = { configured: true, accounts, errors };
     } catch (err) {
       out.googleAds = { configured: true, error: err.message };

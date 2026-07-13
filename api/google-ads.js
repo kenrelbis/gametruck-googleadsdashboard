@@ -1,5 +1,5 @@
 import { getAllAccountMetrics } from './lib/googleAdsClient.js';
-import { resolveDateRange } from './lib/dateRange.js';
+import { resolveDateRange, getPacingWindow } from './lib/dateRange.js';
 
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 's-maxage=120, stale-while-revalidate=300');
@@ -20,11 +20,13 @@ export default async function handler(req, res) {
 
   try {
     const { startDate, endDate } = resolveDateRange(req.query);
-    const { accounts, errors } = await getAllAccountMetrics(config, { startDate, endDate });
+    const pacingWindow = getPacingWindow(startDate, endDate);
+    const { accounts, errors } = await getAllAccountMetrics(config, { startDate, endDate, pacingWindow });
     res.status(200).json({
       configured: true,
       startDate,
       endDate,
+      pacingWindow,
       accounts,
       errors,
       fetchedAt: new Date().toISOString(),

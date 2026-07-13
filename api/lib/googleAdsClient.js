@@ -48,67 +48,6 @@ export async function listActiveChildAccounts({ clientId, clientSecret, refreshT
     .filter(c => c && !c.manager && c.status === 'ENABLED');
 }
 
-// Fetches per-day cost for the current month (1st through today) so we can
-// derive today/this-week/this-month spend from a single query, instead of
-// three separate API calls per account.
-async function getDailyCostSeries({ clientId, clientSecret, refreshToken, developerToken, loginCustomerId, customerId, monthStartDate, todayDate }) {
-  const accessToken = await getAccessToken({ clientId, clientSecret, refreshToken });
-  const query = `
-    SELECT segments.date, metrics.cost_micros
-    FROM customer
-    WHERE segments.date BETWEEN '${monthStartDate}' AND '${todayDate}'
-  `;
-  const rows = await gaqlSearch({ accessToken, developerToken, loginCustomerId, customerId, query });
-  // Map of 'YYYY-MM-DD' -> cost in dollars
-  const byDate = new Map();
-  for (const r of rows) {
-    byDate.set(r.segments.date, Number(r.metrics?.costMicros || 0) / 1_000_000);
-  }
-  return byDate;
-}
-
-// Derives today / week-to-date / month-to-date spend + pace from a daily
-// cost series and the live daily budget. `today` is a Date object (UTC).
-function computeMultiPeriodPacing({ dailyCostByDate, dailyBudget, today }) {
-  const fmt = d => d.toISOString().slice(0, 10);
-  const todayStr = fmt(today);
-
-  // Monday-based week start
-  const dow = (today.getUTCDay() + 6) % 7; // Monday = 0
-  const weekStart = new Date(today);
-  weekStart.setUTCDate(weekStart.getUTCDate() - dow);
-
-  const monthStart = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), 1));
-  const daysInMonth = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth() + 1, 0)).getUTCDate();
-  const dayOfMonth = today.getUTCDate();
-  const daysElapsedThisWeek = dow + 1;
-
-  let todayCost = 0, weekCost = 0, monthCost = 0;
-  for (const [dateStr, cost] of dailyCostByDate.entries()) {
-    const d = new Date(dateStr + 'T00:00:00Z');
-    monthCost += cost;
-    if (d >= weekStart) weekCost += cost;
-    if (dateStr === todayStr) todayCost = cost;
-  }
-
-  function period(actual, daysElapsed) {
-    if (!dailyBudget || dailyBudget <= 0) return { spend: Number(actual.toFixed(2)), expected: null, paceRatio: null };
-    const expected = dailyBudget * daysElapsed;
-    return {
-      spend: Number(actual.toFixed(2)),
-      expected: Number(expected.toFixed(2)),
-      paceRatio: expected > 0 ? Number((actual / expected).toFixed(3)) : null,
-    };
-  }
-
-  return {
-    daily: period(todayCost, 1),
-    weekly: period(weekCost, daysElapsedThisWeek),
-    monthly: period(monthCost, dayOfMonth),
-    projectedMonthEnd: dailyBudget > 0 ? Number((dailyBudget * daysInMonth).toFixed(2)) : null,
-  };
-}
-
 // Returns the account's total active daily budget (sum of enabled
 // campaigns' budgets, de-duplicated by budget id since campaigns can share
 // a budget). This is what Google Ads actually has configured to spend
@@ -192,15 +131,6 @@ export async function getAccountMetrics({ clientId, clientSecret, refreshToken, 
   if (pacingWindow) {
     const dailyBudget = await getDailyBudget({ clientId, clientSecret, refreshToken, developerToken, loginCustomerId, customerId });
     Object.assign(account, computePacing({ cost, dailyBudget, ...pacingWindow }));
-
-    const today = new Date(new Date().toISOString().slice(0, 10) + 'T00:00:00Z');
-    const monthStartDate = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), 1)).toISOString().slice(0, 10);
-    const todayDate = today.toISOString().slice(0, 10);
-    const dailyCostByDate = await getDailyCostSeries({
-      clientId, clientSecret, refreshToken, developerToken, loginCustomerId, customerId,
-      monthStartDate, todayDate,
-    });
-    account.pacing = computeMultiPeriodPacing({ dailyCostByDate, dailyBudget, today });
   }
 
   return account;
