@@ -3442,23 +3442,23 @@
           <table id="pacingTable">
             <thead>
               <tr>
-                <th>Account</th>
-                <th>Daily Budget</th>
-                <th>Spent</th>
-                <th>Expected by Now</th>
-                <th>Pace</th>
-                <th>Projected Period Total</th>
+                <th data-pacing-sort="name">Account <span class="sort-indicator">↕</span></th>
+                <th data-pacing-sort="dailyBudget">Daily Budget <span class="sort-indicator">↕</span></th>
+                <th data-pacing-sort="cost">Spent <span class="sort-indicator">↕</span></th>
+                <th data-pacing-sort="expectedSpendToDate">Expected by Now <span class="sort-indicator">↕</span></th>
+                <th data-pacing-sort="paceRatio">Pace <span class="sort-indicator">↕</span></th>
+                <th data-pacing-sort="projectedPeriodSpend">Projected Period Total <span class="sort-indicator">↕</span></th>
               </tr>
             </thead>
             <tbody id="pacingTableBody"></tbody>
           </table>
         </div>
 
-        <!-- SEARCH TERM WASTE -->
+        <!-- SEARCH TERM PERFORMANCE -->
         <div class="section-head" style="margin-top: 64px">
-          <h2>Search Term Waste</h2>
+          <h2>Search Term Performance</h2>
           <div class="meta" id="searchTermWasteLabel">
-            Search terms burning spend with zero conversions, across all accounts · not loaded yet
+            Every search term with clicks — converting and wasted — across your accounts · not loaded yet
           </div>
         </div>
         <div style="margin-bottom: 12px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap">
@@ -3468,7 +3468,7 @@
             style="padding: 9px 14px; font-size: 11px"
             title="Pulls search term data — heavier query, run on demand"
           >
-            🔍 Load Search Term Waste
+            🔍 Load Search Terms
           </button>
           <select
             id="searchTermWasteAccountSelect"
@@ -3478,22 +3478,29 @@
           >
             <option value="">All Accounts</option>
           </select>
+          <div class="date-scope" style="height: 34px">
+            <button class="scope-btn active" data-term-filter="all">All</button>
+            <button class="scope-btn" data-term-filter="converting">Converting</button>
+            <button class="scope-btn" data-term-filter="wasted">Wasted (0 conv)</button>
+          </div>
         </div>
         <div class="table-wrap">
           <table id="searchTermWasteTable">
             <thead>
               <tr>
-                <th>Account</th>
-                <th>Search Term</th>
-                <th>Cost</th>
-                <th>Clicks</th>
-                <th>Conversions</th>
+                <th data-term-sort="account">Account <span class="sort-indicator">↕</span></th>
+                <th data-term-sort="term">Search Term <span class="sort-indicator">↕</span></th>
+                <th data-term-sort="cost">Cost <span class="sort-indicator">↕</span></th>
+                <th data-term-sort="clicks">Clicks <span class="sort-indicator">↕</span></th>
+                <th data-term-sort="conv">Conversions <span class="sort-indicator">↕</span></th>
+                <th data-term-sort="convRate">Conv Rate <span class="sort-indicator">↕</span></th>
+                <th data-term-sort="costPerConv">Cost/Conv <span class="sort-indicator">↕</span></th>
               </tr>
             </thead>
             <tbody id="searchTermWasteTableBody">
               <tr>
-                <td colspan="5" style="text-align:center; padding: 32px; color: var(--ink-muted); font-family: 'Jost';">
-                  Click "🔍 Load Search Term Waste" above to pull this — it queries every account so it's run on demand, not automatically.
+                <td colspan="7" style="text-align:center; padding: 32px; color: var(--ink-muted); font-family: 'Jost';">
+                  Click "🔍 Load Search Terms" above to pull this — it queries every account so it's run on demand, not automatically.
                 </td>
               </tr>
             </tbody>
@@ -5905,7 +5912,12 @@
             if (!customerId) return;
 
             const dailyBudget = Number(account.dailyBudget);
-            if (!Number.isFinite(dailyBudget)) return;
+            // Skip seeding from a saved 0 — see the write-site comment in
+            // fetchAccountFromMcp for why a 0 isn't trustworthy here. Without
+            // this guard, a 0 saved to browser storage during any earlier
+            // failed load would keep re-poisoning the cache on every future
+            // page load, forever, even after the underlying issue is fixed.
+            if (!Number.isFinite(dailyBudget) || dailyBudget <= 0) return;
 
             if (!adsMcpDailyBudgetCache.has(customerId)) {
               adsMcpDailyBudgetCache.set(customerId, {
@@ -5925,7 +5937,12 @@
           if (!hit) return null;
 
           const dailyBudget = Number(hit.dailyBudget);
-          return Number.isFinite(dailyBudget) ? dailyBudget : null;
+          // A cached 0 isn't trustworthy (see write-site comment) — treat it
+          // as "no real cache entry" so the live query runs again instead of
+          // permanently reusing a stale/failed 0.
+          return Number.isFinite(dailyBudget) && dailyBudget > 0
+            ? dailyBudget
+            : null;
         }
 
         function getPacingWindowForDates(startDate, endDate) {
@@ -6175,7 +6192,12 @@
             dailyBudget = totalMicros / 1000000;
 
             const normalizedId = normalizeCustomerIdDigits(customerId);
-            if (normalizedId && Number.isFinite(dailyBudget)) {
+            // Only cache a genuinely positive budget. A 0 here is far more
+            // likely to be a transient/failed query than a real zero-budget
+            // active account — caching it would lock the account into
+            // "no budget data" forever, since a cache hit skips re-querying
+            // on every future refresh. Better to retry live next time.
+            if (normalizedId && Number.isFinite(dailyBudget) && dailyBudget > 0) {
               adsMcpDailyBudgetCache.set(normalizedId, {
                 dailyBudget,
                 updatedAt: Date.now(),
@@ -6731,7 +6753,7 @@
         // that needs to be live-updated every page load.
         let searchTermWasteLoading = false;
 
-        async function fetchSearchTermWasteFromMcp(startDate, endDate, accountFilter) {
+        async function fetchSearchTermPerformanceFromMcp(startDate, endDate, accountFilter) {
           const tools = await ensureAdsMcpTools();
           const targets = accounts
             .filter((a) => a.customerId)
@@ -6740,7 +6762,7 @@
 
           const results = await runWithConcurrencyLimit(
             targets,
-            5,
+            3,
             async (target) => {
               const search = await mcpSearchRows(
                 tools,
@@ -6757,7 +6779,7 @@
                     `segments.date BETWEEN '${startDate}' AND '${endDate}'`,
                     "metrics.clicks > 0",
                   ],
-                  limit: 200,
+                  limit: 500,
                 },
                 { loginCustomerId: ADS_MCP_ANCHOR_MCC_ID },
               );
@@ -6765,7 +6787,7 @@
             },
           );
 
-          const wasteRows = [];
+          const termRows = [];
           results.forEach((r) => {
             if (r.status !== "fulfilled" || !r.value) return;
             r.value.rows.forEach((row) => {
@@ -6784,21 +6806,24 @@
                 rowValue(row, ["metrics.conversions"]),
                 0,
               );
-              // "Waste" = spent money, got clicks, zero conversions to show for it.
-              if (conv === 0 && cost > 0) {
-                wasteRows.push({
-                  account: r.value.account,
-                  term,
-                  cost,
-                  clicks,
-                  conv,
-                });
-              }
+              // Keep every term with a click, converting or not — the
+              // filter toggle in the UI handles narrowing to just the
+              // wasted (0-conversion) ones, rather than throwing the
+              // converting terms away at fetch time.
+              termRows.push({
+                account: r.value.account,
+                term,
+                cost,
+                clicks,
+                conv,
+                convRate: clicks > 0 ? conv / clicks : 0,
+                costPerConv: conv > 0 ? cost / conv : null,
+              });
             });
           });
 
-          wasteRows.sort((a, b) => b.cost - a.cost);
-          return wasteRows.slice(0, 50);
+          termRows.sort((a, b) => b.cost - a.cost);
+          return termRows;
         }
 
         function populateSearchTermWasteAccountSelect() {
@@ -6825,11 +6850,84 @@
           }
         }
 
+        let searchTermRawResults = [];
+        let searchTermFilter = "all"; // 'all' | 'converting' | 'wasted'
+        let searchTermSortKey = "cost";
+        let searchTermSortDir = "desc";
+
+        function renderSearchTermTable() {
+          const body = document.getElementById("searchTermWasteTableBody");
+          const label = document.getElementById("searchTermWasteLabel");
+          if (!body) return;
+
+          let rows = searchTermRawResults;
+          if (searchTermFilter === "converting") {
+            rows = rows.filter((r) => r.conv > 0);
+          } else if (searchTermFilter === "wasted") {
+            rows = rows.filter((r) => r.conv === 0 && r.cost > 0);
+          }
+
+          const dir = searchTermSortDir === "asc" ? 1 : -1;
+          rows = [...rows].sort((a, b) => {
+            if (searchTermSortKey === "account" || searchTermSortKey === "term") {
+              const va = (a[searchTermSortKey] || "").toLowerCase();
+              const vb = (b[searchTermSortKey] || "").toLowerCase();
+              return va < vb ? -1 * dir : va > vb ? 1 * dir : 0;
+            }
+            let va = Number(a[searchTermSortKey]);
+            let vb = Number(b[searchTermSortKey]);
+            if (!Number.isFinite(va)) va = -Infinity;
+            if (!Number.isFinite(vb)) vb = -Infinity;
+            return (va - vb) * dir;
+          });
+
+          document
+            .querySelectorAll("#searchTermWasteTable th[data-term-sort]")
+            .forEach((th) => {
+              const indicator = th.querySelector(".sort-indicator");
+              if (!indicator) return;
+              indicator.textContent =
+                th.dataset.termSort === searchTermSortKey
+                  ? searchTermSortDir === "asc"
+                    ? "↑"
+                    : "↓"
+                  : "↕";
+            });
+
+          if (rows.length === 0) {
+            body.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 32px; color: var(--ink-muted); font-family: 'Jost';">No terms match this filter.</td></tr>`;
+            return;
+          }
+
+          body.innerHTML = rows
+            .map(
+              (w) => `
+                <tr>
+                  <td>${escapeHtml(w.account)}</td>
+                  <td>${escapeHtml(w.term)}</td>
+                  <td>${fmt$(w.cost)}</td>
+                  <td>${fmtN(w.clicks)}</td>
+                  <td>${fmtN(w.conv)}</td>
+                  <td>${(w.convRate * 100).toFixed(1)}%</td>
+                  <td>${w.costPerConv != null ? fmt$(w.costPerConv) : "—"}</td>
+                </tr>
+              `,
+            )
+            .join("");
+
+          if (label) {
+            const totalCost = searchTermRawResults.reduce((s, w) => s + w.cost, 0);
+            const wastedCost = searchTermRawResults
+              .filter((w) => w.conv === 0)
+              .reduce((s, w) => s + w.cost, 0);
+            label.textContent = `${searchTermRawResults.length} terms total (${rows.length} shown) · ${fmt$(totalCost)} spent · ${fmt$(wastedCost)} on zero-conversion terms`;
+          }
+        }
+
         async function loadSearchTermWaste() {
           if (searchTermWasteLoading) return;
           const btn = document.getElementById("loadSearchTermWasteBtn");
           const label = document.getElementById("searchTermWasteLabel");
-          const body = document.getElementById("searchTermWasteTableBody");
           const select = document.getElementById(
             "searchTermWasteAccountSelect",
           );
@@ -6848,42 +6946,20 @@
 
           try {
             const { startDate, endDate } = resolveClientDateRange(dateScope);
-            const waste = await fetchSearchTermWasteFromMcp(
+            searchTermRawResults = await fetchSearchTermPerformanceFromMcp(
               startDate,
               endDate,
               accountFilter,
             );
-
-            if (waste.length === 0) {
-              body.innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 32px; color: var(--ink-muted); font-family: 'Jost';">No zero-conversion search terms with spend found for ${accountFilterName}, ${startDate} to ${endDate}.</td></tr>`;
-            } else {
-              body.innerHTML = waste
-                .map(
-                  (w) => `
-                <tr>
-                  <td>${escapeHtml(w.account)}</td>
-                  <td>${escapeHtml(w.term)}</td>
-                  <td>${fmt$(w.cost)}</td>
-                  <td>${fmtN(w.clicks)}</td>
-                  <td>${fmtN(w.conv)}</td>
-                </tr>
-              `,
-                )
-                .join("");
-            }
-
-            const totalWasted = waste.reduce((sum, w) => sum + w.cost, 0);
-            if (label) {
-              label.textContent = `${waste.length} zero-conversion terms · ${fmt$(totalWasted)} total wasted spend · ${accountFilterName} · ${startDate} to ${endDate}`;
-            }
+            renderSearchTermTable();
           } catch (err) {
             if (label) label.textContent = `Failed to load: ${err.message || "unknown error"}`;
-            console.error("Search term waste fetch failed", err);
+            console.error("Search term fetch failed", err);
           } finally {
             searchTermWasteLoading = false;
             if (btn) {
               btn.disabled = false;
-              btn.textContent = "🔍 Load Search Term Waste";
+              btn.textContent = "🔍 Load Search Terms";
             }
           }
         }
@@ -7153,6 +7229,38 @@
             wasteBtn.addEventListener("click", loadSearchTermWaste);
             wasteBtn.dataset.boundClick = "true";
           }
+          document
+            .querySelectorAll("[data-term-filter]")
+            .forEach((b) => {
+              if (b.dataset.boundClick) return;
+              b.addEventListener("click", () => {
+                document
+                  .querySelectorAll("[data-term-filter]")
+                  .forEach((x) => x.classList.remove("active"));
+                b.classList.add("active");
+                searchTermFilter = b.dataset.termFilter;
+                renderSearchTermTable();
+              });
+              b.dataset.boundClick = "true";
+            });
+          document
+            .querySelectorAll("#searchTermWasteTable th[data-term-sort]")
+            .forEach((th) => {
+              if (th.dataset.boundClick) return;
+              th.addEventListener("click", () => {
+                const key = th.dataset.termSort;
+                if (searchTermSortKey === key) {
+                  searchTermSortDir =
+                    searchTermSortDir === "asc" ? "desc" : "asc";
+                } else {
+                  searchTermSortKey = key;
+                  searchTermSortDir =
+                    key === "account" || key === "term" ? "asc" : "desc";
+                }
+                renderSearchTermTable();
+              });
+              th.dataset.boundClick = "true";
+            });
         }
 
         // ============ INIT ============
@@ -8397,6 +8505,21 @@
               render();
             });
           });
+
+          document
+            .querySelectorAll("#pacingTable th[data-pacing-sort]")
+            .forEach((th) => {
+              th.addEventListener("click", () => {
+                const key = th.dataset.pacingSort;
+                if (pacingSortKey === key) {
+                  pacingSortDir = pacingSortDir === "asc" ? "desc" : "asc";
+                } else {
+                  pacingSortKey = key;
+                  pacingSortDir = key === "name" ? "asc" : "desc";
+                }
+                renderPacingTable();
+              });
+            });
 
           document.querySelectorAll("#tabs .tab").forEach((t) => {
             t.addEventListener("click", () => switchTab(t.dataset.panel));
@@ -11350,6 +11473,9 @@ levis@gametruck`;
         // the history-scoped view) since pacing is inherently about "right now"
         // relative to the currently configured Google Ads daily budget, not a
         // historical snapshot. Accounts with no live budget data show "n/a".
+        let pacingSortKey = "paceRatio";
+        let pacingSortDir = "desc";
+
         function renderPacingTable() {
           const body = document.getElementById("pacingTableBody");
           const label = document.getElementById("pacingWindowLabel");
@@ -11369,9 +11495,32 @@ levis@gametruck`;
             return;
           }
 
-          const sorted = [...withBudget].sort(
-            (a, b) => (b.paceRatio ?? 0) - (a.paceRatio ?? 0),
-          );
+          const dir = pacingSortDir === "asc" ? 1 : -1;
+          const sorted = [...withBudget].sort((a, b) => {
+            let va, vb;
+            if (pacingSortKey === "name") {
+              va = (a.name || "").toLowerCase();
+              vb = (b.name || "").toLowerCase();
+              return va < vb ? -1 * dir : va > vb ? 1 * dir : 0;
+            }
+            va = Number(a[pacingSortKey]);
+            vb = Number(b[pacingSortKey]);
+            if (!Number.isFinite(va)) va = -Infinity;
+            if (!Number.isFinite(vb)) vb = -Infinity;
+            return (va - vb) * dir;
+          });
+
+          document
+            .querySelectorAll("#pacingTable th[data-pacing-sort]")
+            .forEach((th) => {
+              const indicator = th.querySelector(".sort-indicator");
+              if (!indicator) return;
+              if (th.dataset.pacingSort === pacingSortKey) {
+                indicator.textContent = pacingSortDir === "asc" ? "↑" : "↓";
+              } else {
+                indicator.textContent = "↕";
+              }
+            });
 
           body.innerHTML = sorted
             .map((a) => {
