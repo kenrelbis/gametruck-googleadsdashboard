@@ -6147,10 +6147,22 @@
 
           let budgetRows = [];
           let budgetSearchMode = "cache_hit";
-          let dailyBudget =
-            options && Number.isFinite(Number(options.cachedDailyBudget))
+          // IMPORTANT: Number(null) === 0 in JavaScript, not NaN. So if
+          // cachedDailyBudget is null (meaning "nothing valid is cached"),
+          // naively doing Number(options.cachedDailyBudget) silently turns
+          // that into 0 — which then passes Number.isFinite() and gets
+          // treated as a real cached budget, permanently skipping the live
+          // query. This is the actual bug that caused every account to show
+          // "cache_hit" with a $0 budget even after the cache-write fix.
+          // Checking `!= null` first (catches both null and undefined)
+          // before converting avoids that trap.
+          const rawCached =
+            options && options.cachedDailyBudget != null
               ? Number(options.cachedDailyBudget)
-              : null;
+              : NaN;
+          let dailyBudget = Number.isFinite(rawCached) && rawCached > 0
+            ? rawCached
+            : null;
 
           if (!Number.isFinite(dailyBudget)) {
             const budgetSearch = await mcpSearchRows(
