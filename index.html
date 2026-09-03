@@ -3461,15 +3461,23 @@
             Search terms burning spend with zero conversions, across all accounts · not loaded yet
           </div>
         </div>
-        <div style="margin-bottom: 12px">
+        <div style="margin-bottom: 12px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap">
           <button
             class="btn btn-ghost"
             id="loadSearchTermWasteBtn"
             style="padding: 9px 14px; font-size: 11px"
-            title="Pulls search term data across all accounts — heavier query, run on demand"
+            title="Pulls search term data — heavier query, run on demand"
           >
             🔍 Load Search Term Waste
           </button>
+          <select
+            id="searchTermWasteAccountSelect"
+            class="btn btn-ghost"
+            style="padding: 9px 14px; font-size: 11px; cursor: pointer"
+            title="Limit to one account, or check all"
+          >
+            <option value="">All Accounts</option>
+          </select>
         </div>
         <div class="table-wrap">
           <table id="searchTermWasteTable">
@@ -6084,12 +6092,16 @@
           );
           const metricsRows = metricsSearch.rows;
           const m = metricsRows[0] || {};
-          const hasLiveMetrics = rowsContainRequestedFields(metricsRows, [
-            "metrics.cost_micros",
-            "metrics.clicks",
-            "metrics.conversions",
-            "metrics.average_cpc",
-          ]);
+          // A genuinely quiet day/account (e.g. "Yesterday" with $0 spend)
+          // returns zero rows from Google Ads — that's a valid, real answer,
+          // not a failed query. Only mode === "empty" means every attempt to
+          // reach the API actually failed; anything else means the query
+          // succeeded, even if there was nothing to return. Previously this
+          // checked row content instead, which meant a quiet period looked
+          // identical to a failed fetch and silently fell back to whatever
+          // data was already loaded — that's why switching between Daily/
+          // Yesterday/Last Month could appear to show the same numbers.
+          const hasLiveMetrics = metricsSearch.mode !== "empty";
 
           const costMicros = asNumber(
             rowValue(m, [
@@ -6207,6 +6219,10 @@
           };
         }
 
+        function delay(ms) {
+          return new Promise((resolve) => setTimeout(resolve, ms));
+        }
+
         async function runWithConcurrencyLimit(items, limit, fn) {
           const results = new Array(items.length);
           let nextIndex = 0;
@@ -6219,6 +6235,10 @@
               } catch (err) {
                 results[i] = { status: "rejected", reason: err };
               }
+              // Small breathing room between each item this worker picks up —
+              // smooths out request bursts against the Ads API's rate limit
+              // rather than firing the next one the instant this one resolves.
+              await delay(120);
             }
           }
           const workerCount = Math.min(limit, items.length);
@@ -6340,7 +6360,7 @@
 
           const results = await runWithConcurrencyLimit(
             customerIds,
-            5,
+            3,
             (id) =>
               fetchAccountFromMcp(id, startDate, endDate, tools, pacing, {
                 loginCustomerId: anchorMccId,
@@ -6711,10 +6731,11 @@
         // that needs to be live-updated every page load.
         let searchTermWasteLoading = false;
 
-        async function fetchSearchTermWasteFromMcp(startDate, endDate) {
+        async function fetchSearchTermWasteFromMcp(startDate, endDate, accountFilter) {
           const tools = await ensureAdsMcpTools();
           const targets = accounts
             .filter((a) => a.customerId)
+            .filter((a) => !accountFilter || a.customerId === accountFilter)
             .map((a) => ({ customerId: a.customerId, name: a.name }));
 
           const results = await runWithConcurrencyLimit(
@@ -6780,24 +6801,61 @@
           return wasteRows.slice(0, 50);
         }
 
+        function populateSearchTermWasteAccountSelect() {
+          const select = document.getElementById(
+            "searchTermWasteAccountSelect",
+          );
+          if (!select) return;
+          const prevValue = select.value;
+          const withIds = accounts
+            .filter((a) => a.customerId)
+            .slice()
+            .sort((a, b) => a.name.localeCompare(b.name));
+          select.innerHTML =
+            `<option value="">All Accounts</option>` +
+            withIds
+              .map(
+                (a) =>
+                  `<option value="${escapeHtml(a.customerId)}">${escapeHtml(a.name)}</option>`,
+              )
+              .join("");
+          // Keep the previous selection if it's still a valid option.
+          if ([...select.options].some((o) => o.value === prevValue)) {
+            select.value = prevValue;
+          }
+        }
+
         async function loadSearchTermWaste() {
           if (searchTermWasteLoading) return;
           const btn = document.getElementById("loadSearchTermWasteBtn");
           const label = document.getElementById("searchTermWasteLabel");
           const body = document.getElementById("searchTermWasteTableBody");
+          const select = document.getElementById(
+            "searchTermWasteAccountSelect",
+          );
+          const accountFilter = select ? select.value : "";
+          const accountFilterName = accountFilter
+            ? accounts.find((a) => a.customerId === accountFilter)?.name ||
+              accountFilter
+            : "all accounts";
           searchTermWasteLoading = true;
           if (btn) {
             btn.disabled = true;
             btn.textContent = "⏳ Loading…";
           }
-          if (label) label.textContent = "Loading search term data across all accounts…";
+          if (label)
+            label.textContent = `Loading search term data for ${accountFilterName}…`;
 
           try {
             const { startDate, endDate } = resolveClientDateRange(dateScope);
-            const waste = await fetchSearchTermWasteFromMcp(startDate, endDate);
+            const waste = await fetchSearchTermWasteFromMcp(
+              startDate,
+              endDate,
+              accountFilter,
+            );
 
             if (waste.length === 0) {
-              body.innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 32px; color: var(--ink-muted); font-family: 'Jost';">No zero-conversion search terms with spend found for ${startDate} to ${endDate}.</td></tr>`;
+              body.innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 32px; color: var(--ink-muted); font-family: 'Jost';">No zero-conversion search terms with spend found for ${accountFilterName}, ${startDate} to ${endDate}.</td></tr>`;
             } else {
               body.innerHTML = waste
                 .map(
@@ -6816,7 +6874,7 @@
 
             const totalWasted = waste.reduce((sum, w) => sum + w.cost, 0);
             if (label) {
-              label.textContent = `${waste.length} zero-conversion terms · ${fmt$(totalWasted)} total wasted spend · ${startDate} to ${endDate}`;
+              label.textContent = `${waste.length} zero-conversion terms · ${fmt$(totalWasted)} total wasted spend · ${accountFilterName} · ${startDate} to ${endDate}`;
             }
           } catch (err) {
             if (label) label.textContent = `Failed to load: ${err.message || "unknown error"}`;
@@ -7044,7 +7102,15 @@
               const errorNote = live.errors.length
                 ? ` · ${live.errors.length} account errors`
                 : "";
-              statusEl.textContent = `MCP Live · updated ${lastLiveFetch.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}${accountNote}${mcpNote}${filterNote}${topFilterNote}${metricsGapNote}${emptyNote}${errorNote}`;
+              const withBudgetCount = live.accounts.filter(
+                (a) => a.dailyBudget != null && a.dailyBudget > 0,
+              ).length;
+              const budgetNote =
+                live.accounts.length > 0
+                  ? ` · budget ${withBudgetCount}/${live.accounts.length}`
+                  : "";
+              statusEl.textContent = `MCP Live · updated ${lastLiveFetch.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}${accountNote}${mcpNote}${filterNote}${topFilterNote}${metricsGapNote}${budgetNote}${emptyNote}${errorNote}`;
+              populateSearchTermWasteAccountSelect();
               statusEl.style.color =
                 live.errors.length || emptyNote
                   ? "var(--warn, #9a6700)"
