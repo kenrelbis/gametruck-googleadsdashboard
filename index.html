@@ -4650,6 +4650,7 @@
 
         let lastLiveFetch = null;
         let pacingWindow = null; // { daysElapsed, daysInPeriod } for pacing section
+        let lastBudgetDiagnostics = null; // surfaced in Spend Pacing when budget data is missing
         let adsMcpAuth = null;
         let adsMcpSessionId = null;
         let adsMcpTools = null;
@@ -6320,6 +6321,8 @@
             budgetCacheHits: 0,
             budgetCacheMisses: 0,
             metricsRowsMissing: 0,
+            budgetSearchModeCounts: {},
+            budgetZeroCount: 0,
           };
 
           if (accessibleCustomerIds.length === 0) {
@@ -6403,6 +6406,12 @@
                   diagnostics.budgetCacheHits += 1;
                 } else {
                   diagnostics.budgetCacheMisses += 1;
+                }
+                const bMode = budgetMeta.budgetSearchMode || "unknown";
+                diagnostics.budgetSearchModeCounts[bMode] =
+                  (diagnostics.budgetSearchModeCounts[bMode] || 0) + 1;
+                if (!(r.value.account.dailyBudget > 0)) {
+                  diagnostics.budgetZeroCount += 1;
                 }
                 if (r.value.account._hasLiveMetrics === false) {
                   diagnostics.metricsRowsMissing += 1;
@@ -7021,6 +7030,7 @@
             }
 
             const live = await fetchGoogleAdsFromMcp(startDate, endDate);
+            lastBudgetDiagnostics = live.diagnostics || null;
             const byKey = new Map(
               accounts.map((a) => [
                 a.customerId ? `id:${a.customerId}` : `name:${a.name}`,
@@ -11491,7 +11501,23 @@ levis@gametruck`;
             (a) => a.dailyBudget != null && a.dailyBudget > 0,
           );
           if (withBudget.length === 0) {
-            body.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 32px; color: var(--ink-muted); font-family: 'Jost';">No live budget data yet. Click "🔄 Refresh Live Data" above.</td></tr>`;
+            let diag = "";
+            if (lastBudgetDiagnostics) {
+              const modes = lastBudgetDiagnostics.budgetSearchModeCounts || {};
+              const modeSummary = Object.entries(modes)
+                .map(([mode, count]) => `${escapeHtml(mode)}: ${count}`)
+                .join(", ") || "no data captured";
+              diag = `
+                <div style="margin-top:12px; font-size:11px; color: var(--ink-muted); text-align:left; max-width:520px; margin-left:auto; margin-right:auto; line-height:1.6;">
+                  <strong>Diagnostic:</strong><br/>
+                  Accounts with $0 budget: ${lastBudgetDiagnostics.budgetZeroCount ?? "?"} / ${accounts.length}<br/>
+                  Cache hits: ${lastBudgetDiagnostics.budgetCacheHits ?? "?"} · Cache misses: ${lastBudgetDiagnostics.budgetCacheMisses ?? "?"}<br/>
+                  Budget query result by mode: ${modeSummary}<br/>
+                  <span style="opacity:0.8">(mode "empty" = every attempt to reach the API failed for that account; any other mode name = the query succeeded but found no enabled-campaign budget)</span>
+                </div>
+              `;
+            }
+            body.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 32px; color: var(--ink-muted); font-family: 'Jost';">No live budget data yet. Click "🔄 Refresh Live Data" above.${diag}</td></tr>`;
             return;
           }
 
