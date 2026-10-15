@@ -14,6 +14,16 @@
       rel="stylesheet"
     />
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script>
+      // Format a Date as YYYY-MM-DD in the browser's local time zone.
+      // toISOString() uses UTC, which shifts dates by a day for users east of UTC (e.g. MTD started on the 30th).
+      function __localYMD(d) {
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, "0");
+        const day = String(d.getDate()).padStart(2, "0");
+        return y + "-" + m + "-" + day;
+      }
+    </script>
     <style>
       :root {
         /* GameTruck brand */
@@ -5949,7 +5959,7 @@
         function getPacingWindowForDates(startDate, endDate) {
           const start = new Date(`${startDate}T00:00:00Z`);
           const end = new Date(`${endDate}T00:00:00Z`);
-          const todayIso = new Date().toISOString().slice(0, 10);
+          const todayIso = __localYMD(new Date());
           const today = new Date(`${todayIso}T00:00:00Z`);
 
           const daysInPeriod = Math.round((end - start) / 86400000) + 1;
@@ -6486,7 +6496,7 @@
 
         function resolveClientDateRange(scope) {
           const now = new Date();
-          const toIso = (d) => d.toISOString().slice(0, 10);
+          const toIso = (d) => __localYMD(d);
           const today = toIso(now);
 
           if (
@@ -7110,7 +7120,7 @@
                 (dateScope === "custom" && startDate === endDate);
               const isWeekGrain =
                 dateScope === "weekly" || dateScope === "lastWeek";
-              const todayIso = new Date().toISOString().slice(0, 10);
+              const todayIso = __localYMD(new Date());
 
               for (const acc of accounts) {
                 if (!acc || !acc.name) continue;
@@ -8469,8 +8479,8 @@
               ) {
                 const today = new Date();
                 const fourteenAgo = new Date(today.getTime() - 13 * 86400000);
-                customDateRange.end = today.toISOString().slice(0, 10);
-                customDateRange.start = fourteenAgo.toISOString().slice(0, 10);
+                customDateRange.end = __localYMD(today);
+                customDateRange.start = __localYMD(fourteenAgo);
                 document.getElementById("customStart").value =
                   customDateRange.start;
                 document.getElementById("customEnd").value =
@@ -9907,7 +9917,7 @@
           const url = URL.createObjectURL(blob);
           const a = document.createElement("a");
           a.href = url;
-          a.download = `gametruck-report-${new Date().toISOString().slice(0, 10)}.csv`;
+          a.download = `gametruck-report-${__localYMD(new Date())}.csv`;
           a.click();
           URL.revokeObjectURL(url);
           toast("CSV exported");
