@@ -14,6 +14,16 @@
       rel="stylesheet"
     />
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script>
+      // Format a Date as YYYY-MM-DD in the browser's local time zone.
+      // toISOString() uses UTC, which shifts dates by a day for users east of UTC (e.g. MTD started on the 30th).
+      function __localYMD(d) {
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, "0");
+        const day = String(d.getDate()).padStart(2, "0");
+        return y + "-" + m + "-" + day;
+      }
+    </script>
     <style>
       :root {
         /* GameTruck brand */
@@ -254,6 +264,7 @@
 
       .date-scope {
         display: flex;
+        flex-wrap: wrap;
         gap: 0;
         border: 2px solid var(--black);
         border-radius: 6px;
@@ -3134,9 +3145,12 @@
             <span class="control-label">View</span>
             <div class="date-scope" id="dateScope">
               <button class="scope-btn" data-scope="daily">Daily</button>
+              <button class="scope-btn" data-scope="yesterday">Yesterday</button>
               <button class="scope-btn" data-scope="weekly">Weekly</button>
+              <button class="scope-btn" data-scope="lastWeek">Last Week</button>
               <button class="scope-btn active" data-scope="mtd">MTD</button>
               <button class="scope-btn" data-scope="monthly">Monthly</button>
+              <button class="scope-btn" data-scope="lastMonth">Last Month</button>
               <button class="scope-btn" data-scope="custom">Custom</button>
             </div>
           </div>
@@ -3438,15 +3452,68 @@
           <table id="pacingTable">
             <thead>
               <tr>
-                <th>Account</th>
-                <th>Daily Budget</th>
-                <th>Spent</th>
-                <th>Expected by Now</th>
-                <th>Pace</th>
-                <th>Projected Period Total</th>
+                <th data-pacing-sort="name">Account <span class="sort-indicator">↕</span></th>
+                <th data-pacing-sort="dailyBudget">Daily Budget <span class="sort-indicator">↕</span></th>
+                <th data-pacing-sort="cost">Spent <span class="sort-indicator">↕</span></th>
+                <th data-pacing-sort="expectedSpendToDate">Expected by Now <span class="sort-indicator">↕</span></th>
+                <th data-pacing-sort="paceRatio">Pace <span class="sort-indicator">↕</span></th>
+                <th data-pacing-sort="projectedPeriodSpend">Projected Period Total <span class="sort-indicator">↕</span></th>
               </tr>
             </thead>
             <tbody id="pacingTableBody"></tbody>
+          </table>
+        </div>
+
+        <!-- SEARCH TERM PERFORMANCE -->
+        <div class="section-head" style="margin-top: 64px">
+          <h2>Search Term Performance</h2>
+          <div class="meta" id="searchTermWasteLabel">
+            Every search term with clicks — converting and wasted — across your accounts · not loaded yet
+          </div>
+        </div>
+        <div style="margin-bottom: 12px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap">
+          <button
+            class="btn btn-ghost"
+            id="loadSearchTermWasteBtn"
+            style="padding: 9px 14px; font-size: 11px"
+            title="Pulls search term data — heavier query, run on demand"
+          >
+            🔍 Load Search Terms
+          </button>
+          <select
+            id="searchTermWasteAccountSelect"
+            class="btn btn-ghost"
+            style="padding: 9px 14px; font-size: 11px; cursor: pointer"
+            title="Limit to one account, or check all"
+          >
+            <option value="">All Accounts</option>
+          </select>
+          <div class="date-scope" style="height: 34px">
+            <button class="scope-btn active" data-term-filter="all">All</button>
+            <button class="scope-btn" data-term-filter="converting">Converting</button>
+            <button class="scope-btn" data-term-filter="wasted">Wasted (0 conv)</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table id="searchTermWasteTable">
+            <thead>
+              <tr>
+                <th data-term-sort="account">Account <span class="sort-indicator">↕</span></th>
+                <th data-term-sort="term">Search Term <span class="sort-indicator">↕</span></th>
+                <th data-term-sort="cost">Cost <span class="sort-indicator">↕</span></th>
+                <th data-term-sort="clicks">Clicks <span class="sort-indicator">↕</span></th>
+                <th data-term-sort="conv">Conversions <span class="sort-indicator">↕</span></th>
+                <th data-term-sort="convRate">Conv Rate <span class="sort-indicator">↕</span></th>
+                <th data-term-sort="costPerConv">Cost/Conv <span class="sort-indicator">↕</span></th>
+              </tr>
+            </thead>
+            <tbody id="searchTermWasteTableBody">
+              <tr>
+                <td colspan="7" style="text-align:center; padding: 32px; color: var(--ink-muted); font-family: 'Jost';">
+                  Click "🔍 Load Search Terms" above to pull this — it queries every account so it's run on demand, not automatically.
+                </td>
+              </tr>
+            </tbody>
           </table>
         </div>
 
@@ -4593,6 +4660,7 @@
 
         let lastLiveFetch = null;
         let pacingWindow = null; // { daysElapsed, daysInPeriod } for pacing section
+        let lastBudgetDiagnostics = null; // surfaced in Spend Pacing when budget data is missing
         let adsMcpAuth = null;
         let adsMcpSessionId = null;
         let adsMcpTools = null;
@@ -5855,7 +5923,12 @@
             if (!customerId) return;
 
             const dailyBudget = Number(account.dailyBudget);
-            if (!Number.isFinite(dailyBudget)) return;
+            // Skip seeding from a saved 0 — see the write-site comment in
+            // fetchAccountFromMcp for why a 0 isn't trustworthy here. Without
+            // this guard, a 0 saved to browser storage during any earlier
+            // failed load would keep re-poisoning the cache on every future
+            // page load, forever, even after the underlying issue is fixed.
+            if (!Number.isFinite(dailyBudget) || dailyBudget <= 0) return;
 
             if (!adsMcpDailyBudgetCache.has(customerId)) {
               adsMcpDailyBudgetCache.set(customerId, {
@@ -5875,13 +5948,18 @@
           if (!hit) return null;
 
           const dailyBudget = Number(hit.dailyBudget);
-          return Number.isFinite(dailyBudget) ? dailyBudget : null;
+          // A cached 0 isn't trustworthy (see write-site comment) — treat it
+          // as "no real cache entry" so the live query runs again instead of
+          // permanently reusing a stale/failed 0.
+          return Number.isFinite(dailyBudget) && dailyBudget > 0
+            ? dailyBudget
+            : null;
         }
 
         function getPacingWindowForDates(startDate, endDate) {
           const start = new Date(`${startDate}T00:00:00Z`);
           const end = new Date(`${endDate}T00:00:00Z`);
-          const todayIso = new Date().toISOString().slice(0, 10);
+          const todayIso = __localYMD(new Date());
           const today = new Date(`${todayIso}T00:00:00Z`);
 
           const daysInPeriod = Math.round((end - start) / 86400000) + 1;
@@ -6042,12 +6120,16 @@
           );
           const metricsRows = metricsSearch.rows;
           const m = metricsRows[0] || {};
-          const hasLiveMetrics = rowsContainRequestedFields(metricsRows, [
-            "metrics.cost_micros",
-            "metrics.clicks",
-            "metrics.conversions",
-            "metrics.average_cpc",
-          ]);
+          // A genuinely quiet day/account (e.g. "Yesterday" with $0 spend)
+          // returns zero rows from Google Ads — that's a valid, real answer,
+          // not a failed query. Only mode === "empty" means every attempt to
+          // reach the API actually failed; anything else means the query
+          // succeeded, even if there was nothing to return. Previously this
+          // checked row content instead, which meant a quiet period looked
+          // identical to a failed fetch and silently fell back to whatever
+          // data was already loaded — that's why switching between Daily/
+          // Yesterday/Last Month could appear to show the same numbers.
+          const hasLiveMetrics = metricsSearch.mode !== "empty";
 
           const costMicros = asNumber(
             rowValue(m, [
@@ -6075,10 +6157,22 @@
 
           let budgetRows = [];
           let budgetSearchMode = "cache_hit";
-          let dailyBudget =
-            options && Number.isFinite(Number(options.cachedDailyBudget))
+          // IMPORTANT: Number(null) === 0 in JavaScript, not NaN. So if
+          // cachedDailyBudget is null (meaning "nothing valid is cached"),
+          // naively doing Number(options.cachedDailyBudget) silently turns
+          // that into 0 — which then passes Number.isFinite() and gets
+          // treated as a real cached budget, permanently skipping the live
+          // query. This is the actual bug that caused every account to show
+          // "cache_hit" with a $0 budget even after the cache-write fix.
+          // Checking `!= null` first (catches both null and undefined)
+          // before converting avoids that trap.
+          const rawCached =
+            options && options.cachedDailyBudget != null
               ? Number(options.cachedDailyBudget)
-              : null;
+              : NaN;
+          let dailyBudget = Number.isFinite(rawCached) && rawCached > 0
+            ? rawCached
+            : null;
 
           if (!Number.isFinite(dailyBudget)) {
             const budgetSearch = await mcpSearchRows(
@@ -6121,7 +6215,12 @@
             dailyBudget = totalMicros / 1000000;
 
             const normalizedId = normalizeCustomerIdDigits(customerId);
-            if (normalizedId && Number.isFinite(dailyBudget)) {
+            // Only cache a genuinely positive budget. A 0 here is far more
+            // likely to be a transient/failed query than a real zero-budget
+            // active account — caching it would lock the account into
+            // "no budget data" forever, since a cache hit skips re-querying
+            // on every future refresh. Better to retry live next time.
+            if (normalizedId && Number.isFinite(dailyBudget) && dailyBudget > 0) {
               adsMcpDailyBudgetCache.set(normalizedId, {
                 dailyBudget,
                 updatedAt: Date.now(),
@@ -6163,6 +6262,33 @@
               loginCustomerId,
             },
           };
+        }
+
+        function delay(ms) {
+          return new Promise((resolve) => setTimeout(resolve, ms));
+        }
+
+        async function runWithConcurrencyLimit(items, limit, fn) {
+          const results = new Array(items.length);
+          let nextIndex = 0;
+          async function worker() {
+            while (nextIndex < items.length) {
+              const i = nextIndex;
+              nextIndex += 1;
+              try {
+                results[i] = { status: "fulfilled", value: await fn(items[i], i) };
+              } catch (err) {
+                results[i] = { status: "rejected", reason: err };
+              }
+              // Small breathing room between each item this worker picks up —
+              // smooths out request bursts against the Ads API's rate limit
+              // rather than firing the next one the instant this one resolves.
+              await delay(120);
+            }
+          }
+          const workerCount = Math.min(limit, items.length);
+          await Promise.all(Array.from({ length: workerCount }, worker));
+          return results;
         }
 
         async function fetchGoogleAdsFromMcp(startDate, endDate) {
@@ -6217,6 +6343,8 @@
             budgetCacheHits: 0,
             budgetCacheMisses: 0,
             metricsRowsMissing: 0,
+            budgetSearchModeCounts: {},
+            budgetZeroCount: 0,
           };
 
           if (accessibleCustomerIds.length === 0) {
@@ -6277,14 +6405,15 @@
             }
           }
 
-          const results = await Promise.allSettled(
-            customerIds.map((id) =>
+          const results = await runWithConcurrencyLimit(
+            customerIds,
+            3,
+            (id) =>
               fetchAccountFromMcp(id, startDate, endDate, tools, pacing, {
                 loginCustomerId: anchorMccId,
                 rollCallMeta: rollCallMetaById.get(id) || null,
                 cachedDailyBudget: getCachedDailyBudget(id),
               }),
-            ),
           );
 
           const liveAccounts = [];
@@ -6299,6 +6428,12 @@
                   diagnostics.budgetCacheHits += 1;
                 } else {
                   diagnostics.budgetCacheMisses += 1;
+                }
+                const bMode = budgetMeta.budgetSearchMode || "unknown";
+                diagnostics.budgetSearchModeCounts[bMode] =
+                  (diagnostics.budgetSearchModeCounts[bMode] || 0) + 1;
+                if (!(r.value.account.dailyBudget > 0)) {
+                  diagnostics.budgetZeroCount += 1;
                 }
                 if (r.value.account._hasLiveMetrics === false) {
                   diagnostics.metricsRowsMissing += 1;
@@ -6361,7 +6496,7 @@
 
         function resolveClientDateRange(scope) {
           const now = new Date();
-          const toIso = (d) => d.toISOString().slice(0, 10);
+          const toIso = (d) => __localYMD(d);
           const today = toIso(now);
 
           if (
@@ -6378,15 +6513,38 @@
           switch (scope) {
             case "daily":
               return { startDate: today, endDate: today };
+            case "yesterday": {
+              const y = new Date(now);
+              y.setDate(y.getDate() - 1);
+              return { startDate: toIso(y), endDate: toIso(y) };
+            }
             case "weekly": {
               const d = new Date(now);
               const day = (d.getDay() + 6) % 7;
               d.setDate(d.getDate() - day);
               return { startDate: toIso(d), endDate: today };
             }
+            case "lastWeek": {
+              // Previous Monday-through-Sunday, i.e. the full week before
+              // the current one (not "the last 7 days").
+              const d = new Date(now);
+              const day = (d.getDay() + 6) % 7;
+              const thisWeekStart = new Date(d);
+              thisWeekStart.setDate(d.getDate() - day);
+              const lastWeekStart = new Date(thisWeekStart);
+              lastWeekStart.setDate(thisWeekStart.getDate() - 7);
+              const lastWeekEnd = new Date(thisWeekStart);
+              lastWeekEnd.setDate(thisWeekStart.getDate() - 1);
+              return { startDate: toIso(lastWeekStart), endDate: toIso(lastWeekEnd) };
+            }
             case "monthly": {
               const first = new Date(now.getFullYear(), now.getMonth(), 1);
               const last = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+              return { startDate: toIso(first), endDate: toIso(last) };
+            }
+            case "lastMonth": {
+              const first = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+              const last = new Date(now.getFullYear(), now.getMonth(), 0);
               return { startDate: toIso(first), endDate: toIso(last) };
             }
             case "mtd":
@@ -6617,7 +6775,230 @@
           return scope;
         }
 
+        // ============ SEARCH TERM WASTE ============
+        // Pulls search_term_view across every account currently in the
+        // leaderboard (reuses their customerId — no extra roll-call needed)
+        // and surfaces terms burning spend with zero conversions. Run on
+        // demand via its own button, not on every live refresh, since it's
+        // a heavier query (one extra call per account) and isn't something
+        // that needs to be live-updated every page load.
+        let searchTermWasteLoading = false;
+
+        async function fetchSearchTermPerformanceFromMcp(startDate, endDate, accountFilter) {
+          const tools = await ensureAdsMcpTools();
+          const targets = accounts
+            .filter((a) => a.customerId)
+            .filter((a) => !accountFilter || a.customerId === accountFilter)
+            .map((a) => ({ customerId: a.customerId, name: a.name }));
+
+          const results = await runWithConcurrencyLimit(
+            targets,
+            3,
+            async (target) => {
+              const search = await mcpSearchRows(
+                tools,
+                target.customerId,
+                {
+                  fields: [
+                    "search_term_view.search_term",
+                    "metrics.clicks",
+                    "metrics.cost_micros",
+                    "metrics.conversions",
+                  ],
+                  resource: "search_term_view",
+                  conditions: [
+                    `segments.date BETWEEN '${startDate}' AND '${endDate}'`,
+                    "metrics.clicks > 0",
+                  ],
+                  limit: 500,
+                },
+                { loginCustomerId: ADS_MCP_ANCHOR_MCC_ID },
+              );
+              return { account: target.name, rows: search.rows };
+            },
+          );
+
+          const termRows = [];
+          results.forEach((r) => {
+            if (r.status !== "fulfilled" || !r.value) return;
+            r.value.rows.forEach((row) => {
+              const term = rowValue(row, [
+                "search_term_view.search_term",
+                "searchTermView.searchTerm",
+              ]);
+              if (!term) return;
+              const cost =
+                asNumber(
+                  rowValue(row, ["metrics.cost_micros", "metrics.costMicros"]),
+                  0,
+                ) / 1000000;
+              const clicks = asNumber(rowValue(row, ["metrics.clicks"]), 0);
+              const conv = asNumber(
+                rowValue(row, ["metrics.conversions"]),
+                0,
+              );
+              // Keep every term with a click, converting or not — the
+              // filter toggle in the UI handles narrowing to just the
+              // wasted (0-conversion) ones, rather than throwing the
+              // converting terms away at fetch time.
+              termRows.push({
+                account: r.value.account,
+                term,
+                cost,
+                clicks,
+                conv,
+                convRate: clicks > 0 ? conv / clicks : 0,
+                costPerConv: conv > 0 ? cost / conv : null,
+              });
+            });
+          });
+
+          termRows.sort((a, b) => b.cost - a.cost);
+          return termRows;
+        }
+
+        function populateSearchTermWasteAccountSelect() {
+          const select = document.getElementById(
+            "searchTermWasteAccountSelect",
+          );
+          if (!select) return;
+          const prevValue = select.value;
+          const withIds = accounts
+            .filter((a) => a.customerId)
+            .slice()
+            .sort((a, b) => a.name.localeCompare(b.name));
+          select.innerHTML =
+            `<option value="">All Accounts</option>` +
+            withIds
+              .map(
+                (a) =>
+                  `<option value="${escapeHtml(a.customerId)}">${escapeHtml(a.name)}</option>`,
+              )
+              .join("");
+          // Keep the previous selection if it's still a valid option.
+          if ([...select.options].some((o) => o.value === prevValue)) {
+            select.value = prevValue;
+          }
+        }
+
+        let searchTermRawResults = [];
+        let searchTermFilter = "all"; // 'all' | 'converting' | 'wasted'
+        let searchTermSortKey = "cost";
+        let searchTermSortDir = "desc";
+
+        function renderSearchTermTable() {
+          const body = document.getElementById("searchTermWasteTableBody");
+          const label = document.getElementById("searchTermWasteLabel");
+          if (!body) return;
+
+          let rows = searchTermRawResults;
+          if (searchTermFilter === "converting") {
+            rows = rows.filter((r) => r.conv > 0);
+          } else if (searchTermFilter === "wasted") {
+            rows = rows.filter((r) => r.conv === 0 && r.cost > 0);
+          }
+
+          const dir = searchTermSortDir === "asc" ? 1 : -1;
+          rows = [...rows].sort((a, b) => {
+            if (searchTermSortKey === "account" || searchTermSortKey === "term") {
+              const va = (a[searchTermSortKey] || "").toLowerCase();
+              const vb = (b[searchTermSortKey] || "").toLowerCase();
+              return va < vb ? -1 * dir : va > vb ? 1 * dir : 0;
+            }
+            let va = Number(a[searchTermSortKey]);
+            let vb = Number(b[searchTermSortKey]);
+            if (!Number.isFinite(va)) va = -Infinity;
+            if (!Number.isFinite(vb)) vb = -Infinity;
+            return (va - vb) * dir;
+          });
+
+          document
+            .querySelectorAll("#searchTermWasteTable th[data-term-sort]")
+            .forEach((th) => {
+              const indicator = th.querySelector(".sort-indicator");
+              if (!indicator) return;
+              indicator.textContent =
+                th.dataset.termSort === searchTermSortKey
+                  ? searchTermSortDir === "asc"
+                    ? "↑"
+                    : "↓"
+                  : "↕";
+            });
+
+          if (rows.length === 0) {
+            body.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 32px; color: var(--ink-muted); font-family: 'Jost';">No terms match this filter.</td></tr>`;
+            return;
+          }
+
+          body.innerHTML = rows
+            .map(
+              (w) => `
+                <tr>
+                  <td>${escapeHtml(w.account)}</td>
+                  <td>${escapeHtml(w.term)}</td>
+                  <td>${fmt$(w.cost)}</td>
+                  <td>${fmtN(w.clicks)}</td>
+                  <td>${fmtN(w.conv)}</td>
+                  <td>${(w.convRate * 100).toFixed(1)}%</td>
+                  <td>${w.costPerConv != null ? fmt$(w.costPerConv) : "—"}</td>
+                </tr>
+              `,
+            )
+            .join("");
+
+          if (label) {
+            const totalCost = searchTermRawResults.reduce((s, w) => s + w.cost, 0);
+            const wastedCost = searchTermRawResults
+              .filter((w) => w.conv === 0)
+              .reduce((s, w) => s + w.cost, 0);
+            label.textContent = `${searchTermRawResults.length} terms total (${rows.length} shown) · ${fmt$(totalCost)} spent · ${fmt$(wastedCost)} on zero-conversion terms`;
+          }
+        }
+
+        async function loadSearchTermWaste() {
+          if (searchTermWasteLoading) return;
+          const btn = document.getElementById("loadSearchTermWasteBtn");
+          const label = document.getElementById("searchTermWasteLabel");
+          const select = document.getElementById(
+            "searchTermWasteAccountSelect",
+          );
+          const accountFilter = select ? select.value : "";
+          const accountFilterName = accountFilter
+            ? accounts.find((a) => a.customerId === accountFilter)?.name ||
+              accountFilter
+            : "all accounts";
+          searchTermWasteLoading = true;
+          if (btn) {
+            btn.disabled = true;
+            btn.textContent = "⏳ Loading…";
+          }
+          if (label)
+            label.textContent = `Loading search term data for ${accountFilterName}…`;
+
+          try {
+            const { startDate, endDate } = resolveClientDateRange(dateScope);
+            searchTermRawResults = await fetchSearchTermPerformanceFromMcp(
+              startDate,
+              endDate,
+              accountFilter,
+            );
+            renderSearchTermTable();
+          } catch (err) {
+            if (label) label.textContent = `Failed to load: ${err.message || "unknown error"}`;
+            console.error("Search term fetch failed", err);
+          } finally {
+            searchTermWasteLoading = false;
+            if (btn) {
+              btn.disabled = false;
+              btn.textContent = "🔍 Load Search Terms";
+            }
+          }
+        }
+
+        let liveFetchSeq = 0;
         async function fetchLiveDashboardData() {
+          const mySeq = ++liveFetchSeq;
+          const isStale = () => mySeq !== liveFetchSeq;
           const statusEl = document.getElementById("liveDataStatus");
           const btn = document.getElementById("liveRefreshBtn");
 
@@ -6664,6 +7045,7 @@
             }
 
             const token = await ensureAdsMcpAccessToken();
+            if (isStale()) return;
             if (!token) {
               if (statusEl) {
                 statusEl.textContent =
@@ -6674,6 +7056,9 @@
             }
 
             const live = await fetchGoogleAdsFromMcp(startDate, endDate);
+            // A newer click started while this one was loading: drop this result.
+            if (isStale()) return;
+            lastBudgetDiagnostics = live.diagnostics || null;
             const byKey = new Map(
               accounts.map((a) => [
                 a.customerId ? `id:${a.customerId}` : `name:${a.name}`,
@@ -6691,31 +7076,14 @@
               const merged = Object.assign({}, existing || {}, {
                 name: account.name,
                 customerId: account.customerId,
-                cost: hasLiveMetrics
-                  ? account.cost
-                  : existing && Number.isFinite(Number(existing.cost))
-                    ? Number(existing.cost)
-                    : account.cost,
-                clicks: hasLiveMetrics
-                  ? account.clicks
-                  : existing && Number.isFinite(Number(existing.clicks))
-                    ? Number(existing.clicks)
-                    : account.clicks,
-                cpc: hasLiveMetrics
-                  ? account.cpc
-                  : existing && Number.isFinite(Number(existing.cpc))
-                    ? Number(existing.cpc)
-                    : account.cpc,
-                conv: hasLiveMetrics
-                  ? account.conv
-                  : existing && Number.isFinite(Number(existing.conv))
-                    ? Number(existing.conv)
-                    : account.conv,
-                cpa: hasLiveMetrics
-                  ? account.cpa
-                  : existing && Number.isFinite(Number(existing.cpa))
-                    ? Number(existing.cpa)
-                    : account.cpa,
+                // Never reuse saved numbers from a different date range: if the
+                // metrics query failed, show zeros and flag the row instead.
+                cost: Number.isFinite(Number(account.cost)) ? Number(account.cost) : 0,
+                clicks: Number.isFinite(Number(account.clicks)) ? Number(account.clicks) : 0,
+                cpc: Number.isFinite(Number(account.cpc)) ? Number(account.cpc) : 0,
+                conv: Number.isFinite(Number(account.conv)) ? Number(account.conv) : 0,
+                cpa: Number.isFinite(Number(account.cpa)) ? Number(account.cpa) : 0,
+                _syncGap: !hasLiveMetrics,
                 dailyBudget: account.dailyBudget ?? null,
                 expectedSpendToDate: account.expectedSpendToDate ?? null,
                 projectedPeriodSpend: account.projectedPeriodSpend ?? null,
@@ -6738,6 +7106,55 @@
             await saveData();
             lastLiveFetch = new Date();
 
+            // Record a history snapshot per account on every live refresh, so
+            // trend charts and Today's Focus have real data to compare over
+            // time — previously only Quick Paste / CSV upload saved history,
+            // so the live MCP refresh path never built up any history at all.
+            // Tagged at whatever grain the current view is on (day/week/month)
+            // using numbers already fetched — no extra API calls needed.
+            try {
+              const snapDateRange = `${startDate} - ${endDate}`;
+              const isDayGrain =
+                dateScope === "daily" ||
+                dateScope === "yesterday" ||
+                (dateScope === "custom" && startDate === endDate);
+              const isWeekGrain =
+                dateScope === "weekly" || dateScope === "lastWeek";
+              const todayIso = __localYMD(new Date());
+
+              for (const acc of accounts) {
+                if (!acc || !acc.name) continue;
+                if (!Number.isFinite(Number(acc.cost))) continue;
+                if (acc._syncGap) continue; // don't record failed pulls as real zeros
+                const snap = {
+                  accountName: acc.name,
+                  period: derivePeriod(snapDateRange),
+                  weekPeriod: isDayGrain || isWeekGrain ? deriveWeekPeriod(snapDateRange) : null,
+                  dayPeriod: isDayGrain ? (endDate || todayIso) : null,
+                  capturedAt: new Date().toISOString(),
+                  cost: acc.cost || 0,
+                  clicks: acc.clicks || 0,
+                  cpc: acc.cpc || 0,
+                  conv: acc.conv || 0,
+                  cpa: acc.cpa || 0,
+                  impr: acc.impr || 0,
+                  ctr: acc.ctr || 0,
+                  source: "live_mcp",
+                };
+                history = history.filter((s) => {
+                  if (s.accountName.toLowerCase() !== acc.name.toLowerCase()) return true;
+                  if (snap.dayPeriod) return s.dayPeriod !== snap.dayPeriod;
+                  if (snap.weekPeriod) return !(s.weekPeriod === snap.weekPeriod && !s.dayPeriod);
+                  return !(s.period === snap.period && !s.weekPeriod && !s.dayPeriod);
+                });
+                history.push(snap);
+              }
+              await saveHistory();
+            } catch (snapErr) {
+              console.warn("Live snapshot recording failed", snapErr);
+            }
+
+            const gapCount = accounts.filter((a) => a && a._syncGap).length;
             if (statusEl) {
               const accountNote = ` · ${live.accounts.length} account${live.accounts.length === 1 ? "" : "s"}`;
               const mcpNote =
@@ -6781,24 +7198,34 @@
                         Number(live.diagnostics.extractedCustomerIds || 0) > 0
                       ? " · all active leaf IDs filtered"
                       : "";
+              const syncGapNote = gapCount ? ` · ${gapCount} account${gapCount === 1 ? "" : "s"} failed to load (shown as 0, click Refresh)` : "";
               const errorNote = live.errors.length
                 ? ` · ${live.errors.length} account errors`
                 : "";
-              statusEl.textContent = `MCP Live · updated ${lastLiveFetch.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}${accountNote}${mcpNote}${filterNote}${topFilterNote}${metricsGapNote}${emptyNote}${errorNote}`;
+              const withBudgetCount = live.accounts.filter(
+                (a) => a.dailyBudget != null && a.dailyBudget > 0,
+              ).length;
+              const budgetNote =
+                live.accounts.length > 0
+                  ? ` · budget ${withBudgetCount}/${live.accounts.length}`
+                  : "";
+              statusEl.textContent = `MCP Live · updated ${lastLiveFetch.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}${accountNote}${mcpNote}${filterNote}${topFilterNote}${metricsGapNote}${budgetNote}${emptyNote}${errorNote}${syncGapNote}`;
+              populateSearchTermWasteAccountSelect();
               statusEl.style.color =
-                live.errors.length || emptyNote
+                live.errors.length || emptyNote || gapCount
                   ? "var(--warn, #9a6700)"
                   : "var(--good, #1a7f37)";
             }
             render();
           } catch (err) {
+            if (isStale()) return;
             console.error("Live data fetch failed", err);
             if (statusEl) {
               statusEl.textContent = `Live fetch error: ${err.message || "unknown error"}`;
               statusEl.style.color = "var(--bad, #cf222e)";
             }
           } finally {
-            if (btn) {
+            if (btn && !isStale()) {
               btn.disabled = false;
               btn.textContent = "🔄 Refresh Live Data";
             }
@@ -6822,6 +7249,43 @@
             liveBtn.addEventListener("click", fetchLiveDashboardData);
             liveBtn.dataset.boundClick = "true";
           }
+          const wasteBtn = document.getElementById("loadSearchTermWasteBtn");
+          if (wasteBtn && !wasteBtn.dataset.boundClick) {
+            wasteBtn.addEventListener("click", loadSearchTermWaste);
+            wasteBtn.dataset.boundClick = "true";
+          }
+          document
+            .querySelectorAll("[data-term-filter]")
+            .forEach((b) => {
+              if (b.dataset.boundClick) return;
+              b.addEventListener("click", () => {
+                document
+                  .querySelectorAll("[data-term-filter]")
+                  .forEach((x) => x.classList.remove("active"));
+                b.classList.add("active");
+                searchTermFilter = b.dataset.termFilter;
+                renderSearchTermTable();
+              });
+              b.dataset.boundClick = "true";
+            });
+          document
+            .querySelectorAll("#searchTermWasteTable th[data-term-sort]")
+            .forEach((th) => {
+              if (th.dataset.boundClick) return;
+              th.addEventListener("click", () => {
+                const key = th.dataset.termSort;
+                if (searchTermSortKey === key) {
+                  searchTermSortDir =
+                    searchTermSortDir === "asc" ? "desc" : "asc";
+                } else {
+                  searchTermSortKey = key;
+                  searchTermSortDir =
+                    key === "account" || key === "term" ? "asc" : "desc";
+                }
+                renderSearchTermTable();
+              });
+              th.dataset.boundClick = "true";
+            });
         }
 
         // ============ INIT ============
@@ -6887,13 +7351,22 @@
           // Set date range label based on scope
           const labels = {
             daily: "Today",
+            yesterday: "Yesterday",
             weekly: "This Week",
+            lastWeek: "Last Week",
             mtd:
               d.toLocaleDateString("en-US", { month: "long" }) + " 1 – Today",
             monthly: d.toLocaleDateString("en-US", {
               month: "long",
               year: "numeric",
             }),
+            lastMonth: (() => {
+              const lm = new Date(d.getFullYear(), d.getMonth() - 1, 1);
+              return lm.toLocaleDateString("en-US", {
+                month: "long",
+                year: "numeric",
+              });
+            })(),
             custom:
               customDateRange.start && customDateRange.end
                 ? `${formatDateShort(customDateRange.start)} – ${formatDateShort(customDateRange.end)}`
@@ -8006,8 +8479,8 @@
               ) {
                 const today = new Date();
                 const fourteenAgo = new Date(today.getTime() - 13 * 86400000);
-                customDateRange.end = today.toISOString().slice(0, 10);
-                customDateRange.start = fourteenAgo.toISOString().slice(0, 10);
+                customDateRange.end = __localYMD(today);
+                customDateRange.start = __localYMD(fourteenAgo);
                 document.getElementById("customStart").value =
                   customDateRange.start;
                 document.getElementById("customEnd").value =
@@ -8057,6 +8530,21 @@
               render();
             });
           });
+
+          document
+            .querySelectorAll("#pacingTable th[data-pacing-sort]")
+            .forEach((th) => {
+              th.addEventListener("click", () => {
+                const key = th.dataset.pacingSort;
+                if (pacingSortKey === key) {
+                  pacingSortDir = pacingSortDir === "asc" ? "desc" : "asc";
+                } else {
+                  pacingSortKey = key;
+                  pacingSortDir = key === "name" ? "asc" : "desc";
+                }
+                renderPacingTable();
+              });
+            });
 
           document.querySelectorAll("#tabs .tab").forEach((t) => {
             t.addEventListener("click", () => switchTab(t.dataset.panel));
@@ -9429,7 +9917,7 @@
           const url = URL.createObjectURL(blob);
           const a = document.createElement("a");
           a.href = url;
-          a.download = `gametruck-report-${new Date().toISOString().slice(0, 10)}.csv`;
+          a.download = `gametruck-report-${__localYMD(new Date())}.csv`;
           a.click();
           URL.revokeObjectURL(url);
           toast("CSV exported");
@@ -11010,6 +11498,9 @@ levis@gametruck`;
         // the history-scoped view) since pacing is inherently about "right now"
         // relative to the currently configured Google Ads daily budget, not a
         // historical snapshot. Accounts with no live budget data show "n/a".
+        let pacingSortKey = "paceRatio";
+        let pacingSortDir = "desc";
+
         function renderPacingTable() {
           const body = document.getElementById("pacingTableBody");
           const label = document.getElementById("pacingWindowLabel");
@@ -11025,13 +11516,52 @@ levis@gametruck`;
             (a) => a.dailyBudget != null && a.dailyBudget > 0,
           );
           if (withBudget.length === 0) {
-            body.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 32px; color: var(--ink-muted); font-family: 'Jost';">No live budget data yet. Click "🔄 Refresh Live Data" above.</td></tr>`;
+            let diag = "";
+            if (lastBudgetDiagnostics) {
+              const modes = lastBudgetDiagnostics.budgetSearchModeCounts || {};
+              const modeSummary = Object.entries(modes)
+                .map(([mode, count]) => `${escapeHtml(mode)}: ${count}`)
+                .join(", ") || "no data captured";
+              diag = `
+                <div style="margin-top:12px; font-size:11px; color: var(--ink-muted); text-align:left; max-width:520px; margin-left:auto; margin-right:auto; line-height:1.6;">
+                  <strong>Diagnostic:</strong><br/>
+                  Accounts with $0 budget: ${lastBudgetDiagnostics.budgetZeroCount ?? "?"} / ${accounts.length}<br/>
+                  Cache hits: ${lastBudgetDiagnostics.budgetCacheHits ?? "?"} · Cache misses: ${lastBudgetDiagnostics.budgetCacheMisses ?? "?"}<br/>
+                  Budget query result by mode: ${modeSummary}<br/>
+                  <span style="opacity:0.8">(mode "empty" = every attempt to reach the API failed for that account; any other mode name = the query succeeded but found no enabled-campaign budget)</span>
+                </div>
+              `;
+            }
+            body.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 32px; color: var(--ink-muted); font-family: 'Jost';">No live budget data yet. Click "🔄 Refresh Live Data" above.${diag}</td></tr>`;
             return;
           }
 
-          const sorted = [...withBudget].sort(
-            (a, b) => (b.paceRatio ?? 0) - (a.paceRatio ?? 0),
-          );
+          const dir = pacingSortDir === "asc" ? 1 : -1;
+          const sorted = [...withBudget].sort((a, b) => {
+            let va, vb;
+            if (pacingSortKey === "name") {
+              va = (a.name || "").toLowerCase();
+              vb = (b.name || "").toLowerCase();
+              return va < vb ? -1 * dir : va > vb ? 1 * dir : 0;
+            }
+            va = Number(a[pacingSortKey]);
+            vb = Number(b[pacingSortKey]);
+            if (!Number.isFinite(va)) va = -Infinity;
+            if (!Number.isFinite(vb)) vb = -Infinity;
+            return (va - vb) * dir;
+          });
+
+          document
+            .querySelectorAll("#pacingTable th[data-pacing-sort]")
+            .forEach((th) => {
+              const indicator = th.querySelector(".sort-indicator");
+              if (!indicator) return;
+              if (th.dataset.pacingSort === pacingSortKey) {
+                indicator.textContent = pacingSortDir === "asc" ? "↑" : "↓";
+              } else {
+                indicator.textContent = "↕";
+              }
+            });
 
           body.innerHTML = sorted
             .map((a) => {
@@ -12856,9 +13386,11 @@ levis@gametruck`;
           };
         }
 
-        // Returns 'week' if the user has Weekly scope selected, else 'month'
+        // Returns 'week' if the user has Weekly/Last Week scope selected, else 'month'
         function currentGranularity() {
-          return dateScope === "weekly" ? "week" : "month";
+          return dateScope === "weekly" || dateScope === "lastWeek"
+            ? "week"
+            : "month";
         }
 
         // ============ ANOMALY ALERTS ============
