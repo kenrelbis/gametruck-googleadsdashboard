@@ -6985,7 +6985,10 @@
           }
         }
 
+        let liveFetchSeq = 0;
         async function fetchLiveDashboardData() {
+          const mySeq = ++liveFetchSeq;
+          const isStale = () => mySeq !== liveFetchSeq;
           const statusEl = document.getElementById("liveDataStatus");
           const btn = document.getElementById("liveRefreshBtn");
 
@@ -7032,6 +7035,7 @@
             }
 
             const token = await ensureAdsMcpAccessToken();
+            if (isStale()) return;
             if (!token) {
               if (statusEl) {
                 statusEl.textContent =
@@ -7042,6 +7046,8 @@
             }
 
             const live = await fetchGoogleAdsFromMcp(startDate, endDate);
+            // A newer click started while this one was loading: drop this result.
+            if (isStale()) return;
             lastBudgetDiagnostics = live.diagnostics || null;
             const byKey = new Map(
               accounts.map((a) => [
@@ -7060,31 +7066,14 @@
               const merged = Object.assign({}, existing || {}, {
                 name: account.name,
                 customerId: account.customerId,
-                cost: hasLiveMetrics
-                  ? account.cost
-                  : existing && Number.isFinite(Number(existing.cost))
-                    ? Number(existing.cost)
-                    : account.cost,
-                clicks: hasLiveMetrics
-                  ? account.clicks
-                  : existing && Number.isFinite(Number(existing.clicks))
-                    ? Number(existing.clicks)
-                    : account.clicks,
-                cpc: hasLiveMetrics
-                  ? account.cpc
-                  : existing && Number.isFinite(Number(existing.cpc))
-                    ? Number(existing.cpc)
-                    : account.cpc,
-                conv: hasLiveMetrics
-                  ? account.conv
-                  : existing && Number.isFinite(Number(existing.conv))
-                    ? Number(existing.conv)
-                    : account.conv,
-                cpa: hasLiveMetrics
-                  ? account.cpa
-                  : existing && Number.isFinite(Number(existing.cpa))
-                    ? Number(existing.cpa)
-                    : account.cpa,
+                // Never reuse saved numbers from a different date range: if the
+                // metrics query failed, show zeros and flag the row instead.
+                cost: Number.isFinite(Number(account.cost)) ? Number(account.cost) : 0,
+                clicks: Number.isFinite(Number(account.clicks)) ? Number(account.clicks) : 0,
+                cpc: Number.isFinite(Number(account.cpc)) ? Number(account.cpc) : 0,
+                conv: Number.isFinite(Number(account.conv)) ? Number(account.conv) : 0,
+                cpa: Number.isFinite(Number(account.cpa)) ? Number(account.cpa) : 0,
+                _syncGap: !hasLiveMetrics,
                 dailyBudget: account.dailyBudget ?? null,
                 expectedSpendToDate: account.expectedSpendToDate ?? null,
                 projectedPeriodSpend: account.projectedPeriodSpend ?? null,
@@ -7126,6 +7115,7 @@
               for (const acc of accounts) {
                 if (!acc || !acc.name) continue;
                 if (!Number.isFinite(Number(acc.cost))) continue;
+                if (acc._syncGap) continue; // don't record failed pulls as real zeros
                 const snap = {
                   accountName: acc.name,
                   period: derivePeriod(snapDateRange),
@@ -7154,6 +7144,7 @@
               console.warn("Live snapshot recording failed", snapErr);
             }
 
+            const gapCount = accounts.filter((a) => a && a._syncGap).length;
             if (statusEl) {
               const accountNote = ` · ${live.accounts.length} account${live.accounts.length === 1 ? "" : "s"}`;
               const mcpNote =
@@ -7197,6 +7188,7 @@
                         Number(live.diagnostics.extractedCustomerIds || 0) > 0
                       ? " · all active leaf IDs filtered"
                       : "";
+              const syncGapNote = gapCount ? ` · ${gapCount} account${gapCount === 1 ? "" : "s"} failed to load (shown as 0, click Refresh)` : "";
               const errorNote = live.errors.length
                 ? ` · ${live.errors.length} account errors`
                 : "";
@@ -7207,22 +7199,23 @@
                 live.accounts.length > 0
                   ? ` · budget ${withBudgetCount}/${live.accounts.length}`
                   : "";
-              statusEl.textContent = `MCP Live · updated ${lastLiveFetch.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}${accountNote}${mcpNote}${filterNote}${topFilterNote}${metricsGapNote}${budgetNote}${emptyNote}${errorNote}`;
+              statusEl.textContent = `MCP Live · updated ${lastLiveFetch.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}${accountNote}${mcpNote}${filterNote}${topFilterNote}${metricsGapNote}${budgetNote}${emptyNote}${errorNote}${syncGapNote}`;
               populateSearchTermWasteAccountSelect();
               statusEl.style.color =
-                live.errors.length || emptyNote
+                live.errors.length || emptyNote || gapCount
                   ? "var(--warn, #9a6700)"
                   : "var(--good, #1a7f37)";
             }
             render();
           } catch (err) {
+            if (isStale()) return;
             console.error("Live data fetch failed", err);
             if (statusEl) {
               statusEl.textContent = `Live fetch error: ${err.message || "unknown error"}`;
               statusEl.style.color = "var(--bad, #cf222e)";
             }
           } finally {
-            if (btn) {
+            if (btn && !isStale()) {
               btn.disabled = false;
               btn.textContent = "🔄 Refresh Live Data";
             }
