@@ -1117,7 +1117,10 @@
       #page-mtd .report-table td:nth-child(2),
       #page-mtd .report-table th:nth-child(2),
       #page-markets .report-table td:first-child,
-      #page-markets .report-table th:first-child {
+      #page-markets .report-table th:first-child,
+      #healthTable td:nth-child(2),
+      #healthTable td:nth-child(4),
+      #healthTable th {
         text-align: left;
       }
       .why-cell {
@@ -1153,6 +1156,146 @@
       .metro-map {
         margin-top: 8px;
         line-height: 1.7;
+      }
+      .view-ctl {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-left: auto;
+      }
+      .view-select {
+        font: inherit;
+        font-size: 12px;
+        padding: 6px 8px;
+        border: 1px solid var(--line, #cfcabd);
+        border-radius: 6px;
+        background: transparent;
+        color: inherit;
+      }
+      .colpicker-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.35);
+        z-index: 9999;
+        display: none;
+        align-items: flex-start;
+        justify-content: center;
+        padding: 40px 16px;
+        overflow-y: auto;
+      }
+      .colpicker {
+        background: var(--bg, #fff);
+        color: var(--ink, #111);
+        border-radius: 10px;
+        width: min(880px, 100%);
+        padding: 18px 20px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+      }
+      .cp-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+        font-size: 15px;
+      }
+      .cp-close {
+        border: none;
+        background: transparent;
+        font-size: 18px;
+        cursor: pointer;
+        color: inherit;
+      }
+      .cp-views {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+        margin-bottom: 14px;
+        font-size: 12px;
+      }
+      .cp-views .btn {
+        padding: 6px 10px;
+        font-size: 11px;
+      }
+      .cp-views select {
+        font: inherit;
+        padding: 5px 8px;
+        margin-left: 6px;
+      }
+      .cp-edited {
+        font-size: 11px;
+        color: #8a6500;
+        background: rgba(212, 160, 23, 0.15);
+        padding: 2px 6px;
+        border-radius: 4px;
+      }
+      .cp-body {
+        display: grid;
+        grid-template-columns: 1.6fr 1fr;
+        gap: 20px;
+      }
+      @media (max-width: 700px) {
+        .cp-body {
+          grid-template-columns: 1fr;
+        }
+      }
+      .cp-catalog {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 12px;
+      }
+      .cp-group-title {
+        font-size: 10.5px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--ink-muted);
+        margin-bottom: 6px;
+        font-weight: 600;
+      }
+      .cp-item {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        font-size: 12.5px;
+        padding: 2px 0;
+        cursor: pointer;
+      }
+      .cp-order ol {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+      .cp-order li {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 8px;
+        border: 1px solid var(--line, #e2ded3);
+        border-radius: 6px;
+        margin-bottom: 5px;
+        font-size: 12.5px;
+        background: var(--bg-soft, #f7f5ef);
+        cursor: grab;
+      }
+      .cp-order li .cp-name {
+        flex: 1;
+      }
+      .cp-order li button {
+        border: 1px solid var(--line, #d8d4c8);
+        background: transparent;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 11px;
+        padding: 1px 6px;
+        color: inherit;
+      }
+      .cp-order li button:disabled {
+        opacity: 0.3;
+        cursor: default;
+      }
+      .cp-grip {
+        color: var(--ink-muted);
+        font-size: 11px;
       }
       .delta {
         font-size: 10.5px;
@@ -3360,6 +3503,7 @@
           <button data-nav="accounts">📊 Accounts</button>
           <button data-nav="search">🔍 Search Terms</button>
           <button data-nav="changes">📜 Changes</button>
+          <button data-nav="health">🩺 Health</button>
         </nav>
 
         <!-- DATE SCOPE + SETTINGS -->
@@ -3609,6 +3753,7 @@
           </div>
           <div class="report-controls">
             <div class="date-scope" style="height: 34px"><button class="scope-btn active" data-weekly-mode="lastWeek">Last week</button><button class="scope-btn" data-weekly-mode="weekly">This week so far</button></div>
+            <span class="view-ctl"><label class="control-label">View</label><select class="view-select" data-view-select="weekly" onchange="if (this.value) selectView('weekly', this.value)"></select><button class="pill" onclick="openMetricPicker('weekly')" title="Choose which metrics to show">⚙ Columns</button></span>
             <button class="btn btn-ghost" onclick="renderCurrentPage(true)">🔄 Refresh</button>
             <button class="btn btn-ghost" onclick="copyReport('page-weekly')" title="Copies a summary line + table you can paste into email, Slack or Google Sheets">📋 Copy for report</button>
             <button class="btn btn-ghost" onclick="exportReportCsv('page-weekly', 'weekly-report')">↓ CSV</button>
@@ -3625,6 +3770,7 @@
           </div>
           <div class="report-controls">
             
+            <span class="view-ctl"><label class="control-label">View</label><select class="view-select" data-view-select="mtd" onchange="if (this.value) selectView('mtd', this.value)"></select><button class="pill" onclick="openMetricPicker('mtd')" title="Choose which metrics to show">⚙ Columns</button></span>
             <button class="btn btn-ghost" onclick="renderCurrentPage(true)">🔄 Refresh</button>
             <button class="btn btn-ghost" onclick="copyReport('page-mtd')" title="Copies a summary line + table you can paste into email, Slack or Google Sheets">📋 Copy for report</button>
             <button class="btn btn-ghost" onclick="exportReportCsv('page-mtd', 'mtd-report')">↓ CSV</button>
@@ -3687,6 +3833,7 @@
             >
               ⊞ Group by Region
             </button>
+            <span class="view-ctl"><label class="control-label">View</label><select class="view-select" data-view-select="accounts" onchange="if (this.value) selectView('accounts', this.value)"></select><button class="pill" onclick="openMetricPicker('accounts')" title="Choose which metrics to show">⚙ Columns</button></span>
           </div>
 
           <div class="table-wrap">
@@ -3788,6 +3935,29 @@
           </table>
         </div>
 
+        </div>
+        <div class="page" data-page="health" style="display: none">
+          <div class="section-head">
+            <h2>Account Health</h2>
+            <div class="meta">Conversion tracking, ad approvals, ad strength and quality score across every account with spend</div>
+          </div>
+          <div class="report-controls">
+            <button class="btn btn-ghost" id="runHealthBtn">🩺 Run health check</button>
+            <div class="date-scope" style="height: 34px">
+              <button class="scope-btn active" data-health-filter="all">All</button>
+              <button class="scope-btn" data-health-filter="critical">Critical</button>
+              <button class="scope-btn" data-health-filter="warning">Warnings</button>
+              <button class="scope-btn" data-health-filter="info">Info</button>
+            </div>
+            <span class="report-status" id="healthStatus"></span>
+          </div>
+          <div class="summary" id="healthKpis"></div>
+          <div class="table-wrap">
+            <table id="healthTable">
+              <thead><tr><th></th><th>Account</th><th>Check</th><th>Finding</th><th>What to do</th></tr></thead>
+              <tbody id="healthBody"></tbody>
+            </table>
+          </div>
         </div>
         <div class="page" data-page="search" style="display: none">
         <!-- SEARCH TERM PERFORMANCE -->
@@ -6518,6 +6688,11 @@
                 "metrics.search_impression_share",
                 "metrics.search_budget_lost_impression_share",
                 "metrics.search_rank_lost_impression_share",
+                "metrics.search_top_impression_share",
+                "metrics.search_absolute_top_impression_share",
+                "metrics.all_conversions",
+                "metrics.conversions_value",
+                "metrics.phone_calls",
               ],
               resource: "campaign",
               conditions: [
@@ -6603,6 +6778,11 @@
               is,
               lostBudget: num(row, ["metrics.search_budget_lost_impression_share", "metrics.searchBudgetLostImpressionShare"]),
               lostRank: num(row, ["metrics.search_rank_lost_impression_share", "metrics.searchRankLostImpressionShare"]),
+              topIS: num(row, ["metrics.search_top_impression_share", "metrics.searchTopImpressionShare"]),
+              absTopIS: num(row, ["metrics.search_absolute_top_impression_share", "metrics.searchAbsoluteTopImpressionShare"]),
+              allConv: num(row, ["metrics.all_conversions", "metrics.allConversions"]),
+              convValue: num(row, ["metrics.conversions_value", "metrics.conversionsValue"]),
+              phoneCalls: num(row, ["metrics.phone_calls", "metrics.phoneCalls"]),
             };
           });
 
@@ -6616,7 +6796,11 @@
           // Impression share is a ratio; to combine campaigns we rebuild the
           // eligible impressions (impr / IS) and divide total impr by that.
           let eligible = 0, lostBudgetEligible = 0, lostRankEligible = 0;
+          let topEligible = 0, absTopEligible = 0, allConv = 0, convValue = 0, phoneCalls = 0;
           campaigns.forEach((c) => {
+            allConv += c.allConv || 0;
+            convValue += c.convValue || 0;
+            phoneCalls += c.phoneCalls || 0;
             cost += c.cost;
             clicks += c.clicks;
             conv += c.conv;
@@ -6626,6 +6810,8 @@
               eligible += e;
               lostBudgetEligible += e * c.lostBudget;
               lostRankEligible += e * c.lostRank;
+              topEligible += e * (c.topIS || 0);
+              absTopEligible += e * (c.absTopIS || 0);
             }
           });
 
@@ -6690,6 +6876,11 @@
                 searchIS: eligible > 0 ? impr / eligible : null,
                 lostIsBudget: eligible > 0 ? lostBudgetEligible / eligible : null,
                 lostIsRank: eligible > 0 ? lostRankEligible / eligible : null,
+                topIS: eligible > 0 ? topEligible / eligible : null,
+                absTopIS: eligible > 0 ? absTopEligible / eligible : null,
+                allConv: Number(allConv.toFixed(2)),
+                convValue: Number(convValue.toFixed(2)),
+                phoneCalls,
                 campaigns: relevantCampaigns,
                 idleCampaigns,
                 enabledCampaignCount: enabledCount,
@@ -7317,6 +7508,664 @@
           return termRows;
         }
 
+        // ============ COLUMN PICKER + SAVED VIEWS ============
+        // Every table that supports it (Accounts, Weekly, MTD) draws its
+        // columns from this catalog. Users pick/reorder columns and save
+        // named views; choices are remembered per browser.
+        const COLVIEWS_KEY = "gt_colviews_v1";
+        const COL_GROUPS = ["Status", "Volume", "Cost", "Efficiency", "Competition", "Budget & pacing", "Leads (market)", "Comparison", "Notes"];
+
+        function fmtPctCell(v) {
+          return v == null || !Number.isFinite(v) ? `<span style="color:var(--ink-muted)">—</span>` : `${(v * 100).toFixed(v < 0.1 ? 1 : 0)}%`;
+        }
+
+        // The market (metro) an account mostly spends in, for the same range.
+        function marketForAccount(a, range) {
+          if (!marketsLast || !range || !a || !a.customerId) return null;
+          if (marketsLast.range.startDate !== range.startDate || marketsLast.range.endDate !== range.endDate) return null;
+          const byMetro = new Map();
+          marketsLast.geo.rows.forEach((r) => {
+            if (r.customerId !== a.customerId || r.metro == null) return;
+            byMetro.set(r.metro, (byMetro.get(r.metro) || 0) + r.cost);
+          });
+          let best = null;
+          byMetro.forEach((c, m) => {
+            if (!best || c > best.c) best = { m, c };
+          });
+          if (!best) return null;
+          return marketsLast.list.find((x) => x.metro === best.m) || null;
+        }
+
+        // Derived values used for sorting and display.
+        function enrichRow(a, range, pw) {
+          const p = a.prev || {};
+          const mk = marketForAccount(a, range);
+          return Object.assign(a, {
+            convRate: a.clicks > 0 ? (a.conv || 0) / a.clicks : null,
+            prevCpa: p.cpa > 0 ? p.cpa : null,
+            costChange: pctDelta(a.cost, p.cost),
+            cpaChange: a.cpa > 0 ? pctDelta(a.cpa, p.cpa) : null,
+            convValueRoas: a.cost > 0 && a.convValue > 0 ? a.convValue / a.cost : null,
+            activeCampaigns: (a.campaigns || []).filter((c) => c.status === "ENABLED" && c.impr > 0).length,
+            goalValue: goalFor(a),
+            marketCpl: mk && mk.costPerLead != null ? mk.costPerLead : null,
+            marketLeads: mk ? mk.ppcLeads : null,
+            marketName: mk ? mk.name : null,
+            periodBudget: pw && pw.daysInProjection && a.dailyBudget > 0 ? a.dailyBudget * pw.daysInProjection : null,
+          });
+        }
+
+        const COLUMN_CATALOG = {
+          health: { label: "Health", group: "Status", sort: "health", render: (a) => healthBadge(a.cpa, a), csv: (a) => healthLabel(getHealth(a.cpa, a)) },
+          status: { label: "Status", group: "Status", sort: "_statusRank", render: (a) => `<span title="${statusFor(a).label}" style="font-size:15px">${statusFor(a).icon}</span>`, csv: (a) => statusFor(a).label },
+          cost: { label: "Spend", group: "Cost", sort: "cost", render: (a) => `${fmt$(a.cost)}${a.prev ? deltaHtml(a.cost, a.prev.cost, false, true) : ""}`, csv: (a) => (a.cost || 0).toFixed(2) },
+          impr: { label: "Impr.", group: "Volume", sort: "impr", render: (a) => fmtN(a.impr || 0), csv: (a) => a.impr || 0 },
+          clicks: { label: "Clicks", group: "Volume", sort: "clicks", render: (a) => fmtN(a.clicks || 0), csv: (a) => a.clicks || 0 },
+          ctr: { label: "CTR", group: "Efficiency", sort: "ctr", render: (a) => (a.impr > 0 ? `${(a.ctr || 0).toFixed(2)}%` : "—"), csv: (a) => (a.impr > 0 ? (a.ctr || 0).toFixed(2) : "") },
+          cpc: { label: "Avg CPC", group: "Cost", sort: "cpc", render: (a) => fmt$(a.cpc || 0), csv: (a) => (a.cpc || 0).toFixed(2) },
+          conv: { label: "Conv", group: "Volume", sort: "conv", render: (a) => `${fmtN(a.conv || 0)}${a.prev ? deltaHtml(a.conv, a.prev.conv, false) : ""}`, csv: (a) => (a.conv || 0).toFixed(1) },
+          convRate: { label: "Conv rate", group: "Efficiency", sort: "convRate", render: (a) => fmtPctCell(a.convRate), csv: (a) => (a.convRate != null ? (a.convRate * 100).toFixed(1) : "") },
+          cpa: {
+            label: "Cost/Conv", group: "Cost", sort: "cpa",
+            cellClass: (a) => `cpa-cell ${getHealth(a.cpa, a)}`,
+            render: (a) => `${a.conv > 0 ? fmt$(a.cpa) : a.cost > 0 ? "0 conv" : "—"}${a.prev && a.cpa > 0 ? deltaHtml(a.cpa, a.prev.cpa, true) : ""}`,
+            csv: (a) => (a.conv > 0 ? a.cpa.toFixed(2) : ""),
+          },
+          goal: { label: "Goal", group: "Status", sort: "goalValue", render: (a) => (a.customerId ? `<button class="goal-btn" onclick="setAccountGoal('${escapeHtml(a.customerId)}')" title="Click to change this account's cost/conv goal">≤ ${fmt$(goalFor(a))}</button>` : `≤ ${fmt$(goalFor(a))}`), csv: (a) => goalFor(a).toFixed(2) },
+          prevCpa: { label: "Prev Cost/Conv", group: "Comparison", sort: "prevCpa", render: (a) => (a.prevCpa ? fmt$(a.prevCpa) : a.prev && a.prev.cost > 0 ? "0 conv" : "—"), csv: (a) => (a.prevCpa ? a.prevCpa.toFixed(2) : "") },
+          costChange: { label: "Spend Δ", group: "Comparison", sort: "costChange", render: (a) => (a.costChange == null ? "—" : `${a.costChange > 0 ? "▲" : "▼"} ${Math.abs(a.costChange).toFixed(0)}%`), csv: (a) => (a.costChange == null ? "" : a.costChange.toFixed(1)) },
+          cpaChange: { label: "Cost/Conv Δ", group: "Comparison", sort: "cpaChange", render: (a) => (a.cpaChange == null ? "—" : `<span style="color:${a.cpaChange > 5 ? "var(--bad)" : a.cpaChange < -5 ? "var(--good)" : "inherit"}">${a.cpaChange > 0 ? "▲" : "▼"} ${Math.abs(a.cpaChange).toFixed(0)}%</span>`), csv: (a) => (a.cpaChange == null ? "" : a.cpaChange.toFixed(1)) },
+          allConv: { label: "All conv", group: "Volume", sort: "allConv", render: (a) => (a.allConv != null ? fmtN(a.allConv) : "—"), csv: (a) => (a.allConv != null ? a.allConv.toFixed(1) : "") },
+          phoneCalls: { label: "Calls", group: "Volume", sort: "phoneCalls", render: (a) => (a.phoneCalls != null ? fmtN(a.phoneCalls) : "—"), csv: (a) => a.phoneCalls ?? "" },
+          convValue: { label: "Conv value", group: "Efficiency", sort: "convValue", render: (a) => (a.convValue > 0 ? fmt$(a.convValue) : "—"), csv: (a) => (a.convValue || 0).toFixed(2) },
+          convValueRoas: { label: "Conv value ÷ spend", group: "Efficiency", sort: "convValueRoas", render: (a) => (a.convValueRoas != null ? `${a.convValueRoas.toFixed(1)}×` : "—"), csv: (a) => (a.convValueRoas != null ? a.convValueRoas.toFixed(2) : "") },
+          searchIS: { label: "Imp. Share", group: "Competition", sort: "searchIS", render: (a) => isCellHtml(a), csv: (a) => (a.searchIS != null ? (a.searchIS * 100).toFixed(1) : "") },
+          lostIsBudget: { label: "Lost IS (budget)", group: "Competition", sort: "lostIsBudget", render: (a) => fmtPctCell(a.lostIsBudget), csv: (a) => (a.lostIsBudget != null ? (a.lostIsBudget * 100).toFixed(1) : "") },
+          lostIsRank: { label: "Lost IS (rank)", group: "Competition", sort: "lostIsRank", render: (a) => fmtPctCell(a.lostIsRank), csv: (a) => (a.lostIsRank != null ? (a.lostIsRank * 100).toFixed(1) : "") },
+          topIS: { label: "Top-of-page IS", group: "Competition", sort: "topIS", render: (a) => fmtPctCell(a.topIS), csv: (a) => (a.topIS != null ? (a.topIS * 100).toFixed(1) : "") },
+          absTopIS: { label: "Abs. top IS", group: "Competition", sort: "absTopIS", render: (a) => fmtPctCell(a.absTopIS), csv: (a) => (a.absTopIS != null ? (a.absTopIS * 100).toFixed(1) : "") },
+          dailyBudget: { label: "Daily budget", group: "Budget & pacing", sort: "dailyBudget", render: (a) => (a.dailyBudget > 0 ? fmt$(a.dailyBudget) : "—"), csv: (a) => (a.dailyBudget || 0).toFixed(2) },
+          pace: { label: "Pace", group: "Budget & pacing", sort: "paceRatio", render: (a) => paceBadge(a.paceRatio), csv: (a) => (a.paceRatio != null ? Math.round(a.paceRatio * 100) : "") },
+          periodBudget: { label: "Period budget", group: "Budget & pacing", sort: "periodBudget", render: (a) => (a.periodBudget != null ? `<span title="Daily budget × days in the period (to month-end for MTD)">${fmt$(a.periodBudget)}</span>` : "—"), csv: (a) => (a.periodBudget != null ? a.periodBudget.toFixed(2) : "") },
+          projected: { label: "Projected spend", group: "Budget & pacing", sort: "projectedPeriodSpend", render: (a) => (a.projectedPeriodSpend != null ? fmt$(a.projectedPeriodSpend) : "—"), csv: (a) => (a.projectedPeriodSpend != null ? a.projectedPeriodSpend.toFixed(2) : "") },
+          activeCampaigns: { label: "Active campaigns", group: "Budget & pacing", sort: "activeCampaigns", render: (a) => fmtN(a.activeCampaigns || 0), csv: (a) => a.activeCampaigns || 0 },
+          marketLeads: { label: "Market leads", group: "Leads (market)", sort: "marketLeads", render: (a) => (a.marketLeads != null ? `<span title="${escapeHtml(a.marketName || "")} — Portal PPC leads for the whole metro">${fmtN(a.marketLeads)}</span>` : `<span style="color:var(--ink-muted)" title="Open the Markets page for this date range to fill this in">—</span>`), csv: (a) => a.marketLeads ?? "" },
+          marketCpl: { label: "Market cost/lead", group: "Leads (market)", sort: "marketCpl", render: (a) => (a.marketCpl != null ? `<span title="${escapeHtml(a.marketName || "")} — all ad spend in the metro (incl. GTHQ) ÷ Portal PPC leads">${fmt$(a.marketCpl)}</span>` : `<span style="color:var(--ink-muted)" title="Open the Markets page for this date range to fill this in">—</span>`), csv: (a) => (a.marketCpl != null ? a.marketCpl.toFixed(2) : "") },
+          why: { label: "Why", group: "Notes", sort: null, cellClass: () => "why-cell", render: (a) => escapeHtml(a.cost > 0 ? diagnoseAccount(a)[0] || "" : ""), csv: (a) => (a.cost > 0 ? diagnoseAccount(a)[0] || "" : "") },
+        };
+
+        const COLUMN_TABLES = {
+          accounts: {
+            presets: {
+              Default: ["health", "cost", "clicks", "cpc", "conv", "cpa", "searchIS", "pace"],
+              "Weekly check": ["health", "cost", "conv", "cpa", "goal", "prevCpa", "pace"],
+              "Bids & competition": ["cpc", "ctr", "cpa", "searchIS", "lostIsRank", "topIS", "absTopIS"],
+              Budget: ["cost", "dailyBudget", "pace", "projected", "periodBudget", "lostIsBudget", "cpa"],
+              Leads: ["cost", "conv", "phoneCalls", "cpa", "marketLeads", "marketCpl"],
+            },
+          },
+          weekly: {
+            presets: {
+              Default: ["status", "cost", "conv", "cpa", "goal", "prevCpa", "pace", "why"],
+              Compact: ["status", "cost", "cpa", "goal"],
+              "Bids & competition": ["status", "cpc", "ctr", "cpa", "searchIS", "lostIsRank", "topIS"],
+            },
+          },
+          mtd: {
+            presets: {
+              Default: ["status", "cost", "conv", "cpa", "goal", "prevCpa", "pace", "projected", "periodBudget", "why"],
+              Compact: ["status", "cost", "cpa", "goal", "pace"],
+              Budget: ["status", "cost", "dailyBudget", "pace", "projected", "periodBudget", "lostIsBudget"],
+            },
+          },
+        };
+
+        function loadColViews() {
+          try {
+            return JSON.parse(localStorage.getItem(COLVIEWS_KEY) || "{}") || {};
+          } catch (e) {
+            return {};
+          }
+        }
+        function saveColViews(all) {
+          try {
+            localStorage.setItem(COLVIEWS_KEY, JSON.stringify(all));
+          } catch (e) {}
+        }
+        function tableViewState(tableId) {
+          const all = loadColViews();
+          const st = all[tableId] || {};
+          return { active: st.active || "Default", custom: st.custom || {}, working: st.working || null };
+        }
+        function allViews(tableId) {
+          const st = tableViewState(tableId);
+          return Object.assign({}, COLUMN_TABLES[tableId].presets, st.custom);
+        }
+        function activeColumns(tableId) {
+          const st = tableViewState(tableId);
+          const views = allViews(tableId);
+          const keys = st.working || views[st.active] || COLUMN_TABLES[tableId].presets.Default;
+          return keys.filter((k) => COLUMN_CATALOG[k]);
+        }
+        function setTableState(tableId, patch) {
+          const all = loadColViews();
+          all[tableId] = Object.assign(tableViewState(tableId), patch);
+          saveColViews(all);
+        }
+
+        function rerenderTable(tableId) {
+          if (tableId === "accounts") render();
+          else renderCurrentPage(false);
+          refreshViewSelects();
+        }
+
+        function selectView(tableId, name) {
+          setTableState(tableId, { active: name, working: null });
+          rerenderTable(tableId);
+        }
+
+        function refreshViewSelects() {
+          document.querySelectorAll("select[data-view-select]").forEach((sel) => {
+            const tableId = sel.dataset.viewSelect;
+            const st = tableViewState(tableId);
+            const names = Object.keys(allViews(tableId));
+            sel.innerHTML =
+              names.map((n) => `<option value="${escapeHtml(n)}" ${n === st.active && !st.working ? "selected" : ""}>${escapeHtml(n)}</option>`).join("") +
+              (st.working ? `<option value="" selected>${escapeHtml(st.active)} (edited)</option>` : "");
+          });
+        }
+
+        function columnHeaderHtml(tableId, opts) {
+          const sortable = opts && opts.sortable;
+          return activeColumns(tableId)
+            .map((k) => {
+              const c = COLUMN_CATALOG[k];
+              return sortable && c.sort
+                ? `<th data-sort="${c.sort}">${escapeHtml(c.label)} <span class="sort-indicator">↕</span></th>`
+                : `<th>${escapeHtml(c.label)}</th>`;
+            })
+            .join("");
+        }
+
+        function columnCellsHtml(tableId, row) {
+          return activeColumns(tableId)
+            .map((k) => {
+              const c = COLUMN_CATALOG[k];
+              const cls = c.cellClass ? c.cellClass(row) : "";
+              let html = "";
+              try {
+                html = c.render(row);
+              } catch (e) {
+                html = "—";
+              }
+              return `<td${cls ? ` class="${cls}"` : ""}>${html}</td>`;
+            })
+            .join("");
+        }
+
+        // ---- Picker modal ----
+        let pickerTable = null;
+        let pickerDragKey = null;
+
+        function openMetricPicker(tableId) {
+          pickerTable = tableId;
+          let modal = document.getElementById("colPickerModal");
+          if (!modal) {
+            modal = document.createElement("div");
+            modal.id = "colPickerModal";
+            modal.className = "colpicker-overlay";
+            modal.addEventListener("click", (e) => {
+              if (e.target === modal) closeMetricPicker();
+            });
+            document.body.appendChild(modal);
+          }
+          modal.style.display = "flex";
+          renderMetricPicker();
+        }
+
+        function closeMetricPicker() {
+          const modal = document.getElementById("colPickerModal");
+          if (modal) modal.style.display = "none";
+          pickerTable = null;
+        }
+
+        function pickerSetKeys(keys) {
+          setTableState(pickerTable, { working: keys });
+          rerenderTable(pickerTable);
+          renderMetricPicker();
+        }
+
+        function pickerToggle(key) {
+          const keys = activeColumns(pickerTable).slice();
+          const i = keys.indexOf(key);
+          if (i >= 0) keys.splice(i, 1);
+          else keys.push(key);
+          pickerSetKeys(keys);
+        }
+
+        function pickerMove(key, dir) {
+          const keys = activeColumns(pickerTable).slice();
+          const i = keys.indexOf(key);
+          const j = i + dir;
+          if (i < 0 || j < 0 || j >= keys.length) return;
+          [keys[i], keys[j]] = [keys[j], keys[i]];
+          pickerSetKeys(keys);
+        }
+
+        function pickerDrop(targetKey) {
+          if (!pickerDragKey || pickerDragKey === targetKey) return;
+          const keys = activeColumns(pickerTable).slice();
+          const from = keys.indexOf(pickerDragKey);
+          keys.splice(from, 1);
+          keys.splice(keys.indexOf(targetKey), 0, pickerDragKey);
+          pickerDragKey = null;
+          pickerSetKeys(keys);
+        }
+
+        function pickerSaveAs() {
+          const name = (window.prompt("Name this view (e.g. My weekly check):") || "").trim();
+          if (!name) return;
+          if (COLUMN_TABLES[pickerTable].presets[name]) return toast("That name is a built-in view — pick another", true);
+          const st = tableViewState(pickerTable);
+          st.custom[name] = activeColumns(pickerTable);
+          setTableState(pickerTable, { custom: st.custom, active: name, working: null });
+          rerenderTable(pickerTable);
+          renderMetricPicker();
+          toast(`Saved view "${name}"`);
+        }
+
+        function pickerDeleteView() {
+          const st = tableViewState(pickerTable);
+          if (!st.custom[st.active]) return toast("Built-in views can't be deleted", true);
+          if (!window.confirm(`Delete the view "${st.active}"?`)) return;
+          delete st.custom[st.active];
+          setTableState(pickerTable, { custom: st.custom, active: "Default", working: null });
+          rerenderTable(pickerTable);
+          renderMetricPicker();
+        }
+
+        function pickerResetEdits() {
+          setTableState(pickerTable, { working: null });
+          rerenderTable(pickerTable);
+          renderMetricPicker();
+        }
+
+        function renderMetricPicker() {
+          const modal = document.getElementById("colPickerModal");
+          if (!modal || !pickerTable) return;
+          const keys = activeColumns(pickerTable);
+          const st = tableViewState(pickerTable);
+          const views = Object.keys(allViews(pickerTable));
+          const isCustom = !!st.custom[st.active];
+          const groups = COL_GROUPS.map((g) => {
+            const items = Object.entries(COLUMN_CATALOG).filter(([k, c]) => c.group === g && (pickerTable === "accounts" ? k !== "status" : k !== "health"));
+            if (!items.length) return "";
+            return `<div class="cp-group"><div class="cp-group-title">${g}</div>${items
+              .map(([k, c]) => `<label class="cp-item"><input type="checkbox" ${keys.includes(k) ? "checked" : ""} onchange="pickerToggle('${k}')"> ${escapeHtml(c.label)}</label>`)
+              .join("")}</div>`;
+          }).join("");
+          const order = keys
+            .map(
+              (k, i) => `<li draggable="true" ondragstart="pickerDragKey='${k}'" ondragover="event.preventDefault()" ondrop="pickerDrop('${k}')">
+                <span class="cp-grip">⋮⋮</span><span class="cp-name">${escapeHtml(COLUMN_CATALOG[k].label)}</span>
+                <button onclick="pickerMove('${k}',-1)" ${i === 0 ? "disabled" : ""} title="Move left">↑</button>
+                <button onclick="pickerMove('${k}',1)" ${i === keys.length - 1 ? "disabled" : ""} title="Move right">↓</button>
+                <button onclick="pickerToggle('${k}')" title="Remove">✕</button></li>`,
+            )
+            .join("");
+          const title = { accounts: "Accounts", weekly: "Weekly Report", mtd: "Month to Date" }[pickerTable];
+          modal.innerHTML = `<div class="colpicker">
+            <div class="cp-head"><strong>Columns · ${title}</strong><button class="cp-close" onclick="closeMetricPicker()">✕</button></div>
+            <div class="cp-views">
+              <label>View <select onchange="selectView(pickerTable, this.value); renderMetricPicker()">${views
+                .map((v) => `<option ${v === st.active ? "selected" : ""}>${escapeHtml(v)}</option>`)
+                .join("")}</select></label>
+              ${st.working ? `<span class="cp-edited">edited</span><button class="btn btn-ghost" onclick="pickerResetEdits()">Undo edits</button>` : ""}
+              <button class="btn btn-ghost" onclick="pickerSaveAs()">💾 Save as view</button>
+              ${isCustom ? `<button class="btn btn-ghost" onclick="pickerDeleteView()">🗑 Delete view</button>` : ""}
+            </div>
+            <div class="cp-body">
+              <div class="cp-catalog">${groups}</div>
+              <div class="cp-order"><div class="cp-group-title">Shown, in this order (drag or use ↑↓)</div><ol>${order || "<li>No columns selected</li>"}</ol></div>
+            </div>
+          </div>`;
+        }
+
+        // ============ ACCOUNT HEALTH CHECKS ============
+        // Tracking + ad health across all accounts with spend. ~6 queries per
+        // account, so it runs on demand (Health page) and automatically at
+        // most once a day after the main refresh. Results are kept in this
+        // browser and feed the alerts banner.
+        const HEALTH_KEY = "gt_health_v1";
+        const HEALTH_MAX_AGE_MS = 20 * 60 * 60 * 1000;
+        const LEAD_CATEGORIES = new Set(["SUBMIT_LEAD_FORM", "PHONE_CALL_LEAD", "CONTACT", "BOOK_APPOINTMENT", "REQUEST_QUOTE", "QUALIFIED_LEAD", "IMPORTED_LEAD", "GET_DIRECTIONS", "SIGNUP"]);
+        const SALE_CATEGORIES = new Set(["PURCHASE", "CONVERTED_LEAD", "STORE_SALE"]);
+        const HEALTH_CHECK_LABELS = {
+          "conv-stopped": "Conversions stopped",
+          "action-silent": "Conversion action silent",
+          "mixed-goals": "Leads + sales mixed",
+          "duplicate-leads": "Duplicate lead tracking",
+          "odd-primary": "Unusual counted action",
+          "ads-disapproved": "Disapproved ads",
+          "ads-limited": "Limited ads",
+          "ad-strength": "Weak ad strength",
+          "low-qs": "Low quality score",
+          "check-failed": "Check failed",
+        };
+        let healthState = null; // { runAt, findings: [...], checked, failed }
+        let healthRunning = false;
+        let healthFilter = "all";
+
+        function loadHealthState() {
+          try {
+            healthState = JSON.parse(localStorage.getItem(HEALTH_KEY) || "null");
+          } catch (e) {
+            healthState = null;
+          }
+        }
+        function saveHealthState() {
+          try {
+            localStorage.setItem(HEALTH_KEY, JSON.stringify(healthState));
+          } catch (e) {}
+        }
+
+        async function healthQuery(tools, customerId, spec) {
+          const res = await mcpSearchRows(tools, customerId, spec, { loginCustomerId: ADS_MCP_ANCHOR_MCC_ID });
+          if (res.mode === "empty") throw new Error(`${spec.resource} query failed`);
+          return res.rows;
+        }
+
+        async function checkAccountHealth(tools, a) {
+          const findings = [];
+          const add = (severity, check, detail, fix) =>
+            findings.push({ severity, check, account: a.name, customerId: a.customerId, detail, fix });
+          const today = __localYMD(new Date());
+          const yesterday = ymdAddDays(today, -1);
+          const goal = goalFor(a);
+          const v = (row, keys) => rowValue(row, keys);
+          const n = (row, keys) => asNumber(rowValue(row, keys), 0);
+
+          // 1. Conversions stopped (daily totals, last 21 days)
+          const daily = await healthQuery(tools, a.customerId, {
+            fields: ["segments.date", "metrics.cost_micros", "metrics.conversions"],
+            resource: "customer",
+            conditions: [`segments.date BETWEEN '${ymdAddDays(today, -21)}' AND '${yesterday}'`],
+          });
+          const days = daily
+            .map((r) => ({ date: String(v(r, ["segments.date"]) || ""), cost: n(r, ["metrics.cost_micros", "metrics.costMicros"]) / 1e6, conv: n(r, ["metrics.conversions"]) }))
+            .sort((x, y) => (x.date < y.date ? -1 : 1));
+          const totalCost = days.reduce((t, d) => t + d.cost, 0);
+          const lastConv = [...days].reverse().find((d) => d.conv > 0);
+          if (totalCost >= 100 && !lastConv) {
+            add("critical", "conv-stopped", `No conversions in the last 21 days while spending ${fmt$(totalCost)}`, "Check the website form/tag and call tracking; in Google Ads open Goals → Conversions → Diagnostics.");
+          } else if (lastConv) {
+            const since = days.filter((d) => d.date > lastConv.date);
+            const sinceCost = since.reduce((t, d) => t + d.cost, 0);
+            const gap = Math.round((new Date(`${yesterday}T00:00:00Z`) - new Date(`${lastConv.date}T00:00:00Z`)) / 86400000);
+            if (gap >= 3 && sinceCost >= Math.max(50, goal * 3)) {
+              add(gap >= 5 ? "critical" : "warning", "conv-stopped", `No conversions for ${gap} days — last on ${formatDateShort(lastConv.date)}, ${fmt$(sinceCost)} spent since`, "Check the website form/tag and call tracking; in Google Ads open Goals → Conversions → Diagnostics.");
+            }
+          }
+
+          // 2. Conversion actions (what counts) + per-action daily conversions
+          const actions = await healthQuery(tools, a.customerId, {
+            fields: ["conversion_action.name", "conversion_action.type", "conversion_action.category", "conversion_action.include_in_conversions_metric"],
+            resource: "conversion_action",
+            conditions: ["conversion_action.status = 'ENABLED'"],
+          });
+          const actionInfo = new Map();
+          actions.forEach((r) => {
+            const name = String(v(r, ["conversion_action.name"]) || "");
+            const counted = asBoolean(v(r, ["conversion_action.include_in_conversions_metric"]));
+            const prev = actionInfo.get(name);
+            actionInfo.set(name, {
+              name,
+              type: String(v(r, ["conversion_action.type"]) || ""),
+              category: String(v(r, ["conversion_action.category"]) || ""),
+              counted: counted || (prev && prev.counted),
+            });
+          });
+          const byAction = await healthQuery(tools, a.customerId, {
+            fields: ["segments.date", "segments.conversion_action_name", "metrics.conversions"],
+            resource: "customer",
+            conditions: [`segments.date BETWEEN '${ymdAddDays(today, -28)}' AND '${yesterday}'`],
+          });
+          const recentCut = ymdAddDays(today, -7);
+          const perAction = new Map();
+          byAction.forEach((r) => {
+            const name = String(v(r, ["segments.conversion_action_name", "segments.conversionActionName"]) || "");
+            const date = String(v(r, ["segments.date"]) || "");
+            const conv = n(r, ["metrics.conversions"]);
+            const e = perAction.get(name) || { recent: 0, earlier: 0 };
+            if (date >= recentCut) e.recent += conv;
+            else e.earlier += conv;
+            perAction.set(name, e);
+          });
+          const recording = (name) => {
+            const e = perAction.get(name);
+            return e ? e.recent + e.earlier : 0;
+          };
+          const countedRecording = Array.from(actionInfo.values()).filter((x) => x.counted && recording(x.name) > 0);
+          const leadActs = countedRecording.filter((x) => LEAD_CATEGORIES.has(x.category));
+          const saleActs = countedRecording.filter((x) => SALE_CATEGORIES.has(x.category) || /purchase|sale|booking/i.test(x.name));
+          if (leadActs.length && saleActs.length) {
+            add(
+              "warning",
+              "mixed-goals",
+              `"Conversions" counts leads (${leadActs.map((x) => x.name).slice(0, 3).join(", ")}) and sales/bookings (${saleActs.map((x) => x.name).slice(0, 3).join(", ")}) together — one customer can count 2–3×, so cost/conv looks lower than real cost per lead`,
+              "In Goals, set purchase/booking actions to Secondary (or use a custom goal) so Conversions = leads; track bookings as a separate column.",
+            );
+          }
+          const formActs = leadActs.filter((x) => x.category === "SUBMIT_LEAD_FORM");
+          if (formActs.length >= 2) {
+            add("warning", "duplicate-leads", `${formActs.length} lead-form actions are all counted (${formActs.map((x) => x.name).join(", ")}) — the same form fill may be counted twice`, "Keep one primary lead-form action and set the others to Secondary.");
+          }
+          countedRecording
+            .filter((x) => /install|youtube|subscri|page_view|PAGE_VIEW|DOWNLOAD/i.test(`${x.name} ${x.category}`))
+            .forEach((x) => add("info", "odd-primary", `"${x.name}" is counted in Conversions (${fmtN(recording(x.name))} in 28 days) but isn't a lead or sale`, "Set it to Secondary so it doesn't inflate Conversions."));
+          actionInfo.forEach((x) => {
+            if (!x.counted || /^UPLOAD|IMPORT|STORE_SALES/i.test(x.type)) return; // offline imports lag — skip
+            const e = perAction.get(x.name);
+            if (e && e.earlier >= 5 && e.recent === 0) {
+              add("warning", "action-silent", `"${x.name}" recorded ${fmtN(e.earlier)} conversions in the 3 weeks before, but 0 in the last 7 days`, "Open Goals → Conversions and check this action's status/diagnostics; for GA4 imports check the GA4 key event.");
+            }
+          });
+
+          // 3. Ad approvals + RSA strength
+          const ads = await healthQuery(tools, a.customerId, {
+            fields: ["campaign.name", "ad_group.name", "ad_group_ad.ad.id", "ad_group_ad.ad.type", "ad_group_ad.policy_summary.approval_status", "ad_group_ad.ad_strength"],
+            resource: "ad_group_ad",
+            conditions: ["ad_group_ad.status = 'ENABLED'", "ad_group.status = 'ENABLED'", "campaign.status = 'ENABLED'"],
+            limit: 2000,
+          });
+          const disapproved = [];
+          const limited = [];
+          const poorAds = [];
+          ads.forEach((r) => {
+            const where = `${v(r, ["campaign.name"])} › ${v(r, ["ad_group.name"])}`;
+            const st = String(v(r, ["ad_group_ad.policy_summary.approval_status", "adGroupAd.policySummary.approvalStatus"]) || "").toUpperCase();
+            if (st === "DISAPPROVED") disapproved.push(where);
+            else if (st === "APPROVED_LIMITED" || st === "AREA_OF_INTEREST_ONLY") limited.push(where);
+            const strength = String(v(r, ["ad_group_ad.ad_strength", "adGroupAd.adStrength"]) || "").toUpperCase();
+            if (strength === "POOR") poorAds.push(where);
+          });
+          if (disapproved.length) add("critical", "ads-disapproved", `${disapproved.length} disapproved ad${disapproved.length === 1 ? "" : "s"}: ${disapproved.slice(0, 3).join("; ")}${disapproved.length > 3 ? "…" : ""}`, "Open the ad's policy details in Google Ads, then edit or appeal.");
+          if (limited.length) add("warning", "ads-limited", `${limited.length} ad${limited.length === 1 ? "" : "s"} approved (limited): ${limited.slice(0, 3).join("; ")}${limited.length > 3 ? "…" : ""}`, "Check the policy reason — limited ads show less often.");
+
+          // 4. PMax asset group strength
+          const groups = await healthQuery(tools, a.customerId, {
+            fields: ["campaign.name", "asset_group.name", "asset_group.ad_strength"],
+            resource: "asset_group",
+            conditions: ["asset_group.status = 'ENABLED'", "campaign.status = 'ENABLED'"],
+          });
+          groups.forEach((r) => {
+            const strength = String(v(r, ["asset_group.ad_strength", "assetGroup.adStrength"]) || "").toUpperCase();
+            if (strength === "POOR") poorAds.push(`${v(r, ["campaign.name"])} › ${v(r, ["asset_group.name"])} (PMax)`);
+          });
+          if (poorAds.length) add("warning", "ad-strength", `Poor ad strength: ${poorAds.slice(0, 3).join("; ")}${poorAds.length > 3 ? ` +${poorAds.length - 3} more` : ""}`, "Add more unique headlines and descriptions (RSA) or more assets (PMax).");
+
+          // 5. Low quality score keywords with spend (last 30 days)
+          const kws = await healthQuery(tools, a.customerId, {
+            fields: ["campaign.name", "ad_group_criterion.keyword.text", "ad_group_criterion.quality_info.quality_score", "metrics.cost_micros", "metrics.conversions"],
+            resource: "keyword_view",
+            conditions: ["segments.date DURING LAST_30_DAYS", "metrics.cost_micros > 0", "ad_group_criterion.status = 'ENABLED'"],
+            limit: 2000,
+          });
+          const lowQs = kws
+            .map((r) => ({
+              kw: String(v(r, ["ad_group_criterion.keyword.text"]) || ""),
+              qs: n(r, ["ad_group_criterion.quality_info.quality_score"]),
+              cost: n(r, ["metrics.cost_micros", "metrics.costMicros"]) / 1e6,
+              conv: n(r, ["metrics.conversions"]),
+            }))
+            .filter((k) => k.qs >= 1 && k.qs <= 4 && k.cost >= 20)
+            .sort((x, y) => y.cost - x.cost);
+          if (lowQs.length) {
+            add("warning", "low-qs", `${lowQs.length} keyword${lowQs.length === 1 ? "" : "s"} with quality score ≤4 spent ${fmt$(lowQs.reduce((t, k) => t + k.cost, 0))} in 30 days: ${lowQs.slice(0, 4).map((k) => `"${k.kw}" (QS ${k.qs}, ${fmt$(k.cost)})`).join(", ")}`, "Tighten ad group themes, use the keyword in headlines, and improve landing-page relevance; pause if it never converts.");
+          }
+          return findings;
+        }
+
+        async function runHealthCheck(opts) {
+          if (healthRunning) return;
+          const auto = opts && opts.auto;
+          const status = document.getElementById("healthStatus");
+          const btn = document.getElementById("runHealthBtn");
+          try {
+            const token = await ensureAdsMcpAccessToken();
+            if (!token) throw new Error("Connect Ads MCP first (button at the top).");
+            const source = liveRange ? accounts.filter((x) => x._liveFetchId === liveRange.fetchId) : accounts;
+            const targets = source.filter((x) => x.customerId && ((x.cost || 0) > 0 || (x.enabledCampaignCount || 0) > 0));
+            if (!targets.length) throw new Error("Accounts haven't loaded yet — wait for the live refresh, then run again.");
+            healthRunning = true;
+            if (btn) {
+              btn.disabled = true;
+              btn.textContent = "⏳ Checking…";
+            }
+            const tools = await ensureAdsMcpTools();
+            let done = 0;
+            const all = [];
+            let failed = 0;
+            await runWithConcurrencyLimit(targets, 3, async (a) => {
+              try {
+                all.push(...(await checkAccountHealth(tools, a)));
+              } catch (err) {
+                failed += 1;
+                all.push({ severity: "info", check: "check-failed", account: a.name, customerId: a.customerId, detail: `Couldn't finish: ${err.message || err}`, fix: "Run the check again." });
+              }
+              done += 1;
+              if (status) status.textContent = `${auto ? "Daily health check" : "Checking"}: ${done} / ${targets.length} accounts…`;
+            });
+            // Same structural setup issue in many accounts → one grouped row.
+            ["mixed-goals", "duplicate-leads", "odd-primary"].forEach((check) => {
+              const hits = all.filter((x) => x.check === check);
+              if (hits.length < 3) return;
+              const names = [...new Set(hits.map((x) => x.account))];
+              const keep = all.filter((x) => x.check !== check);
+              keep.push({
+                severity: hits[0].severity,
+                check,
+                account: `${names.length} accounts`,
+                customerId: null,
+                detail: `Found in ${names.length} accounts: ${names.join(", ")}. Example — ${hits[0].account}: ${hits[0].detail}`,
+                fix: hits[0].fix,
+              });
+              all.length = 0;
+              all.push(...keep);
+            });
+            const order = { critical: 0, warning: 1, info: 2 };
+            all.sort((x, y) => order[x.severity] - order[y.severity] || x.account.localeCompare(y.account));
+            healthState = { runAt: Date.now(), findings: all, checked: targets.length, failed };
+            saveHealthState();
+            renderHealthPage();
+            render();
+            if (!auto) toast(`Health check done: ${all.filter((f) => f.severity === "critical").length} critical, ${all.filter((f) => f.severity === "warning").length} warnings`);
+          } catch (err) {
+            if (status) status.textContent = `Couldn't run: ${err.message || err}`;
+          } finally {
+            healthRunning = false;
+            if (btn) {
+              btn.disabled = false;
+              btn.textContent = "🩺 Run health check";
+            }
+            if (healthState) renderHealthPage();
+          }
+        }
+
+        function maybeAutoRunHealth() {
+          if (healthRunning) return;
+          if (healthState && Date.now() - healthState.runAt < HEALTH_MAX_AGE_MS) return;
+          runHealthCheck({ auto: true });
+        }
+
+        function renderHealthPage() {
+          const body = document.getElementById("healthBody");
+          const kpis = document.getElementById("healthKpis");
+          const status = document.getElementById("healthStatus");
+          if (!body) return;
+          document.querySelectorAll("[data-health-filter]").forEach((b) => b.classList.toggle("active", b.dataset.healthFilter === healthFilter));
+          if (!healthState) {
+            if (status && !healthRunning) status.textContent = "Not run yet — click Run health check (takes 2–3 minutes for all accounts).";
+            body.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:28px;color:var(--ink-muted)">No results yet.</td></tr>`;
+            if (kpis) kpis.innerHTML = "";
+            return;
+          }
+          const f = healthState.findings || [];
+          const count = (s) => f.filter((x) => x.severity === s).length;
+          if (kpis)
+            kpis.innerHTML = [
+              kpiCard("Critical", count("critical"), "fix today"),
+              kpiCard("Warnings", count("warning"), "fix this week"),
+              kpiCard("Info", count("info"), "worth a look"),
+              kpiCard("Accounts checked", healthState.checked, healthState.failed ? `${healthState.failed} failed` : "all OK"),
+            ].join("");
+          if (status && !healthRunning) status.textContent = `Last run ${new Date(healthState.runAt).toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })} · runs automatically once a day`;
+          const rows = f.filter((x) => healthFilter === "all" || x.severity === healthFilter || x.check === healthFilter);
+          const icon = { critical: "🔴", warning: "🟡", info: "🔵" };
+          body.innerHTML = rows.length
+            ? rows
+                .map(
+                  (x) => `<tr>
+                <td>${icon[x.severity] || ""}</td>
+                <td>${escapeHtml(x.account)}${x.customerId ? ` <button class="icon-btn ga-btn" onclick="openGoogleAds('${escapeHtml(x.customerId)}')" title="Open in Google Ads">↗</button>` : ""}</td>
+                <td>${escapeHtml(HEALTH_CHECK_LABELS[x.check] || x.check)}</td>
+                <td>${escapeHtml(x.detail)}</td>
+                <td class="why-cell">${escapeHtml(x.fix || "")}</td></tr>`,
+                )
+                .join("")
+            : `<tr><td colspan="5" style="text-align:center;padding:28px;color:var(--ink-muted)">Nothing in this filter. ✅</td></tr>`;
+        }
+
+        function bindHealthControls() {
+          const btn = document.getElementById("runHealthBtn");
+          if (btn && !btn.dataset.boundClick) {
+            btn.addEventListener("click", () => runHealthCheck());
+            btn.dataset.boundClick = "true";
+          }
+          document.querySelectorAll("[data-health-filter]").forEach((b) => {
+            if (b.dataset.boundClick) return;
+            b.addEventListener("click", () => {
+              healthFilter = b.dataset.healthFilter;
+              renderHealthPage();
+            });
+            b.dataset.boundClick = "true";
+          });
+        }
+
+        // Health findings → alerts banner (critical + warnings only).
+        function healthAlerts() {
+          if (!healthState || !healthState.findings) return [];
+          return healthState.findings
+            .filter((x) => x.severity === "critical" || x.severity === "warning")
+            .filter((x) => x.check !== "mixed-goals" && x.check !== "duplicate-leads") // structural — shown on Health page
+            .map((x) => ({
+              accountName: x.account,
+              severity: x.severity,
+              type: `health-${x.check}`,
+              msg: `<strong>${escapeHtml(HEALTH_CHECK_LABELS[x.check] || x.check)}</strong> — ${escapeHtml(x.detail)}`,
+            }));
+        }
+
         // ============ REPORT PAGES (Weekly · Month to Date · Markets) ============
         // Each page pulls its own date range from Google Ads (and the Portal
         // for Markets) and keeps it in memory, so switching pages is instant
@@ -7440,7 +8289,7 @@
           const showProjection = opts.projection && pw.daysInProjection > pw.daysElapsed;
 
           const deltaTxt = (c, p, lower, neutral) => {
-            const d = pctChange(c, p);
+            const d = pctDelta(c, p);
             if (d == null) return "";
             return deltaHtml(c, p, lower, neutral);
           };
@@ -7454,45 +8303,29 @@
 
           el.querySelector(".report-meta").textContent = `${rangeLabel(entry.range)} vs ${rangeLabel(entry.prevRange)} · updated ${new Date(entry.fetchedAt).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}${showProjection ? ` · day ${pw.daysElapsed} of ${pw.daysInProjection}` : ""}`;
 
-          const head = `<tr>
-            <th>Status</th><th>Account</th><th>Spend</th><th>Conv</th><th>Cost/Conv</th><th>Goal</th>
-            <th title="${escapeHtml(rangeLabel(entry.prevRange))}">Prev Cost/Conv</th>
-            <th>Pace</th>${showProjection ? "<th>Projected month spend</th><th>Month budget</th>" : ""}<th>Why</th></tr>`;
+          const tableId = opts.tableId;
+          rows.forEach((r) => {
+            enrichRow(r, entry.range, entry.pacingWindow);
+            r._statusRank = r._status.rank;
+          });
+          const head = `<tr><th>Account</th>${columnHeaderHtml(tableId)}</tr>`;
           const body = rows
-            .map((r) => {
-              const p = r.prev || {};
-              const why = r.cost > 0 ? (diagnoseAccount(r)[0] || "") : "";
-              const monthBudget = r.dailyBudget > 0 && pw.daysInProjection ? r.dailyBudget * pw.daysInProjection : null;
-              return `<tr class="status-${r._status.key}">
-                <td title="${r._status.label}">${r._status.icon}</td>
-                <td>${escapeHtml(r.name)}</td>
-                <td>${fmt$(r.cost)}${deltaHtml(r.cost, p.cost, false, true)}</td>
-                <td>${fmtN(r.conv)}${deltaHtml(r.conv, p.conv, false)}</td>
-                <td class="cpa-cell ${r._status.key === "good" ? "good" : r._status.key === "warn" ? "warn" : r._status.key === "bad" ? "bad" : ""}">${r.conv > 0 ? fmt$(r.cpa) : r.cost > 0 ? "0 conv" : "—"}${r.cpa > 0 && p.cpa > 0 ? deltaHtml(r.cpa, p.cpa, true) : ""}</td>
-                <td><button class="goal-btn" onclick="setAccountGoal('${escapeHtml(r.customerId || "")}')" title="Click to change this account's goal">≤ ${fmt$(r._goal)}</button></td>
-                <td>${p.cpa > 0 ? fmt$(p.cpa) : p.cost > 0 ? "0 conv" : "—"}</td>
-                <td>${paceBadge(r.paceRatio)}</td>
-                ${showProjection ? `<td>${r.projectedPeriodSpend != null ? fmt$(r.projectedPeriodSpend) : "—"}</td><td>${monthBudget != null ? fmt$(monthBudget) : "—"}</td>` : ""}
-                <td class="why-cell">${escapeHtml(why)}</td>
-              </tr>`;
-            })
+            .map((r) => `<tr class="status-${r._status.key}"><td>${escapeHtml(r.name)}</td>${columnCellsHtml(tableId, r)}</tr>`)
             .join("");
-          el.querySelector(".report-table").innerHTML = `<thead>${head}</thead><tbody>${body || `<tr><td colspan="10" style="text-align:center;padding:24px;color:var(--ink-muted)">No spend in this period.</td></tr>`}</tbody>`;
+          const ncols = activeColumns(tableId).length + 1;
+          el.querySelector(".report-table").innerHTML = `<thead>${head}</thead><tbody>${body || `<tr><td colspan="${ncols}" style="text-align:center;padding:24px;color:var(--ink-muted)">No spend in this period.</td></tr>`}</tbody>`;
 
-          // Plain-text version for pasting into email / Slack / Sheets.
+          // Plain-text version (same columns) for email / Slack / Sheets.
+          const cols = activeColumns(tableId);
           el._copyRows = [
-            ["Status", "Account", "Spend", "Conv", "Cost/Conv", "Goal", "Prev Cost/Conv", "Pace", ...(showProjection ? ["Projected month spend"] : [])],
-            ...rows.map((r) => [
-              r._status.label,
-              r.name,
-              (r.cost || 0).toFixed(2),
-              (r.conv || 0).toFixed(1),
-              r.conv > 0 ? r.cpa.toFixed(2) : "",
-              r._goal.toFixed(2),
-              r.prev && r.prev.cpa > 0 ? r.prev.cpa.toFixed(2) : "",
-              r.paceRatio != null ? `${Math.round(r.paceRatio * 100)}%` : "",
-              ...(showProjection ? [r.projectedPeriodSpend != null ? r.projectedPeriodSpend.toFixed(2) : ""] : []),
-            ]),
+            ["Account", ...cols.map((k) => COLUMN_CATALOG[k].label)],
+            ...rows.map((r) => [r.name, ...cols.map((k) => {
+              try {
+                return String(COLUMN_CATALOG[k].csv(r) ?? "");
+              } catch (e) {
+                return "";
+              }
+            })]),
           ];
           el._summaryText = `${opts.title} (${rangeLabel(entry.range)}): spend ${fmt$(cost)} (prev ${fmt$(pCost)}), ${fmtN(conv)} conversions (prev ${fmtN(pConv)}), cost/conv ${fmt$(cpa)} (prev ${fmt$(pCpa)}). ${within} of ${spent.length} accounts within goal, ${close} close.`;
         }
@@ -7544,11 +8377,11 @@
         function loadWeeklyPage(force) {
           const title = weeklyMode === "weekly" ? "This week so far" : "Last week";
           document.querySelectorAll("[data-weekly-mode]").forEach((b) => b.classList.toggle("active", b.dataset.weeklyMode === weeklyMode));
-          return loadPerformancePage("page-weekly", weeklyMode, { title: `Weekly Google Ads report — ${title}`, projection: false }, force);
+          return loadPerformancePage("page-weekly", weeklyMode, { title: `Weekly Google Ads report — ${title}`, projection: false, tableId: "weekly" }, force);
         }
 
         function loadMtdPage(force) {
-          return loadPerformancePage("page-mtd", "mtd", { title: "Month-to-date Google Ads report", projection: true }, force);
+          return loadPerformancePage("page-mtd", "mtd", { title: "Month-to-date Google Ads report", projection: true, tableId: "mtd" }, force);
         }
 
         // ---------- Markets ----------
@@ -7816,13 +8649,14 @@
         }
 
         // ---------- Page router ----------
-        const PAGES = ["today", "weekly", "mtd", "markets", "accounts", "search", "changes"];
+        const PAGES = ["today", "weekly", "mtd", "markets", "accounts", "search", "changes", "health"];
         let activePage = "today";
 
         function renderCurrentPage(force) {
           if (activePage === "weekly") return loadWeeklyPage(force);
           if (activePage === "mtd") return loadMtdPage(force);
           if (activePage === "markets") return loadMarketsPage(force);
+          if (activePage === "health") return renderHealthPage();
         }
 
         function showPage(name, opts) {
@@ -8945,6 +9779,11 @@
                 searchIS: account.searchIS ?? null,
                 lostIsBudget: account.lostIsBudget ?? null,
                 lostIsRank: account.lostIsRank ?? null,
+                topIS: account.topIS ?? null,
+                absTopIS: account.absTopIS ?? null,
+                allConv: account.allConv ?? null,
+                convValue: account.convValue ?? 0,
+                phoneCalls: account.phoneCalls ?? null,
                 campaigns: account.campaigns || [],
                 idleCampaigns: account.idleCampaigns || [],
                 enabledCampaignCount: account.enabledCampaignCount ?? null,
@@ -9115,6 +9954,8 @@
               fetchedAt: lastLiveFetch,
             });
             render();
+            // Daily tracking/ad health check runs in the background (max once per ~20h).
+            if (dateScope === "mtd") setTimeout(maybeAutoRunHealth, 1500);
           } catch (err) {
             if (isStale()) return;
             console.error("Live data fetch failed", err);
@@ -9235,6 +10076,7 @@
           await runInitStep("loadHistory", loadHistory);
           await runInitStep("loadAdsMcpAuthState", loadAdsMcpAuthState);
           await runInitStep("loadPortalAuthState", loadPortalAuthState);
+          await runInitStep("loadHealthState", loadHealthState);
           let portalCallbackHandled = false;
           await runInitStep("maybeHandlePortalOAuthCallback", async () => {
             portalCallbackHandled = await maybeHandlePortalOAuthCallback();
@@ -9251,7 +10093,9 @@
           render();
           updateAdsMcpUi();
           updatePortalUi();
+          bindHealthControls();
           initPageRouter();
+          refreshViewSelects();
 
           if (initError) {
             const statusEl = document.getElementById("liveDataStatus");
@@ -10466,8 +11310,11 @@
             });
           }
 
-          document.querySelectorAll("thead th[data-sort]").forEach((th) => {
-            th.addEventListener("click", () => {
+          const leaderTableEl = document.getElementById("leaderTable");
+          if (leaderTableEl) leaderTableEl.addEventListener("click", (ev) => {
+            const th = ev.target.closest("thead th[data-sort]");
+            if (!th) return;
+            {
               const key = th.dataset.sort;
               if (sortKey === key) sortDir = sortDir === "asc" ? "desc" : "asc";
               else {
@@ -10476,7 +11323,7 @@
               }
               currentPage = 1;
               render();
-            });
+            }
           });
 
           document
@@ -13599,14 +14446,12 @@ levis@gametruck`;
             return accounts
               .filter((a) => a && a._liveFetchId === liveRange.fetchId)
               .map((a) => {
-                const pm = portalMetricsForAccount(a);
-                return {
+                return enrichRow({
                   ...a,
-                  portalCpl: pm && pm.costPerLead != null ? pm.costPerLead : null,
                   _scope: scope,
                   _scopeLabel: label,
                   _isFallback: false,
-                };
+                }, liveRange, pacingWindow);
               });
           }
           // 'mtd', 'monthly', 'weekly', 'daily', 'custom'
@@ -15597,6 +16442,8 @@ levis@gametruck`;
             }
           }
 
+          alerts.push(...healthAlerts());
+
           // Sort: critical first, then by account name
           alerts.sort((a, b) => {
             if (a.severity !== b.severity)
@@ -15625,7 +16472,7 @@ levis@gametruck`;
           <div class="focus-item-detail">${detail}</div>
         </div>`;
           const prevNote = (cur, prev, lowerIsBetter, fmtFn) => {
-            const d = pctChange(cur, prev);
+            const d = pctDelta(cur, prev);
             if (d == null || Math.abs(d) < 5) return "";
             return ` · ${d > 0 ? "▲" : "▼"}${Math.abs(d).toFixed(0)}% vs prev (${fmtFn(prev)})`;
           };
@@ -16123,17 +16970,17 @@ levis@gametruck`;
         }
 
         // ---- Leaderboard helpers ----
-        const LEADER_COLS = 10;
+        let LEADER_COLS = 10;
         const expandedAccounts = new Set();
 
-        function pctChange(cur, prev) {
+        function pctDelta(cur, prev) {
           if (!(prev > 0) || !Number.isFinite(cur)) return null;
           return ((cur - prev) / prev) * 100;
         }
 
         // Small "▲ 12%" under a number. lowerIsBetter flips the colour (cost/conv).
         function deltaHtml(cur, prev, lowerIsBetter, neutral) {
-          const d = pctChange(cur, prev);
+          const d = pctDelta(cur, prev);
           if (d == null || Math.abs(d) < 0.5) return "";
           const up = d > 0;
           const good = lowerIsBetter ? !up : up;
@@ -16224,23 +17071,14 @@ levis@gametruck`;
           const idx = accounts.findIndex(
             (x) => x.name.toLowerCase() === a.name.toLowerCase(),
           );
-          const h = getHealth(a.cpa, a);
           const key = a.customerId || a.name;
           const open = expandedAccounts.has(key);
-          const p = a.prev || null;
           const canDrill = Array.isArray(a.campaigns);
           const safeKey = escapeHtml(String(key)).replace(/'/g, "&#39;");
           return `
       <tr class="${open ? "drill-open" : ""}">
         <td>${canDrill ? `<button class="drill-btn" onclick="toggleAccountDrill('${safeKey}')" title="Show campaigns">${open ? "▾" : "▸"}</button> ` : ""}${escapeHtml(a.name)}</td>
-        <td>${healthBadge(a.cpa, a)}</td>
-        <td>${fmt$(a.cost)}${p ? deltaHtml(a.cost, p.cost, false, true) : ""}</td>
-        <td>${fmtN(a.clicks)}</td>
-        <td>${fmt$(a.cpc)}</td>
-        <td>${fmtN(a.conv)}${p ? deltaHtml(a.conv, p.conv, false) : ""}</td>
-        <td class="cpa-cell ${h}">${a.conv > 0 ? fmt$(a.cpa) : a.cost > 0 ? "0 conv" : fmt$(0)}${p && a.cpa > 0 ? deltaHtml(a.cpa, p.cpa, true) : ""}</td>
-        <td>${isCellHtml(a)}</td>
-        <td>${paceBadge(a.paceRatio)}</td>
+        ${columnCellsHtml("accounts", a)}
         <td>
           <div class="row-actions">
             ${a.customerId ? `<button class="icon-btn ga-btn" onclick="openGoogleAds('${escapeHtml(a.customerId)}')" title="Open in Google Ads">↗</button>` : ""}
@@ -16252,7 +17090,15 @@ levis@gametruck`;
       </tr>${open ? campaignDrilldownHtml(a) : ""}`;
         }
 
+        function renderLeaderHead() {
+          const thead = document.querySelector("#leaderTable thead");
+          if (!thead) return;
+          thead.innerHTML = `<tr><th data-sort="name">Account <span class="sort-indicator">↕</span></th>${columnHeaderHtml("accounts", { sortable: true })}<th></th></tr>`;
+          LEADER_COLS = activeColumns("accounts").length + 2;
+        }
+
         function renderTable(list) {
+          renderLeaderHead();
           const body = document.getElementById("tableBody");
           if (list.length === 0) {
             body.innerHTML = `<tr><td colspan="${LEADER_COLS}" style="text-align:center; padding: 40px; color: var(--ink-muted); font-family: 'Jost';">No accounts match your filters.</td></tr>`;
