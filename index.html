@@ -1001,6 +1001,70 @@
         font-size: 13.5px;
       }
 
+      #negativeFinder {
+        margin-bottom: 16px;
+      }
+      .neg-intro {
+        font-size: 12px;
+        color: var(--ink-muted);
+        margin-bottom: 10px;
+        line-height: 1.5;
+      }
+      .neg-empty {
+        padding: 16px;
+        color: var(--ink-muted);
+        font-size: 13px;
+      }
+      .neg-group {
+        border: 1px solid var(--line, #e2ded3);
+        border-radius: 8px;
+        padding: 12px 14px;
+        margin-bottom: 10px;
+        background: var(--bg-soft, #f7f5ef);
+      }
+      .neg-head {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        flex-wrap: wrap;
+        font-size: 13px;
+        margin-bottom: 6px;
+      }
+      .neg-head span {
+        color: var(--ink-muted);
+        font-size: 12px;
+      }
+      .neg-row {
+        margin-top: 8px;
+      }
+      .neg-label {
+        font-size: 11.5px;
+        font-weight: 600;
+        margin-bottom: 4px;
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .neg-chip {
+        display: inline-block;
+        font-size: 11.5px;
+        padding: 3px 8px;
+        margin: 2px 4px 2px 0;
+        border-radius: 12px;
+        background: rgba(0, 0, 0, 0.05);
+      }
+      .neg-chip b {
+        font-weight: 600;
+        margin-left: 2px;
+      }
+      .neg-more {
+        font-size: 11px;
+        color: var(--ink-muted);
+      }
+      tr.change-auto td {
+        background: rgba(212, 160, 23, 0.10);
+      }
       .delta {
         font-size: 10.5px;
         font-family: "JetBrains Mono", monospace;
@@ -3525,6 +3589,33 @@
           </table>
         </div>
 
+        <!-- CHANGE HISTORY -->
+        <div class="section-head" style="margin-top: 64px">
+          <h2>Change History</h2>
+          <div class="meta" id="changeHistoryLabel">
+            Who changed what in each account over the last 30 days, including Google's auto-applied recommendations · not loaded yet
+          </div>
+        </div>
+        <div style="margin-bottom: 12px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap">
+          <button class="btn btn-ghost" id="loadChangeHistoryBtn" style="padding: 9px 14px; font-size: 11px" title="One query per account — run on demand">
+            📜 Load Change History
+          </button>
+          <div class="date-scope" style="height: 34px">
+            <button class="scope-btn active" data-change-filter="all">All changes</button>
+            <button class="scope-btn" data-change-filter="auto">🤖 Auto-applied only</button>
+          </div>
+        </div>
+        <div class="table-wrap" style="max-height: 460px; overflow-y: auto">
+          <table id="changeHistoryTable">
+            <thead>
+              <tr><th>Date</th><th>Account</th><th>Who</th><th>What</th><th>Campaign</th></tr>
+            </thead>
+            <tbody id="changeHistoryBody">
+              <tr><td colspan="5" style="text-align:center; padding: 32px; color: var(--ink-muted); font-family: 'Jost';">Click "📜 Load Change History" to pull the last 30 days of changes.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
         <!-- SEARCH TERM PERFORMANCE -->
         <div class="section-head" style="margin-top: 64px">
           <h2>Search Term Performance</h2>
@@ -3553,8 +3644,10 @@
             <button class="scope-btn active" data-term-filter="all">All</button>
             <button class="scope-btn" data-term-filter="converting">Converting</button>
             <button class="scope-btn" data-term-filter="wasted">Wasted (0 conv)</button>
+            <button class="scope-btn" data-term-filter="negatives" title="Suggested negative keywords, with guardrails for core service terms">🚫 Negative Finder</button>
           </div>
         </div>
+        <div id="negativeFinder" style="display: none"></div>
         <div class="table-wrap">
           <table id="searchTermWasteTable">
             <thead>
@@ -6968,9 +7061,13 @@
 
         async function fetchSearchTermPerformanceFromMcp(startDate, endDate, accountFilter) {
           const tools = await ensureAdsMcpTools();
-          const targets = accounts
+          const source = liveRange
+            ? accounts.filter((a) => a._liveFetchId === liveRange.fetchId)
+            : accounts;
+          const targets = source
             .filter((a) => a.customerId)
             .filter((a) => !accountFilter || a.customerId === accountFilter)
+            .filter((a) => accountFilter || (a.cost || 0) > 0 || !liveRange)
             .map((a) => ({ customerId: a.customerId, name: a.name }));
 
           const results = await runWithConcurrencyLimit(
@@ -6983,6 +7080,8 @@
                 {
                   fields: [
                     "search_term_view.search_term",
+                    "search_term_view.status",
+                    "campaign.name",
                     "metrics.clicks",
                     "metrics.cost_micros",
                     "metrics.conversions",
@@ -6992,51 +7091,409 @@
                     `segments.date BETWEEN '${startDate}' AND '${endDate}'`,
                     "metrics.clicks > 0",
                   ],
-                  limit: 500,
+                  orderings: ["metrics.cost_micros DESC"],
+                  limit: 1000,
                 },
                 { loginCustomerId: ADS_MCP_ANCHOR_MCC_ID },
               );
-              return { account: target.name, rows: search.rows };
+              return { account: target.name, customerId: target.customerId, rows: search.rows };
             },
           );
 
-          const termRows = [];
+          // search_term_view returns one row per ad group; merge them per
+          // account + campaign + term.
+          const merged = new Map();
           results.forEach((r) => {
             if (r.status !== "fulfilled" || !r.value) return;
             r.value.rows.forEach((row) => {
-              const term = rowValue(row, [
-                "search_term_view.search_term",
-                "searchTermView.searchTerm",
-              ]);
+              const term = rowValue(row, ["search_term_view.search_term", "searchTermView.searchTerm"]);
               if (!term) return;
-              const cost =
-                asNumber(
-                  rowValue(row, ["metrics.cost_micros", "metrics.costMicros"]),
-                  0,
-                ) / 1000000;
-              const clicks = asNumber(rowValue(row, ["metrics.clicks"]), 0);
-              const conv = asNumber(
-                rowValue(row, ["metrics.conversions"]),
-                0,
-              );
-              // Keep every term with a click, converting or not — the
-              // filter toggle in the UI handles narrowing to just the
-              // wasted (0-conversion) ones, rather than throwing the
-              // converting terms away at fetch time.
-              termRows.push({
+              const campaign = String(rowValue(row, ["campaign.name", "campaignName"]) || "");
+              const status = String(rowValue(row, ["search_term_view.status", "searchTermView.status"]) || "").toUpperCase();
+              const key = `${r.value.customerId}||${campaign}||${String(term).toLowerCase()}`;
+              const e = merged.get(key) || {
                 account: r.value.account,
-                term,
-                cost,
-                clicks,
-                conv,
-                convRate: clicks > 0 ? conv / clicks : 0,
-                costPerConv: conv > 0 ? cost / conv : null,
+                customerId: r.value.customerId,
+                term: String(term),
+                campaigns: campaign ? [campaign] : [],
+                cost: 0,
+                clicks: 0,
+                conv: 0,
+                excluded: false,
+              };
+              e.cost += asNumber(rowValue(row, ["metrics.cost_micros", "metrics.costMicros"]), 0) / 1000000;
+              e.clicks += asNumber(rowValue(row, ["metrics.clicks"]), 0);
+              e.conv += asNumber(rowValue(row, ["metrics.conversions"]), 0);
+              if (status === "EXCLUDED" || status === "ADDED_EXCLUDED") e.excluded = true;
+              merged.set(key, e);
+            });
+          });
+          const termRows = Array.from(merged.values()).map((e) => ({
+            ...e,
+            convRate: e.clicks > 0 ? e.conv / e.clicks : 0,
+            costPerConv: e.conv > 0 ? e.cost / e.conv : null,
+          }));
+          termRows.sort((a, b) => b.cost - a.cost);
+          return termRows;
+        }
+
+        // ============ CHANGE HISTORY ============
+        // Google Ads keeps 30 days of change events. Pulled on demand (one
+        // query per account) and grouped so "9 keywords removed by
+        // Recommendations Auto-Apply" reads as one line, not nine.
+        let changeHistoryRows = [];
+        let changeHistoryLoading = false;
+        let changeHistoryAutoOnly = false;
+
+        const CHANGE_RESOURCE_LABELS = {
+          AD_GROUP_CRITERION: "keyword / ad group targeting",
+          CAMPAIGN_CRITERION: "campaign targeting / negatives",
+          CAMPAIGN_BUDGET: "budget",
+          CAMPAIGN: "campaign settings",
+          AD_GROUP: "ad group",
+          AD_GROUP_AD: "ad",
+          AD: "ad",
+          ASSET: "asset",
+          AD_GROUP_ASSET: "ad group asset",
+          CAMPAIGN_ASSET: "campaign asset",
+          CUSTOMER_ASSET: "account asset",
+          AD_GROUP_BID_MODIFIER: "bid adjustment",
+          ASSET_GROUP: "PMax asset group",
+          ASSET_GROUP_ASSET: "PMax asset",
+          ASSET_SET: "asset set",
+          CAMPAIGN_ASSET_SET: "campaign asset set",
+          FEED: "feed",
+          FEED_ITEM: "feed item",
+        };
+        const CHANGE_OP_LABELS = { CREATE: "Added", UPDATE: "Changed", REMOVE: "Removed" };
+
+        function isAutoApplyUser(u) {
+          return /auto-?apply|recommendation/i.test(String(u || ""));
+        }
+
+        async function loadChangeHistory() {
+          if (changeHistoryLoading) return;
+          const btn = document.getElementById("loadChangeHistoryBtn");
+          const label = document.getElementById("changeHistoryLabel");
+          changeHistoryLoading = true;
+          if (btn) {
+            btn.disabled = true;
+            btn.textContent = "⏳ Loading…";
+          }
+          try {
+            const tools = await ensureAdsMcpTools();
+            const source = liveRange
+              ? accounts.filter((a) => a._liveFetchId === liveRange.fetchId)
+              : accounts;
+            const targets = source.filter((a) => a.customerId && ((a.cost || 0) > 0 || !liveRange));
+            const today = __localYMD(new Date());
+            const since = ymdAddDays(today, -29);
+            if (label) label.textContent = `Loading changes since ${formatDateShort(since)} for ${targets.length} accounts…`;
+            const results = await runWithConcurrencyLimit(targets, 3, async (a) => {
+              const res = await mcpSearchRows(
+                tools,
+                a.customerId,
+                {
+                  fields: [
+                    "change_event.change_date_time",
+                    "change_event.change_resource_type",
+                    "change_event.resource_change_operation",
+                    "change_event.user_email",
+                    "campaign.name",
+                  ],
+                  resource: "change_event",
+                  conditions: [
+                    `change_event.change_date_time >= '${since}'`,
+                    `change_event.change_date_time <= '${today} 23:59:59'`,
+                  ],
+                  orderings: ["change_event.change_date_time DESC"],
+                  limit: 1000,
+                },
+                { loginCustomerId: ADS_MCP_ANCHOR_MCC_ID },
+              );
+              return { account: a.name, customerId: a.customerId, rows: res.rows, mode: res.mode };
+            });
+
+            const groups = new Map();
+            let failed = 0;
+            results.forEach((r) => {
+              if (r.status !== "fulfilled" || !r.value || r.value.mode === "empty") {
+                failed += 1;
+                return;
+              }
+              r.value.rows.forEach((row) => {
+                const when = String(rowValue(row, ["change_event.change_date_time", "changeEvent.changeDateTime"]) || "");
+                const day = when.slice(0, 10);
+                const type = String(rowValue(row, ["change_event.change_resource_type", "changeEvent.changeResourceType"]) || "");
+                const op = String(rowValue(row, ["change_event.resource_change_operation", "changeEvent.resourceChangeOperation"]) || "");
+                const user = String(rowValue(row, ["change_event.user_email", "changeEvent.userEmail"]) || "unknown");
+                const campaign = String(rowValue(row, ["campaign.name"]) || "");
+                const key = [r.value.customerId, day, user, type, op, campaign].join("||");
+                const g = groups.get(key) || {
+                  account: r.value.account,
+                  customerId: r.value.customerId,
+                  day,
+                  latest: when,
+                  user,
+                  type,
+                  op,
+                  campaign,
+                  count: 0,
+                  auto: isAutoApplyUser(user),
+                };
+                g.count += 1;
+                if (when > g.latest) g.latest = when;
+                groups.set(key, g);
               });
+            });
+            changeHistoryRows = Array.from(groups.values()).sort((a, b) => (a.latest < b.latest ? 1 : -1));
+            renderChangeHistory();
+            if (failed && label) label.textContent += ` · ${failed} account${failed === 1 ? "" : "s"} failed to load`;
+            render(); // refresh drill-downs and alerts with change data
+          } catch (err) {
+            if (label) label.textContent = `Failed to load: ${err.message || "unknown error"}`;
+            console.error("Change history fetch failed", err);
+          } finally {
+            changeHistoryLoading = false;
+            if (btn) {
+              btn.disabled = false;
+              btn.textContent = "📜 Load Change History";
+            }
+          }
+        }
+
+        function describeChange(g) {
+          const what = CHANGE_RESOURCE_LABELS[g.type] || g.type.toLowerCase().replace(/_/g, " ");
+          const op = CHANGE_OP_LABELS[g.op] || g.op.toLowerCase();
+          return `${op} ${g.count > 1 ? `${g.count} × ` : ""}${what}`;
+        }
+
+        function changeWhoLabel(g) {
+          if (g.auto) return "🤖 Google auto-apply";
+          return g.user;
+        }
+
+        function renderChangeHistory() {
+          const body = document.getElementById("changeHistoryBody");
+          const label = document.getElementById("changeHistoryLabel");
+          if (!body) return;
+          const rows = changeHistoryAutoOnly ? changeHistoryRows.filter((g) => g.auto) : changeHistoryRows;
+          if (label) {
+            const autoAccounts = new Set(changeHistoryRows.filter((g) => g.auto).map((g) => g.account));
+            const total = changeHistoryRows.reduce((s, g) => s + g.count, 0);
+            const autoTotal = changeHistoryRows.filter((g) => g.auto).reduce((s, g) => s + g.count, 0);
+            label.textContent = `${total} changes in the last 30 days · ${autoTotal} by Google auto-apply across ${autoAccounts.size} account${autoAccounts.size === 1 ? "" : "s"}`;
+          }
+          if (!rows.length) {
+            body.innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 32px; color: var(--ink-muted); font-family: 'Jost';">${changeHistoryRows.length ? "No auto-applied changes." : "No changes found."}</td></tr>`;
+            return;
+          }
+          body.innerHTML = rows
+            .slice(0, 400)
+            .map(
+              (g) => `<tr class="${g.auto ? "change-auto" : ""}">
+                <td>${escapeHtml(formatDateShort(g.day))}</td>
+                <td>${escapeHtml(g.account)}</td>
+                <td>${escapeHtml(changeWhoLabel(g))}</td>
+                <td>${escapeHtml(describeChange(g))}</td>
+                <td>${escapeHtml(g.campaign || "—")}</td>
+              </tr>`,
+            )
+            .join("");
+        }
+
+        function accountChangeSummaryHtml(a) {
+          if (!changeHistoryRows.length) return "";
+          const mine = changeHistoryRows.filter((g) => g.customerId === a.customerId);
+          if (!mine.length) return `<div class="drill-notes" style="color:var(--ink-muted)">No changes in the last 30 days.</div>`;
+          return `<div class="drill-notes"><strong>Recent changes:</strong>${mine
+            .slice(0, 6)
+            .map((g) => `<div>• ${escapeHtml(formatDateShort(g.day))} — ${escapeHtml(changeWhoLabel(g))}: ${escapeHtml(describeChange(g))}${g.campaign ? ` (${escapeHtml(g.campaign)})` : ""}</div>`)
+            .join("")}${mine.length > 6 ? `<div style="color:var(--ink-muted)">+${mine.length - 6} more in Change History below</div>` : ""}</div>`;
+        }
+
+        // ============ NEGATIVE KEYWORD FINDER ============
+        // Words/phrases that describe what GameTruck actually sells. A
+        // non-converting term containing one of these is a bid/ad/landing-page
+        // question, NOT a negative keyword — negating it would block customers.
+        const CORE_SERVICE_PHRASES = [
+          "game truck", "gametruck", "game-truck", "gaming truck", "gamer truck",
+          "video game truck", "game bus", "gaming bus", "game trailer", "gaming trailer",
+          "game theater", "video game party", "gaming party", "laser tag", "lasertag",
+          "game rental", "gaming rental", "mobile gaming", "mobile game", "video game rental",
+        ];
+        const NEG_STOPWORDS = new Set(
+          "a an and for in of on the to with near me my at by from is are how what where who best cheap top vs or your our".split(" "),
+        );
+
+        // Intent words that mean "not a party customer", even when the term
+        // also contains a core phrase ("game truck jobs", "game truck for sale").
+        const NON_BUYER_PATTERNS = [
+          /\bjobs?\b/, /\bhiring\b/, /\bcareers?\b/, /\bsalary\b/, /\bemploy(ment|er)?\b/,
+          /\bfor sale\b/, /\bused\b/, /\bdiy\b/, /\bhow to (build|make|start)\b/,
+          /\bfranchise\b/, /\bbusiness for sale\b/, /\bwholesale\b/, /\bmanufacturer\b/,
+        ];
+
+        function isNonBuyerTerm(term) {
+          const t = String(term || "").toLowerCase();
+          return NON_BUYER_PATTERNS.some((re) => re.test(t));
+        }
+
+        function isCoreServiceTerm(term) {
+          if (isNonBuyerTerm(term)) return false;
+          const t = ` ${String(term || "").toLowerCase()} `;
+          return CORE_SERVICE_PHRASES.some((p) => t.includes(p));
+        }
+
+        // Builds the negative-keyword view from loaded search terms.
+        function buildNegativeSuggestions(terms) {
+          const minCost = Math.max(10, settings.goodMax || 15);
+          const byAccount = new Map();
+          const ensure = (name, id) => {
+            if (!byAccount.has(name)) {
+              byAccount.set(name, { account: name, customerId: id, negatives: [], review: [], elsewhere: [], words: [] });
+            }
+            return byAccount.get(name);
+          };
+
+          // Aggregate each term across the account's campaigns.
+          const agg = new Map();
+          terms.forEach((t) => {
+            const k = `${t.account}||${t.term.toLowerCase()}`;
+            const e = agg.get(k) || { account: t.account, customerId: t.customerId, term: t.term, cost: 0, clicks: 0, conv: 0, campaigns: [], excluded: false };
+            e.cost += t.cost;
+            e.clicks += t.clicks;
+            e.conv += t.conv;
+            e.excluded = e.excluded || !!t.excluded;
+            (t.campaigns || []).forEach((c) => { if (!e.campaigns.includes(c)) e.campaigns.push(c); });
+            agg.set(k, e);
+          });
+
+          agg.forEach((t) => {
+            if (t.conv > 0 || t.excluded) return;
+            if (!(t.cost >= minCost || t.clicks >= 8)) return;
+            const g = ensure(t.account, t.customerId);
+            if (isCoreServiceTerm(t.term)) g.review.push(t);
+            else g.negatives.push(t);
+          });
+
+          // Per campaign: zero conversions here, but the same term converts in
+          // another campaign of the account → a campaign-overlap question.
+          terms.forEach((t) => {
+            if (t.conv > 0 || t.excluded || !(t.cost >= minCost || t.clicks >= 8)) return;
+            const a = agg.get(`${t.account}||${t.term.toLowerCase()}`);
+            if (a && a.conv > 0) {
+              ensure(t.account, t.customerId).elsewhere.push(Object.assign({}, t, { term: `${t.term} (${(t.campaigns || [])[0] || "campaign"})` }));
+            }
+          });
+
+          // Word-level: words in ≥3 zero-conv terms (≥$20 combined) and in
+          // no converting term of the same account.
+          const wordsByAccount = new Map();
+          terms.forEach((t) => {
+            const words = new Set(
+              t.term.toLowerCase().split(/[^a-z0-9']+/).filter((w) => w.length > 2 && !NEG_STOPWORDS.has(w)),
+            );
+            if (!wordsByAccount.has(t.account)) wordsByAccount.set(t.account, new Map());
+            const m = wordsByAccount.get(t.account);
+            words.forEach((w) => {
+              const e = m.get(w) || { word: w, wasteTerms: 0, wasteCost: 0, converts: false, customerId: t.customerId };
+              if (t.conv > 0) e.converts = true;
+              else {
+                e.wasteTerms += 1;
+                e.wasteCost += t.cost;
+              }
+              m.set(w, e);
+            });
+          });
+          wordsByAccount.forEach((m, account) => {
+            m.forEach((e) => {
+              if (e.converts || e.wasteTerms < 3 || e.wasteCost < 20) return;
+              if (isCoreServiceTerm(e.word) || CORE_SERVICE_PHRASES.some((p) => p.split(" ").includes(e.word))) return;
+              ensure(account, e.customerId).words.push(e);
             });
           });
 
-          termRows.sort((a, b) => b.cost - a.cost);
-          return termRows;
+          const groups = Array.from(byAccount.values()).filter(
+            (g) => g.negatives.length || g.review.length || g.elsewhere.length || g.words.length,
+          );
+          groups.forEach((g) => {
+            g.negatives.sort((a, b) => b.cost - a.cost);
+            g.review.sort((a, b) => b.cost - a.cost);
+            g.elsewhere.sort((a, b) => b.cost - a.cost);
+            g.words.sort((a, b) => b.wasteCost - a.wasteCost);
+            g.negWaste = g.negatives.reduce((s, t) => s + t.cost, 0);
+            g.reviewWaste = g.review.reduce((s, t) => s + t.cost, 0);
+          });
+          groups.sort((a, b) => b.negWaste + b.reviewWaste - (a.negWaste + a.reviewWaste));
+          return { groups, minCost };
+        }
+
+        let negativeSuggestionCache = null;
+
+        function copyNegatives(accountIdx, kind) {
+          const g = negativeSuggestionCache && negativeSuggestionCache.groups[accountIdx];
+          if (!g) return;
+          const lines =
+            kind === "words"
+              ? g.words.map((w) => `"${w.word}"`)
+              : g.negatives.map((t) => `[${t.term}]`);
+          const text = lines.join("\n");
+          const done = () => {
+            const el = document.getElementById(`negCopy-${accountIdx}-${kind}`);
+            if (el) {
+              const old = el.textContent;
+              el.textContent = `✓ Copied ${lines.length}`;
+              setTimeout(() => (el.textContent = old), 1800);
+            }
+          };
+          try {
+            navigator.clipboard.writeText(text).then(done, () => window.prompt("Copy these negatives:", text));
+          } catch (e) {
+            window.prompt("Copy these negatives:", text);
+          }
+        }
+
+        function renderNegativeFinder() {
+          const box = document.getElementById("negativeFinder");
+          if (!box) return;
+          if (searchTermFilter !== "negatives" || !searchTermRawResults.length) {
+            box.style.display = "none";
+            return;
+          }
+          negativeSuggestionCache = buildNegativeSuggestions(searchTermRawResults);
+          const { groups, minCost } = negativeSuggestionCache;
+          box.style.display = "block";
+          if (!groups.length) {
+            box.innerHTML = `<div class="neg-empty">No negative-keyword candidates: every term with ${fmt$(minCost)}+ spend or 8+ clicks either converted or is already excluded.</div>`;
+            return;
+          }
+          const termList = (list, max) =>
+            list
+              .slice(0, max)
+              .map((t) => `<span class="neg-chip" title="${escapeHtml(t.campaigns.join(", "))} · ${fmtN(t.clicks)} clicks">${escapeHtml(t.term)} <b>${fmt$(t.cost)}</b></span>`)
+              .join("") + (list.length > max ? `<span class="neg-more">+${list.length - max} more</span>` : "");
+          box.innerHTML = `
+            <div class="neg-intro">Rules: no conversions in the account, ${fmt$(minCost)}+ spend or 8+ clicks, not already excluded. Copy buttons give Google Ads format — exact <code>[term]</code> or phrase <code>"word"</code> — ready to paste into a negative keyword list. For Performance Max terms, add them to an account-level negative list.</div>
+            ${groups
+              .map(
+                (g, i) => `
+              <div class="neg-group">
+                <div class="neg-head">
+                  <strong>${escapeHtml(g.account)}</strong>
+                  <span>${fmt$(g.negWaste)} on negative candidates${g.reviewWaste ? ` · ${fmt$(g.reviewWaste)} on core terms to review` : ""}</span>
+                  ${g.customerId ? `<button class="icon-btn ga-btn" onclick="openGoogleAds('${escapeHtml(g.customerId)}')" title="Open in Google Ads">↗</button>` : ""}
+                </div>
+                ${g.negatives.length ? `<div class="neg-row"><div class="neg-label">🚫 Add as negatives (${g.negatives.length}) <button class="icon-btn" id="negCopy-${i}-terms" onclick="copyNegatives(${i}, 'terms')">Copy [exact]</button></div><div>${termList(g.negatives, 12)}</div></div>` : ""}
+                ${g.words.length ? `<div class="neg-row"><div class="neg-label">🔤 Word-level negatives (${g.words.length}) <button class="icon-btn" id="negCopy-${i}-words" onclick="copyNegatives(${i}, 'words')">Copy "phrase"</button></div><div>${g.words
+                  .slice(0, 12)
+                  .map((w) => `<span class="neg-chip" title="In ${w.wasteTerms} non-converting terms, never in a converting one">${escapeHtml(w.word)} <b>${fmt$(w.wasteCost)}</b></span>`)
+                  .join("")}</div></div>` : ""}
+                ${g.review.length ? `<div class="neg-row"><div class="neg-label">⚠️ Core service terms not converting — review bids, ads or landing page; don't negate (${g.review.length})</div><div>${termList(g.review, 8)}</div></div>` : ""}
+                ${g.elsewhere.length ? `<div class="neg-row"><div class="neg-label">↔ 0 conv here but converts in another campaign — check which campaign should own it (${g.elsewhere.length})</div><div>${termList(g.elsewhere, 8)}</div></div>` : ""}
+              </div>`,
+              )
+              .join("")}`;
         }
 
         function populateSearchTermWasteAccountSelect() {
@@ -7073,8 +7530,11 @@
           const label = document.getElementById("searchTermWasteLabel");
           if (!body) return;
 
+          renderNegativeFinder();
           let rows = searchTermRawResults;
-          if (searchTermFilter === "converting") {
+          if (searchTermFilter === "negatives") {
+            rows = rows.filter((r) => r.conv === 0 && r.cost > 0 && !r.excluded);
+          } else if (searchTermFilter === "converting") {
             rows = rows.filter((r) => r.conv > 0);
           } else if (searchTermFilter === "wasted") {
             rows = rows.filter((r) => r.conv === 0 && r.cost > 0);
@@ -7117,7 +7577,7 @@
               (w) => `
                 <tr>
                   <td>${escapeHtml(w.account)}</td>
-                  <td>${escapeHtml(w.term)}</td>
+                  <td title="${escapeHtml((w.campaigns || []).join(", "))}">${escapeHtml(w.term)}${w.excluded ? ' <span class="camp-status">excluded</span>' : ""}${isCoreServiceTerm(w.term) && w.conv === 0 ? ' <span class="camp-status warn">core term</span>' : ""}<div class="delta" style="color:var(--ink-muted)">${escapeHtml((w.campaigns || []).join(", "))}</div></td>
                   <td>${fmt$(w.cost)}</td>
                   <td>${fmtN(w.clicks)}</td>
                   <td>${fmtN(w.conv)}</td>
@@ -7471,6 +7931,21 @@
             liveBtn.addEventListener("click", fetchLiveDashboardData);
             liveBtn.dataset.boundClick = "true";
           }
+          const changeBtn = document.getElementById("loadChangeHistoryBtn");
+          if (changeBtn && !changeBtn.dataset.boundClick) {
+            changeBtn.addEventListener("click", loadChangeHistory);
+            changeBtn.dataset.boundClick = "true";
+          }
+          document.querySelectorAll("[data-change-filter]").forEach((b) => {
+            if (b.dataset.boundClick) return;
+            b.addEventListener("click", () => {
+              document.querySelectorAll("[data-change-filter]").forEach((x) => x.classList.remove("active"));
+              b.classList.add("active");
+              changeHistoryAutoOnly = b.dataset.changeFilter === "auto";
+              renderChangeHistory();
+            });
+            b.dataset.boundClick = "true";
+          });
           const wasteBtn = document.getElementById("loadSearchTermWasteBtn");
           if (wasteBtn && !wasteBtn.dataset.boundClick) {
             wasteBtn.addEventListener("click", loadSearchTermWaste);
@@ -13828,6 +14303,23 @@ levis@gametruck`;
             }
           }
 
+          // Google auto-applied recommendations that removed things (last 14 days).
+          if (changeHistoryRows.length) {
+            const cutoff = ymdAddDays(__localYMD(new Date()), -14);
+            const byAcc = new Map();
+            changeHistoryRows
+              .filter((g) => g.auto && g.op === "REMOVE" && g.day >= cutoff)
+              .forEach((g) => byAcc.set(g.account, (byAcc.get(g.account) || 0) + g.count));
+            byAcc.forEach((n, acc) => {
+              alerts.push({
+                accountName: acc,
+                severity: "warning",
+                type: "auto-apply",
+                msg: `Google auto-apply <strong>removed ${n} item${n === 1 ? "" : "s"}</strong> (keywords/targeting) in the last 14 days — review in Change History, and consider turning auto-apply off`,
+              });
+            });
+          }
+
           // Live-data alerts (only when the numbers are live for this range).
           if (isLiveForCurrentScope()) {
             const goodMax = settings.goodMax || 15;
@@ -14475,6 +14967,7 @@ levis@gametruck`;
             : `<tr><td colspan="9" style="color:var(--ink-muted)">No campaign data for this period — click Refresh Live Data.</td></tr>`;
           return `<tr class="drill-row"><td colspan="${LEADER_COLS}">
             ${notes.length ? `<div class="drill-notes">${notes.map((n) => `<div>• ${escapeHtml(n)}</div>`).join("")}</div>` : ""}
+            ${accountChangeSummaryHtml(a)}
             <table class="drill-table">
               <thead><tr><th>Campaign</th><th>Type</th><th>Budget</th><th>Cost</th><th>Clicks</th><th>Conv</th><th>Cost/Conv</th><th>Imp. Share</th><th>Lost: budget / rank</th></tr></thead>
               <tbody>${rows}</tbody>
