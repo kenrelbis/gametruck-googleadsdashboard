@@ -1001,6 +1001,64 @@
         font-size: 13.5px;
       }
 
+      .delta {
+        font-size: 10.5px;
+        font-family: "JetBrains Mono", monospace;
+        line-height: 1.2;
+        margin-top: 2px;
+        white-space: nowrap;
+      }
+      .drill-btn {
+        border: 1px solid var(--line, #d8d4c8);
+        background: transparent;
+        border-radius: 4px;
+        width: 20px;
+        height: 20px;
+        line-height: 16px;
+        padding: 0;
+        cursor: pointer;
+        font-size: 11px;
+        color: inherit;
+      }
+      tr.drill-row > td {
+        background: var(--bg-soft, #f4f1ea);
+        padding: 12px 16px 16px;
+      }
+      .drill-notes {
+        font-size: 12.5px;
+        margin-bottom: 10px;
+        line-height: 1.6;
+      }
+      .drill-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+      }
+      .drill-table th,
+      .drill-table td {
+        padding: 6px 8px;
+        text-align: left;
+        border-bottom: 1px solid var(--line, #e2ded3);
+      }
+      .drill-table th {
+        font-size: 10.5px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--ink-muted);
+      }
+      .camp-status {
+        font-size: 10px;
+        text-transform: uppercase;
+        padding: 1px 5px;
+        border-radius: 3px;
+        background: rgba(0, 0, 0, 0.06);
+        color: var(--ink-muted);
+        margin-left: 4px;
+      }
+      .camp-status.warn {
+        background: rgba(212, 160, 23, 0.18);
+        color: #8a6500;
+      }
       .cpa-cell {
         font-weight: 700;
         position: relative;
@@ -3422,6 +3480,9 @@
                   <th data-sort="cpa">
                     Cost/Conv <span class="sort-indicator">↕</span>
                   </th>
+                  <th data-sort="searchIS" title="Search impression share, and how much was lost to budget vs ad rank">
+                    Imp. Share <span class="sort-indicator">↕</span>
+                  </th>
                   <th data-sort="paceRatio">
                     Pace <span class="sort-indicator">↕</span>
                   </th>
@@ -3457,7 +3518,7 @@
                 <th data-pacing-sort="cost">Spent <span class="sort-indicator">↕</span></th>
                 <th data-pacing-sort="expectedSpendToDate">Expected by Now <span class="sort-indicator">↕</span></th>
                 <th data-pacing-sort="paceRatio">Pace <span class="sort-indicator">↕</span></th>
-                <th data-pacing-sort="projectedPeriodSpend">Projected Period Total <span class="sort-indicator">↕</span></th>
+                <th data-pacing-sort="projectedPeriodSpend" id="pacingProjectionTh">Projected Period Total <span class="sort-indicator">↕</span></th>
               </tr>
             </thead>
             <tbody id="pacingTableBody"></tbody>
@@ -5956,7 +6017,51 @@
             : null;
         }
 
-        function getPacingWindowForDates(startDate, endDate) {
+        // Add n days to a YYYY-MM-DD string (pure calendar math in UTC, so no
+        // timezone can shift the result).
+        function ymdAddDays(ymd, n) {
+          const d = new Date(`${ymd}T00:00:00Z`);
+          d.setUTCDate(d.getUTCDate() + n);
+          return d.toISOString().slice(0, 10);
+        }
+
+        // The comparison window used for period-over-period deltas.
+        //   MTD            → same days of the previous month (Oct 1–20 → Sep 1–20)
+        //   Monthly / Last Month → the full month before
+        //   everything else → the same number of days immediately before
+        function computePreviousRange(startDate, endDate, scope) {
+          const [sy, sm] = startDate.split("-").map(Number);
+          if (scope === "mtd") {
+            const prevFirst = new Date(Date.UTC(sy, sm - 2, 1));
+            const prevLastDay = new Date(Date.UTC(sy, sm - 1, 0)).getUTCDate();
+            const endDay = Math.min(Number(endDate.slice(8, 10)), prevLastDay);
+            const startIso = prevFirst.toISOString().slice(0, 10);
+            return {
+              startDate: startIso,
+              endDate: `${startIso.slice(0, 8)}${String(endDay).padStart(2, "0")}`,
+            };
+          }
+          if (scope === "monthly" || scope === "lastMonth") {
+            const prevFirst = new Date(Date.UTC(sy, sm - 2, 1));
+            const prevLast = new Date(Date.UTC(sy, sm - 1, 0));
+            return {
+              startDate: prevFirst.toISOString().slice(0, 10),
+              endDate: prevLast.toISOString().slice(0, 10),
+            };
+          }
+          const len =
+            Math.round(
+              (new Date(`${endDate}T00:00:00Z`) -
+                new Date(`${startDate}T00:00:00Z`)) /
+                86400000,
+            ) + 1;
+          return {
+            startDate: ymdAddDays(startDate, -len),
+            endDate: ymdAddDays(startDate, -1),
+          };
+        }
+
+        function getPacingWindowForDates(startDate, endDate, scope) {
           const start = new Date(`${startDate}T00:00:00Z`);
           const end = new Date(`${endDate}T00:00:00Z`);
           const todayIso = __localYMD(new Date());
@@ -5972,7 +6077,22 @@
             ),
           );
 
-          return { daysElapsed, daysInPeriod };
+          // How far to project spend: MTD projects to the end of the month,
+          // This Week to Sunday. Other views are already complete periods.
+          let projectionEnd = end;
+          if (scope === "mtd") {
+            projectionEnd = new Date(
+              Date.UTC(end.getUTCFullYear(), end.getUTCMonth() + 1, 0),
+            );
+          } else if (scope === "weekly") {
+            projectionEnd = new Date(start.getTime() + 6 * 86400000);
+          }
+          const daysInProjection = Math.max(
+            daysInPeriod,
+            Math.round((projectionEnd - start) / 86400000) + 1,
+          );
+
+          return { daysElapsed, daysInPeriod, daysInProjection };
         }
 
         function computePacingClient(cost, dailyBudget, pacing) {
@@ -5985,7 +6105,11 @@
             };
           }
           const expectedSpendToDate = dailyBudget * pacing.daysElapsed;
-          const projectedPeriodSpend = dailyBudget * pacing.daysInPeriod;
+          // Projection = current run-rate (spend per elapsed day) carried to
+          // the end of the projection window (e.g. month-end for MTD).
+          const projectionDays = pacing.daysInProjection || pacing.daysInPeriod;
+          const projectedPeriodSpend =
+            (cost / Math.max(1, pacing.daysElapsed)) * projectionDays;
           const paceRatio =
             expectedSpendToDate > 0 ? cost / expectedSpendToDate : null;
           return {
@@ -6100,137 +6224,183 @@
             };
           }
 
-          const metricsSearch = await mcpSearchRows(
+          // ONE campaign-level query gives us everything for the period:
+          // account totals (summed), per-campaign drill-down, impression
+          // share, and the daily budget of campaigns that are actually
+          // serving. All spend lives in campaigns, so the sums match the
+          // account-level numbers in Google Ads.
+          const campaignSearch = await mcpSearchRows(
             tools,
             customerId,
             {
               fields: [
+                "campaign.id",
+                "campaign.name",
+                "campaign.status",
+                "campaign.advertising_channel_type",
+                "campaign_budget.id",
+                "campaign_budget.amount_micros",
                 "metrics.cost_micros",
                 "metrics.clicks",
                 "metrics.conversions",
-                "metrics.average_cpc",
+                "metrics.impressions",
+                "metrics.search_impression_share",
+                "metrics.search_budget_lost_impression_share",
+                "metrics.search_rank_lost_impression_share",
               ],
-              resource: "customer",
+              resource: "campaign",
               conditions: [
                 `segments.date BETWEEN '${startDate}' AND '${endDate}'`,
               ],
-              limit: 1,
             },
             { loginCustomerId },
           );
-          const metricsRows = metricsSearch.rows;
-          const m = metricsRows[0] || {};
-          // A genuinely quiet day/account (e.g. "Yesterday" with $0 spend)
-          // returns zero rows from Google Ads — that's a valid, real answer,
-          // not a failed query. Only mode === "empty" means every attempt to
-          // reach the API actually failed; anything else means the query
-          // succeeded, even if there was nothing to return. Previously this
-          // checked row content instead, which meant a quiet period looked
-          // identical to a failed fetch and silently fell back to whatever
-          // data was already loaded — that's why switching between Daily/
-          // Yesterday/Last Month could appear to show the same numbers.
-          const hasLiveMetrics = metricsSearch.mode !== "empty";
+          // A genuinely quiet day/account returns zero rows from Google Ads —
+          // that's a valid answer, not a failed query. Only mode === "empty"
+          // means every attempt to reach the API failed.
+          const hasLiveMetrics = campaignSearch.mode !== "empty";
 
-          const costMicros = asNumber(
-            rowValue(m, [
-              "metrics.cost_micros",
-              "metrics.costMicros",
-              "cost_micros",
-              "costMicros",
-            ]),
-            0,
-          );
-          const clicks = asNumber(rowValue(m, ["metrics.clicks", "clicks"]), 0);
-          const conv = asNumber(
-            rowValue(m, ["metrics.conversions", "conversions"]),
-            0,
-          );
-          const avgCpcMicros = asNumber(
-            rowValue(m, [
-              "metrics.average_cpc",
-              "metrics.averageCpc",
-              "average_cpc",
-              "averageCpc",
-            ]),
-            0,
-          );
-
-          let budgetRows = [];
-          let budgetSearchMode = "cache_hit";
-          // IMPORTANT: Number(null) === 0 in JavaScript, not NaN. So if
-          // cachedDailyBudget is null (meaning "nothing valid is cached"),
-          // naively doing Number(options.cachedDailyBudget) silently turns
-          // that into 0 — which then passes Number.isFinite() and gets
-          // treated as a real cached budget, permanently skipping the live
-          // query. This is the actual bug that caused every account to show
-          // "cache_hit" with a $0 budget even after the cache-write fix.
-          // Checking `!= null` first (catches both null and undefined)
-          // before converting avoids that trap.
-          const rawCached =
-            options && options.cachedDailyBudget != null
-              ? Number(options.cachedDailyBudget)
-              : NaN;
-          let dailyBudget = Number.isFinite(rawCached) && rawCached > 0
-            ? rawCached
-            : null;
-
-          if (!Number.isFinite(dailyBudget)) {
-            const budgetSearch = await mcpSearchRows(
-              tools,
-              customerId,
-              {
-                fields: ["campaign_budget.id", "campaign_budget.amount_micros"],
-                resource: "campaign",
-                conditions: ["campaign.status = 'ENABLED'"],
-              },
-              { loginCustomerId },
-            );
-            budgetRows = budgetSearch.rows;
-            budgetSearchMode = budgetSearch.mode;
-
-            const seen = new Set();
-            let totalMicros = 0;
-            budgetRows.forEach((row) => {
-              const budgetId = rowValue(row, [
-                "campaign_budget.id",
-                "campaign_budget.id",
-                "campaignBudget.id",
-                "id",
-              ]);
-              if (budgetId == null) return;
-              const key = String(budgetId);
-              if (seen.has(key)) return;
-              seen.add(key);
-              totalMicros += asNumber(
-                rowValue(row, [
-                  "campaign_budget.amount_micros",
-                  "campaign_budget.amountMicros",
-                  "campaignBudget.amountMicros",
-                  "amount_micros",
-                ]),
-                0,
+          // Previous comparable period (for "vs previous period" deltas).
+          let prev = null;
+          if (options && options.prevRange) {
+            try {
+              const prevSearch = await mcpSearchRows(
+                tools,
+                customerId,
+                {
+                  fields: [
+                    "metrics.cost_micros",
+                    "metrics.clicks",
+                    "metrics.conversions",
+                    "metrics.impressions",
+                  ],
+                  resource: "customer",
+                  conditions: [
+                    `segments.date BETWEEN '${options.prevRange.startDate}' AND '${options.prevRange.endDate}'`,
+                  ],
+                  limit: 1,
+                },
+                { loginCustomerId },
               );
+              if (prevSearch.mode !== "empty") {
+                const pm = prevSearch.rows[0] || {};
+                const pCost =
+                  asNumber(
+                    rowValue(pm, ["metrics.cost_micros", "metrics.costMicros", "cost_micros", "costMicros"]),
+                    0,
+                  ) / 1000000;
+                const pConv = asNumber(rowValue(pm, ["metrics.conversions", "conversions"]), 0);
+                const pClicks = asNumber(rowValue(pm, ["metrics.clicks", "clicks"]), 0);
+                const pImpr = asNumber(rowValue(pm, ["metrics.impressions", "impressions"]), 0);
+                prev = {
+                  cost: Number(pCost.toFixed(2)),
+                  conv: Number(pConv.toFixed(2)),
+                  clicks: pClicks,
+                  impr: pImpr,
+                  cpa: pConv > 0 ? Number((pCost / pConv).toFixed(2)) : 0,
+                  ctr: pImpr > 0 ? Number(((pClicks / pImpr) * 100).toFixed(2)) : 0,
+                  startDate: options.prevRange.startDate,
+                  endDate: options.prevRange.endDate,
+                };
+              }
+            } catch (prevErr) {
+              prev = null; // deltas are optional; never fail the account
+            }
+          }
+
+          const num = (row, keys) => asNumber(rowValue(row, keys), 0);
+          const campaigns = campaignSearch.rows.map((row) => {
+            const cImpr = num(row, ["metrics.impressions", "impressions"]);
+            const is = num(row, ["metrics.search_impression_share", "metrics.searchImpressionShare", "search_impression_share"]);
+            const cCost = num(row, ["metrics.cost_micros", "metrics.costMicros", "cost_micros"]) / 1000000;
+            const cConv = num(row, ["metrics.conversions", "conversions"]);
+            return {
+              id: String(rowValue(row, ["campaign.id", "id"]) ?? ""),
+              name: String(rowValue(row, ["campaign.name", "name"]) ?? "Campaign"),
+              status: String(rowValue(row, ["campaign.status", "status"]) ?? "").toUpperCase(),
+              type: String(
+                rowValue(row, ["campaign.advertising_channel_type", "campaign.advertisingChannelType", "advertising_channel_type"]) ?? "",
+              ).toUpperCase(),
+              budgetId: String(rowValue(row, ["campaign_budget.id", "campaignBudget.id"]) ?? ""),
+              dailyBudget:
+                num(row, ["campaign_budget.amount_micros", "campaign_budget.amountMicros", "campaignBudget.amountMicros"]) / 1000000,
+              cost: Number(cCost.toFixed(2)),
+              clicks: num(row, ["metrics.clicks", "clicks"]),
+              conv: Number(cConv.toFixed(2)),
+              cpa: cConv > 0 ? Number((cCost / cConv).toFixed(2)) : 0,
+              impr: cImpr,
+              is,
+              lostBudget: num(row, ["metrics.search_budget_lost_impression_share", "metrics.searchBudgetLostImpressionShare"]),
+              lostRank: num(row, ["metrics.search_rank_lost_impression_share", "metrics.searchRankLostImpressionShare"]),
+            };
+          });
+
+          // Keep campaigns that matter for this period: anything enabled, plus
+          // paused/removed campaigns that still spent in the period.
+          const relevantCampaigns = campaigns
+            .filter((c) => c.status === "ENABLED" || c.cost > 0 || c.impr > 0)
+            .sort((a, b) => b.cost - a.cost);
+
+          let cost = 0, clicks = 0, conv = 0, impr = 0;
+          // Impression share is a ratio; to combine campaigns we rebuild the
+          // eligible impressions (impr / IS) and divide total impr by that.
+          let eligible = 0, lostBudgetEligible = 0, lostRankEligible = 0;
+          campaigns.forEach((c) => {
+            cost += c.cost;
+            clicks += c.clicks;
+            conv += c.conv;
+            impr += c.impr;
+            if (c.is > 0 && c.impr > 0) {
+              const e = c.impr / c.is;
+              eligible += e;
+              lostBudgetEligible += e * c.lostBudget;
+              lostRankEligible += e * c.lostRank;
+            }
+          });
+
+          // Daily budget = distinct budgets of ENABLED campaigns that are
+          // actually serving. An enabled campaign with zero impressions after
+          // a few days (e.g. an experiment arm, or one with a targeting or
+          // approval problem) isn't spending, so counting its budget made
+          // accounts look badly under-paced. Those are reported as "idle".
+          const enoughDays = pacing && pacing.daysElapsed >= 3;
+          const seenBudgets = new Set();
+          let dailyBudget = 0;
+          const idleCampaigns = [];
+          campaigns
+            .filter((c) => c.status === "ENABLED")
+            .forEach((c) => {
+              const idle = enoughDays && c.impr === 0;
+              if (idle) {
+                idleCampaigns.push({ name: c.name, dailyBudget: c.dailyBudget, type: c.type });
+                return;
+              }
+              const key = c.budgetId || `c:${c.id}`;
+              if (seenBudgets.has(key)) return;
+              seenBudgets.add(key);
+              dailyBudget += c.dailyBudget;
             });
 
-            dailyBudget = totalMicros / 1000000;
-
+          // Fall back to the cached budget only if the live query failed.
+          if (!hasLiveMetrics) {
+            const rawCached =
+              options && options.cachedDailyBudget != null
+                ? Number(options.cachedDailyBudget)
+                : NaN;
+            dailyBudget = Number.isFinite(rawCached) && rawCached > 0 ? rawCached : 0;
+          } else {
             const normalizedId = normalizeCustomerIdDigits(customerId);
-            // Only cache a genuinely positive budget. A 0 here is far more
-            // likely to be a transient/failed query than a real zero-budget
-            // active account — caching it would lock the account into
-            // "no budget data" forever, since a cache hit skips re-querying
-            // on every future refresh. Better to retry live next time.
-            if (normalizedId && Number.isFinite(dailyBudget) && dailyBudget > 0) {
+            if (normalizedId && dailyBudget > 0) {
               adsMcpDailyBudgetCache.set(normalizedId, {
                 dailyBudget,
                 updatedAt: Date.now(),
-                source: "live_budget_query",
+                source: "live_campaign_query",
               });
             }
           }
 
-          const cost = costMicros / 1000000;
-          const cpc = avgCpcMicros / 1000000;
+          const enabledCount = campaigns.filter((c) => c.status === "ENABLED").length;
+          const cpc = clicks > 0 ? cost / clicks : 0;
           const cpa = conv > 0 ? cost / conv : 0;
 
           return {
@@ -6244,6 +6414,15 @@
                 cpc: Number(cpc.toFixed(2)),
                 conv: Number(conv.toFixed(2)),
                 cpa: Number(cpa.toFixed(2)),
+                impr,
+                ctr: impr > 0 ? Number(((clicks / impr) * 100).toFixed(2)) : 0,
+                searchIS: eligible > 0 ? impr / eligible : null,
+                lostIsBudget: eligible > 0 ? lostBudgetEligible / eligible : null,
+                lostIsRank: eligible > 0 ? lostRankEligible / eligible : null,
+                campaigns: relevantCampaigns,
+                idleCampaigns,
+                enabledCampaignCount: enabledCount,
+                prev,
               },
               computePacingClient(cost, dailyBudget, pacing),
             ),
@@ -6253,12 +6432,12 @@
               status,
               manager,
               infoRows: infoRows.length,
-              metricsRows: metricsRows.length,
-              budgetRows: budgetRows.length,
+              metricsRows: campaignSearch.rows.length,
+              budgetRows: campaignSearch.rows.length,
               infoSearchMode,
-              metricsSearchMode: metricsSearch.mode,
-              budgetSearchMode,
-              budgetCacheHit: budgetSearchMode === "cache_hit",
+              metricsSearchMode: campaignSearch.mode,
+              budgetSearchMode: hasLiveMetrics ? campaignSearch.mode : "cache_fallback",
+              budgetCacheHit: false,
               loginCustomerId,
             },
           };
@@ -6377,7 +6556,8 @@
             );
           }
 
-          const pacing = getPacingWindowForDates(startDate, endDate);
+          const pacing = getPacingWindowForDates(startDate, endDate, dateScope);
+          const prevRange = computePreviousRange(startDate, endDate, dateScope);
 
           if (customerIds.length > 0) {
             const primeCustomerId = customerIds[0];
@@ -6413,6 +6593,7 @@
                 loginCustomerId: anchorMccId,
                 rollCallMeta: rollCallMetaById.get(id) || null,
                 cachedDailyBudget: getCachedDailyBudget(id),
+                prevRange,
               }),
           );
 
@@ -6490,6 +6671,7 @@
             accounts: liveAccounts,
             errors,
             pacingWindow: pacing,
+            prevRange,
             diagnostics,
           };
         }
@@ -6996,6 +7178,10 @@
         }
 
         let liveFetchSeq = 0;
+
+        // Date range the live `accounts` numbers belong to (null = not live).
+
+        let liveRange = null;
         async function fetchLiveDashboardData() {
           const mySeq = ++liveFetchSeq;
           const isStale = () => mySeq !== liveFetchSeq;
@@ -7088,10 +7274,39 @@
                 expectedSpendToDate: account.expectedSpendToDate ?? null,
                 projectedPeriodSpend: account.projectedPeriodSpend ?? null,
                 paceRatio: account.paceRatio ?? null,
+                impr: account.impr ?? 0,
+                ctr: account.ctr ?? 0,
+                searchIS: account.searchIS ?? null,
+                lostIsBudget: account.lostIsBudget ?? null,
+                lostIsRank: account.lostIsRank ?? null,
+                campaigns: account.campaigns || [],
+                idleCampaigns: account.idleCampaigns || [],
+                enabledCampaignCount: account.enabledCampaignCount ?? null,
+                prev: account.prev || null,
+                _liveFetchId: mySeq,
               });
               if (idKey) byKey.set(idKey, merged);
               byKey.set(nameKey, merged);
             });
+
+            // Accounts saved from earlier sessions that the live MCC roll call
+            // no longer returns (cancelled/closed accounts, e.g. IL-Chicago)
+            // are dropped, so they stop showing up as $0 rows. Only done when
+            // the roll call itself succeeded and returned accounts.
+            const liveIds = new Set(
+              live.accounts.map((a) => String(a.customerId || "")).filter(Boolean),
+            );
+            const rollCallOk =
+              live.accounts.length > 0 &&
+              live.diagnostics &&
+              live.diagnostics.rollCallSource === "mcc_customer_client";
+            if (rollCallOk) {
+              for (const [key, value] of Array.from(byKey.entries())) {
+                if (value && value.customerId && !liveIds.has(String(value.customerId))) {
+                  byKey.delete(key);
+                }
+              }
+            }
 
             const dedup = new Map();
             byKey.forEach((value) => {
@@ -7103,6 +7318,13 @@
 
             accounts = Array.from(dedup.values());
             pacingWindow = live.pacingWindow || null;
+            liveRange = {
+              startDate,
+              endDate,
+              scope: dateScope,
+              prevRange: live.prevRange || null,
+              fetchId: mySeq,
+            };
             await saveData();
             lastLiveFetch = new Date();
 
@@ -8214,6 +8436,22 @@
 
         // ============ HEALTH LOGIC ============
         function getHealth(cpa, account) {
+          // Spend with zero conversions is a problem, not "no data". Flag it
+          // once the spend is past what one conversion should cost.
+          if (
+            account &&
+            (!cpa || cpa <= 0) &&
+            Number(account.cost) > 0 &&
+            !(Number(account.conv) > 0)
+          ) {
+            const target =
+              account.goalTargetCpa > 0 ? account.goalTargetCpa : settings.goodMax;
+            const badAt =
+              account.goalTargetCpa > 0 ? account.goalTargetCpa * 1.5 : settings.badMin;
+            if (account.cost >= badAt) return "bad";
+            if (account.cost >= target) return "warn";
+            return "none";
+          }
           if (!cpa || cpa <= 0) return "none";
           // If the account has a per-account goalTargetCpa set, use that as the
           // "good" threshold and scale the bad threshold proportionally.
@@ -11506,13 +11744,30 @@ levis@gametruck`;
           const label = document.getElementById("pacingWindowLabel");
           if (!body) return;
 
+          const projTh = document.getElementById("pacingProjectionTh");
+          const projectsAhead =
+            pacingWindow &&
+            pacingWindow.daysInProjection &&
+            pacingWindow.daysInProjection > pacingWindow.daysElapsed;
+          if (projTh) {
+            const what =
+              liveRange && liveRange.scope === "mtd"
+                ? "Projected Month Total"
+                : liveRange && liveRange.scope === "weekly"
+                  ? "Projected Week Total"
+                  : "Period Total";
+            projTh.innerHTML = `${what} <span class="sort-indicator">↕</span>`;
+          }
           if (label) {
             label.textContent = pacingWindow
-              ? `Day ${pacingWindow.daysElapsed} of ${pacingWindow.daysInPeriod} in the selected period · pulled from live Google Ads daily budgets`
+              ? `Day ${pacingWindow.daysElapsed} of ${pacingWindow.daysInProjection || pacingWindow.daysInPeriod} · budget = enabled campaigns that are serving (idle ones excluded)${projectsAhead ? " · projection = current daily run-rate carried to period end" : ""}`
               : `How each account's spend compares to its Google Ads daily budget \u2014 refresh live data to populate this`;
           }
 
-          const withBudget = accounts.filter(
+          const pacingSource = liveRange
+            ? accounts.filter((a) => a && a._liveFetchId === liveRange.fetchId)
+            : accounts;
+          const withBudget = pacingSource.filter(
             (a) => a.dailyBudget != null && a.dailyBudget > 0,
           );
           if (withBudget.length === 0) {
@@ -11590,7 +11845,15 @@ levis@gametruck`;
             </div>
           </div>
         </td>
-        <td>${a.projectedPeriodSpend != null ? fmt$(a.projectedPeriodSpend) : "n/a"}</td>
+        <td>${a.projectedPeriodSpend != null ? fmt$(a.projectedPeriodSpend) : "n/a"}${
+          a.projectedPeriodSpend != null && pacingWindow && pacingWindow.daysInProjection
+            ? `<div class="delta" style="color:var(--ink-muted)">budget allows ${fmt$(a.dailyBudget * pacingWindow.daysInProjection)}</div>`
+            : ""
+        }${
+          a.idleCampaigns && a.idleCampaigns.length
+            ? `<div class="delta" style="color:#8a6500" title="${escapeHtml(a.idleCampaigns.map((c) => c.name).join(", "))}">${a.idleCampaigns.length} idle campaign${a.idleCampaigns.length === 1 ? "" : "s"} excluded</div>`
+            : ""
+        }</td>
       </tr>
     `;
             })
@@ -11601,8 +11864,37 @@ levis@gametruck`;
         // matching the current dateScope. Falls back to the all-time `accounts[]`
         // list when no scoped snapshots are available, with a flag so the UI can
         // show a fallback indicator.
+        // True when the `accounts` numbers came from a live Google Ads pull for
+        // exactly the range currently selected.
+        function isLiveForCurrentScope() {
+          if (!liveRange || liveRange.scope !== dateScope) return false;
+          if (dateScope === "custom") {
+            return (
+              customDateRange.start === liveRange.startDate &&
+              customDateRange.end === liveRange.endDate
+            );
+          }
+          return true;
+        }
+
         function getScopedAccounts() {
           const scope = dateScope;
+
+          // Live data for the selected range is the source of truth. Before,
+          // the leaderboard was rebuilt from saved history snapshots, which
+          // dropped pacing/IS data and made Yesterday, Last Week and Last
+          // Month show the latest *month* snapshot (i.e. month-to-date).
+          if (isLiveForCurrentScope()) {
+            const label = `${formatDateShort(liveRange.startDate)} – ${formatDateShort(liveRange.endDate)}`;
+            return accounts
+              .filter((a) => a && a._liveFetchId === liveRange.fetchId)
+              .map((a) => ({
+                ...a,
+                _scope: scope,
+                _scopeLabel: label,
+                _isFallback: false,
+              }));
+          }
           // 'mtd', 'monthly', 'weekly', 'daily', 'custom'
           // We use history granularity for filtering: daily → most recent day, etc.
 
@@ -13237,10 +13529,14 @@ levis@gametruck`;
               if (sortKey === "health") {
                 const order = { good: 0, warn: 1, bad: 2, none: 3 };
                 va = order[getHealth(a.cpa, a)] ?? 4;
-                vb = order[getHealth(b.cpa)] ?? 4;
+                vb = order[getHealth(b.cpa, b)] ?? 4;
               } else {
                 va = a[sortKey];
                 vb = b[sortKey];
+                if (sortKey !== "name") {
+                  if (!Number.isFinite(Number(va))) va = -Infinity;
+                  if (!Number.isFinite(Number(vb))) vb = -Infinity;
+                }
               }
               if (sortKey === "name") {
                 va = String(va).toLowerCase();
@@ -13532,6 +13828,44 @@ levis@gametruck`;
             }
           }
 
+          // Live-data alerts (only when the numbers are live for this range).
+          if (isLiveForCurrentScope()) {
+            const goodMax = settings.goodMax || 15;
+            for (const a of getScopedAccounts()) {
+              (a.idleCampaigns || []).forEach((c) => {
+                alerts.push({
+                  accountName: a.name,
+                  severity: "warning",
+                  type: "idle-campaign",
+                  msg: `Enabled campaign <strong>${escapeHtml(c.name)}</strong> (${fmt$(c.dailyBudget)}/day) got <strong>0 impressions</strong> this period — check targeting, approvals or bidding, or pause it`,
+                });
+              });
+              (a.campaigns || [])
+                .filter((c) => c.cost >= Math.max(50, goodMax * 3) && !(c.conv > 0))
+                .forEach((c) => {
+                  alerts.push({
+                    accountName: a.name,
+                    severity: c.cost >= goodMax * 6 ? "critical" : "warning",
+                    type: "campaign-no-conv",
+                    msg: `Campaign <strong>${escapeHtml(c.name)}</strong> spent <strong>${fmt$(c.cost)}</strong> with <strong>0 conversions</strong>`,
+                  });
+                });
+              if (
+                a.lostIsBudget != null &&
+                a.lostIsBudget >= 0.25 &&
+                a.cpa > 0 &&
+                a.cpa <= goodMax
+              ) {
+                alerts.push({
+                  accountName: a.name,
+                  severity: "warning",
+                  type: "scale-opportunity",
+                  msg: `Room to scale — on target at <strong>${fmt$(a.cpa)}</strong>/conv but losing <strong>${fmtPct(a.lostIsBudget)}</strong> of searches to budget`,
+                });
+              }
+            }
+          }
+
           // Sort: critical first, then by account name
           alerts.sort((a, b) => {
             if (a.severity !== b.severity)
@@ -13550,6 +13884,122 @@ levis@gametruck`;
         //
         // Designed to make the morning routine: open dashboard → glance at the panel
         // → know exactly which 3-5 accounts to look at first.
+        // Today's Focus from live data: current period vs the previous
+        // comparable period (both pulled in the same live refresh), so it
+        // works from the first load instead of needing weeks of saved history.
+        function renderFocusPanelLive(list, ctrWinT, cpaWinT, cpaConcernT) {
+          const focusItem = (name, icon, detail) => `
+        <div class="focus-item" onclick="scrollToAccount('${escapeHtml(name).replace(/'/g, "&#39;")}')" title="Click to jump to this account">
+          <div class="focus-item-name">${icon} ${escapeHtml(name)}</div>
+          <div class="focus-item-detail">${detail}</div>
+        </div>`;
+          const prevNote = (cur, prev, lowerIsBetter, fmtFn) => {
+            const d = pctChange(cur, prev);
+            if (d == null || Math.abs(d) < 5) return "";
+            return ` · ${d > 0 ? "▲" : "▼"}${Math.abs(d).toFixed(0)}% vs prev (${fmtFn(prev)})`;
+          };
+          const pw = pacingWindow || {};
+          const pacingMeaningful =
+            (dateScope === "mtd" || dateScope === "weekly") && (pw.daysElapsed || 0) >= 5;
+
+          // ---- Needs Attention ----
+          const attention = [];
+          for (const a of list) {
+            const h = getHealth(a.cpa, a);
+            const reasons = [];
+            let rank = 0; // 2 = high, 1 = medium
+            if (h === "bad" || h === "warn") {
+              rank = Math.max(rank, h === "bad" ? 2 : 1);
+              reasons.push(
+                a.conv > 0
+                  ? `Cost/Conv ${fmt$(a.cpa)} (target ≤ $${cpaConcernT})${a.prev ? prevNote(a.cpa, a.prev.cpa, true, fmt$) : ""}`
+                  : `${fmt$(a.cost)} spent, 0 conversions`,
+              );
+            }
+            if (a.idleCampaigns && a.idleCampaigns.length) {
+              rank = Math.max(rank, 1);
+              reasons.push(`${a.idleCampaigns.length} enabled campaign${a.idleCampaigns.length === 1 ? "" : "s"} getting 0 impressions`);
+            }
+            if (pacingMeaningful && a.paceRatio != null) {
+              if (a.paceRatio > 1.15) {
+                rank = Math.max(rank, 1);
+                reasons.push(`Over-pacing ${Math.round(a.paceRatio * 100)}% of budget`);
+              } else if (a.paceRatio < 0.8) {
+                rank = Math.max(rank, 1);
+                reasons.push(`Under-pacing ${Math.round(a.paceRatio * 100)}% of budget`);
+              }
+            }
+            if (a.prev && a.prev.conv >= 5 && a.conv < a.prev.conv * 0.6 && a.cost >= a.prev.cost * 0.7) {
+              rank = Math.max(rank, 1);
+              reasons.push(`Conversions down ${Math.round((1 - a.conv / a.prev.conv) * 100)}% vs prev period`);
+            }
+            if (!rank) continue;
+            const diag = diagnoseAccount(a).find((n) => /rank|budget-limited|weak spot/.test(n));
+            attention.push({ a, rank, detail: reasons.join(" · ") + (diag ? ` — ${diag}` : "") });
+          }
+          attention.sort((x, y) => y.rank - x.rank || (y.a.cost || 0) - (x.a.cost || 0));
+          const attentionTop = attention.slice(0, 5);
+          document.getElementById("focusAttentionCount").textContent = attention.length;
+          document.getElementById("focusAttentionBody").innerHTML = attentionTop.length
+            ? attentionTop
+                .map((x) => focusItem(x.a.name, x.rank === 2 ? "🔴" : "🟡", escapeHtml(x.detail)))
+                .join("") +
+              (attention.length > attentionTop.length
+                ? `<div class="focus-empty">+${attention.length - attentionTop.length} more in the leaderboard (filter: Attention / Critical)</div>`
+                : "")
+            : `<div class="focus-empty">Nothing urgent — every account is within target, pacing and serving normally</div>`;
+
+          // ---- Doing Well (improving vs previous period) ----
+          const well = [];
+          for (const a of list) {
+            const p = a.prev;
+            if (!p || !(p.cost > 20) || !(a.cost > 20)) continue;
+            const cpaImp = p.cpa > 0 && a.cpa > 0 ? ((p.cpa - a.cpa) / p.cpa) * 100 : 0;
+            const convGr = p.conv >= 3 ? ((a.conv - p.conv) / p.conv) * 100 : 0;
+            if (cpaImp < -10) continue; // getting more expensive — not "doing well"
+            const score = cpaImp + convGr * 0.5;
+            if (cpaImp >= 10 || convGr >= 20) well.push({ a, cpaImp, convGr, score });
+          }
+          well.sort((x, y) => y.score - x.score);
+          document.getElementById("focusWellCount").textContent = well.length;
+          document.getElementById("focusWellBody").innerHTML = well.length
+            ? well
+                .slice(0, 5)
+                .map((w) => {
+                  const parts = [];
+                  if (w.cpaImp >= 10) parts.push(`<span class="pos">Cost/Conv ↓ ${w.cpaImp.toFixed(0)}%</span> (${fmt$(w.a.prev.cpa)} → ${fmt$(w.a.cpa)})`);
+                  if (w.convGr >= 10) parts.push(`<span class="pos">Conv ↑ ${w.convGr.toFixed(0)}%</span>`);
+                  return focusItem(w.a.name, "📈", parts.join(" · "));
+                })
+                .join("")
+            : `<div class="focus-empty">No account improved ≥10% vs the previous period</div>`;
+
+          // ---- Wins (on target for CTR and cost/conv with real volume) ----
+          const wins = list
+            .filter((a) => a.cost >= 50 && a.conv > 0 && a.cpa <= cpaWinT && (a.ctr || 0) >= ctrWinT)
+            .sort((x, y) => y.conv - x.conv);
+          document.getElementById("focusWinsCount").textContent = wins.length;
+          document.getElementById("focusWinsBody").innerHTML = wins.length
+            ? wins
+                .slice(0, 5)
+                .map((a) =>
+                  focusItem(
+                    a.name,
+                    "🏆",
+                    `CTR <strong>${(a.ctr || 0).toFixed(1)}%</strong> · Cost/Conv <strong>${fmt$(a.cpa)}</strong> · ${fmtN(a.conv)} conv`,
+                  ),
+                )
+                .join("")
+            : `<div class="focus-empty">No account at CTR ≥ ${ctrWinT}% and cost/conv ≤ $${cpaWinT} with $50+ spend</div>`;
+
+          const subtitleEl = document.getElementById("focusSubtitle");
+          if (subtitleEl) {
+            const now = new Date();
+            const pr = liveRange && liveRange.prevRange;
+            subtitleEl.textContent = `${now.toLocaleDateString("en-US", { weekday: "long" })}, ${now.toLocaleDateString("en-US", { month: "short", day: "numeric" })} · CTR target ≥${ctrWinT}% · Cost/Conv ≤$${cpaWinT}${pr ? ` · compared with ${formatDateShort(pr.startDate)} – ${formatDateShort(pr.endDate)}` : ""}`;
+          }
+        }
+
         function renderFocusPanel() {
           const panel = document.getElementById("focusPanel");
           if (!panel) return;
@@ -13565,6 +14015,11 @@ levis@gametruck`;
           const ctrWinT = settings.ctrWinThreshold || 8;
           const cpaWinT = settings.cpaWinThreshold || 15;
           const cpaConcernT = settings.cpaConcernThreshold || 15;
+
+          if (isLiveForCurrentScope()) {
+            renderFocusPanelLive(getScopedAccounts(), ctrWinT, cpaWinT, cpaConcernT);
+            return;
+          }
 
           // Helper: pick the "most recent stable" pair of weekly snapshots for an account.
           // The latest week often has partial attribution (conversions trickle in for days).
@@ -13918,8 +14373,15 @@ levis@gametruck`;
           });
         }
 
-        function healthBadge(cpa) {
-          const h = getHealth(cpa);
+        function healthBadge(cpa, account) {
+          const h = getHealth(cpa, account);
+          if (h === "none" && account && !(Number(account.cost) > 0)) {
+            const idle =
+              account.enabledCampaignCount === 0
+                ? "No active campaigns"
+                : "No spend";
+            return `<span class="health-badge health-none" title="No spend in this period"><span class="dot"></span>${idle}</span>`;
+          }
           const cls = {
             good: "health-good",
             warn: "health-warn",
@@ -13929,10 +14391,139 @@ levis@gametruck`;
           return `<span class="health-badge ${cls}"><span class="dot"></span>${healthLabel(h)}</span>`;
         }
 
+        // ---- Leaderboard helpers ----
+        const LEADER_COLS = 10;
+        const expandedAccounts = new Set();
+
+        function pctChange(cur, prev) {
+          if (!(prev > 0) || !Number.isFinite(cur)) return null;
+          return ((cur - prev) / prev) * 100;
+        }
+
+        // Small "▲ 12%" under a number. lowerIsBetter flips the colour (cost/conv).
+        function deltaHtml(cur, prev, lowerIsBetter, neutral) {
+          const d = pctChange(cur, prev);
+          if (d == null || Math.abs(d) < 0.5) return "";
+          const up = d > 0;
+          const good = lowerIsBetter ? !up : up;
+          const color =
+            neutral || Math.abs(d) < 5 ? "var(--ink-muted)" : good ? "var(--good)" : "var(--bad)";
+          return `<div class="delta" style="color:${color}" title="vs previous period">${up ? "▲" : "▼"} ${Math.abs(d).toFixed(0)}%</div>`;
+        }
+
+        function fmtPct(v) {
+          return v == null || !Number.isFinite(v) ? "—" : `${Math.round(v * 100)}%`;
+        }
+
+        function isCellHtml(a) {
+          if (a.searchIS == null) return `<span style="color:var(--ink-muted)">—</span>`;
+          const b = a.lostIsBudget || 0;
+          const r = a.lostIsRank || 0;
+          return `<div>${fmtPct(a.searchIS)}</div><div class="delta" style="color:var(--ink-muted)" title="Search impression share lost to budget / to rank">lost: ${fmtPct(b)} budget · ${fmtPct(r)} rank</div>`;
+        }
+
+        // One-line plain-English read of what is holding an account back.
+        function diagnoseAccount(a) {
+          const notes = [];
+          if (a.idleCampaigns && a.idleCampaigns.length) {
+            const total = a.idleCampaigns.reduce((s, c) => s + (c.dailyBudget || 0), 0);
+            notes.push(`${a.idleCampaigns.length} enabled campaign${a.idleCampaigns.length === 1 ? "" : "s"} with ${fmt$(total)}/day budget got 0 impressions`);
+          }
+          if (a.searchIS != null) {
+            if ((a.lostIsRank || 0) >= 0.4 && (a.lostIsRank || 0) > (a.lostIsBudget || 0) * 2) {
+              notes.push(`losing ${fmtPct(a.lostIsRank)} of searches to rank → bids, ad strength or quality score, not budget`);
+            } else if ((a.lostIsBudget || 0) >= 0.2) {
+              notes.push(`losing ${fmtPct(a.lostIsBudget)} of searches to budget → budget-limited`);
+            }
+          }
+          const camps = (a.campaigns || []).filter((c) => c.cost > 0);
+          if (camps.length > 1 && a.cpa > 0) {
+            const worst = camps
+              .filter((c) => c.cost >= a.cost * 0.1)
+              .sort((x, y) => (y.cpa || Infinity) - (x.cpa || Infinity))[0];
+            if (worst && (worst.conv === 0 || worst.cpa > a.cpa * 1.25)) {
+              notes.push(`"${worst.name}" is the weak spot (${worst.conv > 0 ? fmt$(worst.cpa) + "/conv" : "0 conv"} on ${fmt$(worst.cost)})`);
+            }
+          }
+          return notes;
+        }
+
+        function campaignDrilldownHtml(a) {
+          const camps = a.campaigns || [];
+          const notes = diagnoseAccount(a);
+          const typeLabel = (t) =>
+            ({ SEARCH: "Search", PERFORMANCE_MAX: "PMax", DISPLAY: "Display", VIDEO: "Video", SHOPPING: "Shopping", DEMAND_GEN: "Demand Gen" }[t] || t || "—");
+          const rows = camps.length
+            ? camps
+                .map((c) => {
+                  const h = getHealth(c.cpa, c);
+                  const status = c.status === "ENABLED" ? "" : ` <span class="camp-status">${escapeHtml(c.status.toLowerCase())}</span>`;
+                  const idle = c.status === "ENABLED" && c.impr === 0 ? ` <span class="camp-status warn">0 impr</span>` : "";
+                  return `<tr>
+                    <td>${escapeHtml(c.name)}${status}${idle}</td>
+                    <td>${typeLabel(c.type)}</td>
+                    <td>${c.dailyBudget > 0 ? fmt$(c.dailyBudget) + "/day" : "—"}</td>
+                    <td>${fmt$(c.cost)}</td>
+                    <td>${fmtN(c.clicks)}</td>
+                    <td>${fmtN(c.conv)}</td>
+                    <td class="cpa-cell ${h}">${c.conv > 0 ? fmt$(c.cpa) : c.cost > 0 ? "0 conv" : "—"}</td>
+                    <td>${c.impr > 0 && c.is > 0 ? fmtPct(c.is) : "—"}</td>
+                    <td>${c.impr > 0 && c.is > 0 ? `${fmtPct(c.lostBudget)} / ${fmtPct(c.lostRank)}` : "—"}</td>
+                  </tr>`;
+                })
+                .join("")
+            : `<tr><td colspan="9" style="color:var(--ink-muted)">No campaign data for this period — click Refresh Live Data.</td></tr>`;
+          return `<tr class="drill-row"><td colspan="${LEADER_COLS}">
+            ${notes.length ? `<div class="drill-notes">${notes.map((n) => `<div>• ${escapeHtml(n)}</div>`).join("")}</div>` : ""}
+            <table class="drill-table">
+              <thead><tr><th>Campaign</th><th>Type</th><th>Budget</th><th>Cost</th><th>Clicks</th><th>Conv</th><th>Cost/Conv</th><th>Imp. Share</th><th>Lost: budget / rank</th></tr></thead>
+              <tbody>${rows}</tbody>
+            </table>
+          </td></tr>`;
+        }
+
+        function toggleAccountDrill(key) {
+          if (expandedAccounts.has(key)) expandedAccounts.delete(key);
+          else expandedAccounts.add(key);
+          render();
+        }
+
+        function leaderRowHtml(a) {
+          const idx = accounts.findIndex(
+            (x) => x.name.toLowerCase() === a.name.toLowerCase(),
+          );
+          const h = getHealth(a.cpa, a);
+          const key = a.customerId || a.name;
+          const open = expandedAccounts.has(key);
+          const p = a.prev || null;
+          const canDrill = Array.isArray(a.campaigns);
+          const safeKey = escapeHtml(String(key)).replace(/'/g, "&#39;");
+          return `
+      <tr class="${open ? "drill-open" : ""}">
+        <td>${canDrill ? `<button class="drill-btn" onclick="toggleAccountDrill('${safeKey}')" title="Show campaigns">${open ? "▾" : "▸"}</button> ` : ""}${escapeHtml(a.name)}</td>
+        <td>${healthBadge(a.cpa, a)}</td>
+        <td>${fmt$(a.cost)}${p ? deltaHtml(a.cost, p.cost, false, true) : ""}</td>
+        <td>${fmtN(a.clicks)}</td>
+        <td>${fmt$(a.cpc)}</td>
+        <td>${fmtN(a.conv)}${p ? deltaHtml(a.conv, p.conv, false) : ""}</td>
+        <td class="cpa-cell ${h}">${a.conv > 0 ? fmt$(a.cpa) : a.cost > 0 ? "0 conv" : fmt$(0)}${p && a.cpa > 0 ? deltaHtml(a.cpa, p.cpa, true) : ""}</td>
+        <td>${isCellHtml(a)}</td>
+        <td>${paceBadge(a.paceRatio)}</td>
+        <td>
+          <div class="row-actions">
+            ${a.customerId ? `<button class="icon-btn ga-btn" onclick="openGoogleAds('${escapeHtml(a.customerId)}')" title="Open in Google Ads">↗</button>` : ""}
+            <button class="icon-btn report" onclick="downloadAccountReport(${idx})" title="Download report">⬇ Report</button>
+            <button class="icon-btn" onclick="openModal('manual', ${idx})">Edit</button>
+            <button class="icon-btn danger" onclick="deleteAccount(${idx})">×</button>
+          </div>
+        </td>
+      </tr>${open ? campaignDrilldownHtml(a) : ""}`;
+        }
+
         function renderTable(list) {
           const body = document.getElementById("tableBody");
           if (list.length === 0) {
-            body.innerHTML = `<tr><td colspan="9" style="text-align:center; padding: 40px; color: var(--ink-muted); font-family: 'Jost';">No accounts match your filters.</td></tr>`;
+            body.innerHTML = `<tr><td colspan="${LEADER_COLS}" style="text-align:center; padding: 40px; color: var(--ink-muted); font-family: 'Jost';">No accounts match your filters.</td></tr>`;
             renderPagination(0);
             return;
           }
@@ -13954,7 +14545,6 @@ levis@gametruck`;
             let html = "";
             for (const region of regionsSorted) {
               const rAccounts = groups[region];
-              // Sort accounts within region by current sort key
               const rSorted = sortAccountList(rAccounts);
               const totals = rAccounts.reduce(
                 (acc, a) => ({
@@ -13976,7 +14566,7 @@ levis@gametruck`;
 
               html += `
         <tr class="region-header">
-          <td colspan="9">
+          <td colspan="${LEADER_COLS}">
             <span class="region-title">${escapeHtml(getRegionLabel(region))}</span>
             <span class="region-stats">
               ${rAccounts.length} account${rAccounts.length !== 1 ? "s" : ""}
@@ -13988,35 +14578,7 @@ levis@gametruck`;
           </td>
         </tr>
       `;
-
-              html += rSorted
-                .map((a) => {
-                  const idx = accounts.findIndex(
-                    (x) => x.name.toLowerCase() === a.name.toLowerCase(),
-                  );
-                  const h = getHealth(a.cpa, a);
-                  return `
-          <tr>
-            <td>${escapeHtml(a.name)}</td>
-            <td>${healthBadge(a.cpa)}</td>
-            <td>${fmt$(a.cost)}</td>
-            <td>${fmtN(a.clicks)}</td>
-            <td>${fmt$(a.cpc)}</td>
-            <td>${fmtN(a.conv)}</td>
-            <td class="cpa-cell ${h}">${fmt$(a.cpa)}</td>
-            <td>${paceBadge(a.paceRatio)}</td>
-            <td>
-              <div class="row-actions">
-                ${a.customerId ? `<button class="icon-btn ga-btn" onclick="openGoogleAds('${escapeHtml(a.customerId)}')" title="Open in Google Ads">↗</button>` : ""}
-                <button class="icon-btn report" onclick="downloadAccountReport(${idx})" title="Download report">⬇ Report</button>
-                <button class="icon-btn" onclick="openModal('manual', ${idx})">Edit</button>
-                <button class="icon-btn danger" onclick="deleteAccount(${idx})">×</button>
-              </div>
-            </td>
-          </tr>
-        `;
-                })
-                .join("");
+              html += rSorted.map(leaderRowHtml).join("");
             }
 
             body.innerHTML = html;
@@ -14033,34 +14595,7 @@ levis@gametruck`;
           const end = start + PAGE_SIZE;
           const pageItems = list.slice(start, end);
 
-          body.innerHTML = pageItems
-            .map((a) => {
-              const idx = accounts.findIndex(
-                (x) => x.name.toLowerCase() === a.name.toLowerCase(),
-              );
-              const h = getHealth(a.cpa, a);
-              return `
-      <tr>
-        <td>${escapeHtml(a.name)}</td>
-        <td>${healthBadge(a.cpa)}</td>
-        <td>${fmt$(a.cost)}</td>
-        <td>${fmtN(a.clicks)}</td>
-        <td>${fmt$(a.cpc)}</td>
-        <td>${fmtN(a.conv)}</td>
-        <td class="cpa-cell ${h}">${fmt$(a.cpa)}</td>
-            <td>${paceBadge(a.paceRatio)}</td>
-        <td>
-          <div class="row-actions">
-            ${a.customerId ? `<button class="icon-btn ga-btn" onclick="openGoogleAds('${escapeHtml(a.customerId)}')" title="Open in Google Ads">↗</button>` : ""}
-            <button class="icon-btn report" onclick="downloadAccountReport(${idx})" title="Download report">⬇ Report</button>
-            <button class="icon-btn" onclick="openModal('manual', ${idx})">Edit</button>
-            <button class="icon-btn danger" onclick="deleteAccount(${idx})">×</button>
-          </div>
-        </td>
-      </tr>
-    `;
-            })
-            .join("");
+          body.innerHTML = pageItems.map(leaderRowHtml).join("");
 
           renderPagination(list.length);
         }
@@ -14072,10 +14607,12 @@ levis@gametruck`;
             if (sortKey === "health") {
               const order = { good: 0, warn: 1, bad: 2, none: 3 };
               va = order[getHealth(a.cpa, a)] ?? 4;
-              vb = order[getHealth(b.cpa)] ?? 4;
+              vb = order[getHealth(b.cpa, b)] ?? 4;
             } else {
               va = a[sortKey];
               vb = b[sortKey];
+              if (typeof va !== "string" && !Number.isFinite(Number(va))) va = -Infinity;
+              if (typeof vb !== "string" && !Number.isFinite(Number(vb))) vb = -Infinity;
             }
             if (typeof va === "string") {
               return sortDir === "asc"
