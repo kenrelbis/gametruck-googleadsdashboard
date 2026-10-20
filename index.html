@@ -3331,6 +3331,22 @@
           >
             ⎋ Disconnect Ads MCP
           </button>
+          <button
+            class="btn btn-ghost"
+            id="portalConnectBtn"
+            style="padding: 9px 14px; font-size: 11px"
+            title="Connect your GameTruck Portal login to see real PPC leads, bookings and cost per booking"
+          >
+            🔐 Connect Portal
+          </button>
+          <button
+            class="btn btn-ghost"
+            id="portalDisconnectBtn"
+            style="padding: 9px 14px; font-size: 11px; display: none"
+            title="Disconnect the Portal login"
+          >
+            ⎋ Disconnect Portal
+          </button>
           <span
             class="control-label"
             id="adsMcpAuthStatus"
@@ -3544,7 +3560,10 @@
                   <th data-sort="cpa">
                     Cost/Conv <span class="sort-indicator">↕</span>
                   </th>
-                  <th data-sort="searchIS" title="Search impression share, and how much was lost to budget vs ad rank">
+                  <th data-sort="portalCpl" title="From the GameTruck Portal: PPC leads and cost per lead; estimated bookings, cost per booking and ROAS">
+                    Portal Leads <span class="sort-indicator">↕</span>
+                  </th>
+                  <th data-sort="searchIS" title=""Search impression share, and how much was lost to budget vs ad rank">
                     Imp. Share <span class="sort-indicator">↕</span>
                   </th>
                   <th data-sort="paceRatio">
@@ -6838,6 +6857,7 @@
           const code = url.searchParams.get("code");
           const state = url.searchParams.get("state");
           if (!error && !code) return;
+          if (state && state.startsWith("portal.")) return; // Portal login, handled elsewhere
 
           const hadAuthBeforeCallback = !!(
             adsMcpAuth && adsMcpAuth.accessToken
@@ -7135,6 +7155,478 @@
           }));
           termRows.sort((a, b) => b.cost - a.cost);
           return termRows;
+        }
+
+        // ============ PORTAL REPORTS (leads & bookings) ============
+        // Connects to the GameTruck Portal Reports MCP with the user's own
+        // Portal login (OAuth + PKCE, same pattern as Ads MCP). All calls go
+        // through /api/portal-mcp-proxy because the Portal doesn't allow
+        // browser (CORS) requests.
+        const PORTAL_MCP_URL = "https://api.gametruck.com/mcp/reporting";
+        const PORTAL_AUTH_KEY = "gt_portal_mcp_auth_v1";
+        const PORTAL_PENDING_KEY = "gt_portal_mcp_pending_v1";
+        const PORTAL_STATE_PREFIX = "portal.";
+        // Ad accounts whose campaigns serve more than one franchise.
+        // NY-Long-Island's account also runs the Westchester (098) campaigns.
+        const PORTAL_EXTRA_FRANCHISES = { "4738714801": [98] };
+        // Accounts that aren't a single franchise (national/brand) — no match.
+        const PORTAL_NO_MATCH = new Set(["8261103563"]);
+
+        let portalAuth = null;
+        let portalSessionId = null;
+        let portalToolNames = null;
+        let portalData = null; // { range, franchises: Map<id, {...}>, fetchedAt }
+
+        async function portalFetch(url, init) {
+          const i = init || {};
+          return await fetch("/api/portal-mcp-proxy", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              forwardUrl: url,
+              method: i.method || "GET",
+              headers: headersToObject(i.headers),
+              body: i.body != null ? bodyToProxyString(i.body) : undefined,
+            }),
+          });
+        }
+
+        async function portalJson(url, init, label) {
+          const res = await portalFetch(url, init);
+          const text = await res.text();
+          if (!res.ok) throw new Error(`${label} failed (${res.status}): ${text.slice(0, 300)}`);
+          try {
+            return JSON.parse(text);
+          } catch (e) {
+            throw new Error(`${label} returned non-JSON`);
+          }
+        }
+
+        function loadPortalAuthState() {
+          try {
+            const raw = localStorage.getItem(PORTAL_AUTH_KEY);
+            portalAuth = raw ? JSON.parse(raw) : null;
+          } catch (e) {
+            portalAuth = null;
+          }
+        }
+
+        function persistPortalAuthState() {
+          try {
+            if (portalAuth) localStorage.setItem(PORTAL_AUTH_KEY, JSON.stringify(portalAuth));
+            else localStorage.removeItem(PORTAL_AUTH_KEY);
+          } catch (e) {}
+        }
+
+        function isPortalConnected() {
+          return !!(portalAuth && (portalAuth.accessToken || portalAuth.refreshToken));
+        }
+
+        function updatePortalUi() {
+          const c = document.getElementById("portalConnectBtn");
+          const d = document.getElementById("portalDisconnectBtn");
+          const connected = isPortalConnected();
+          if (IS_FILE_ORIGIN) {
+            if (c) c.disabled = true;
+            return;
+          }
+          if (c) {
+            c.style.display = connected ? "none" : "inline-flex";
+            c.disabled = false;
+          }
+          if (d) d.style.display = connected ? "inline-flex" : "none";
+        }
+
+        async function discoverPortalOAuth() {
+          const base = new URL(PORTAL_MCP_URL);
+          const resourceMeta = await portalJson(
+            `${base.origin}/.well-known/oauth-protected-resource${base.pathname}`,
+            {},
+            "Portal resource discovery",
+          );
+          const authServer = String((resourceMeta.authorization_servers || [])[0] || base.origin).replace(/\/+$/, "");
+          const authMeta = await portalJson(
+            `${authServer}/.well-known/oauth-authorization-server`,
+            {},
+            "Portal authorization-server discovery",
+          );
+          return {
+            resource: resourceMeta.resource || PORTAL_MCP_URL,
+            authorizationEndpoint: authMeta.authorization_endpoint,
+            tokenEndpoint: authMeta.token_endpoint,
+            registrationEndpoint: authMeta.registration_endpoint,
+            scope: (resourceMeta.scopes_supported || authMeta.scopes_supported || ["mcp:use"]).join(" "),
+          };
+        }
+
+        async function connectPortal() {
+          if (IS_FILE_ORIGIN) return toast(FILE_MODE_HINT, true);
+          try {
+            toast("Connecting to Portal…");
+            const discovery = await discoverPortalOAuth();
+            let clientId = portalAuth && portalAuth.clientId;
+            let clientSecret = portalAuth && portalAuth.clientSecret;
+            if (!clientId) {
+              const reg = await portalJson(
+                discovery.registrationEndpoint,
+                {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    client_name: "GameTruck Ads Dashboard",
+                    redirect_uris: [getAdsRedirectUri()],
+                    grant_types: ["authorization_code", "refresh_token"],
+                    response_types: ["code"],
+                    token_endpoint_auth_method: "client_secret_post",
+                    scope: discovery.scope,
+                  }),
+                },
+                "Portal app registration",
+              );
+              clientId = reg.client_id;
+              clientSecret = reg.client_secret || null; // public clients get none
+              if (!clientId) throw new Error("Portal registration returned no client_id");
+            }
+            const codeVerifier = randomString(96);
+            const codeChallenge = await pkceChallenge(codeVerifier);
+            const state = PORTAL_STATE_PREFIX + randomString(40);
+            const redirectUri = getAdsRedirectUri();
+            sessionStorage.setItem(
+              PORTAL_PENDING_KEY,
+              JSON.stringify({ state, codeVerifier, redirectUri, clientId, clientSecret, ...discovery }),
+            );
+            const authUrl = new URL(discovery.authorizationEndpoint);
+            authUrl.searchParams.set("response_type", "code");
+            authUrl.searchParams.set("client_id", clientId);
+            authUrl.searchParams.set("redirect_uri", redirectUri);
+            authUrl.searchParams.set("scope", discovery.scope);
+            authUrl.searchParams.set("state", state);
+            authUrl.searchParams.set("code_challenge", codeChallenge);
+            authUrl.searchParams.set("code_challenge_method", "S256");
+            authUrl.searchParams.set("resource", discovery.resource);
+            window.location.assign(authUrl.toString());
+          } catch (err) {
+            console.error(err);
+            toast(err.message || "Unable to connect Portal", true);
+          }
+        }
+
+        function disconnectPortal() {
+          portalAuth = null;
+          portalSessionId = null;
+          portalToolNames = null;
+          portalData = null;
+          persistPortalAuthState();
+          updatePortalUi();
+          render();
+          toast("Portal disconnected");
+        }
+
+        // Handles the OAuth redirect when it belongs to the Portal login.
+        // Returns true if it consumed the callback.
+        async function maybeHandlePortalOAuthCallback() {
+          if (IS_FILE_ORIGIN) return false;
+          const url = new URL(window.location.href);
+          const state = url.searchParams.get("state") || "";
+          if (!state.startsWith(PORTAL_STATE_PREFIX)) return false;
+          const code = url.searchParams.get("code");
+          const error = url.searchParams.get("error");
+          try {
+            const pendingRaw = sessionStorage.getItem(PORTAL_PENDING_KEY);
+            sessionStorage.removeItem(PORTAL_PENDING_KEY);
+            if (error) throw new Error(`Portal login failed: ${url.searchParams.get("error_description") || error}`);
+            const pending = pendingRaw ? JSON.parse(pendingRaw) : null;
+            if (!pending || pending.state !== state) throw new Error("Portal login state mismatch — click Connect Portal again.");
+            const form = {
+              grant_type: "authorization_code",
+              code,
+              redirect_uri: pending.redirectUri,
+              client_id: pending.clientId,
+              code_verifier: pending.codeVerifier,
+            };
+            if (pending.clientSecret) form.client_secret = pending.clientSecret;
+            const token = await portalJson(
+              pending.tokenEndpoint,
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: new URLSearchParams(form),
+              },
+              "Portal token exchange",
+            );
+            portalAuth = {
+              clientId: pending.clientId,
+              clientSecret: pending.clientSecret || null,
+              tokenEndpoint: pending.tokenEndpoint,
+              resource: pending.resource,
+              accessToken: token.access_token,
+              refreshToken: token.refresh_token || null,
+              expiresAt: Date.now() + Number(token.expires_in || 3600) * 1000,
+            };
+            persistPortalAuthState();
+            toast("Portal connected");
+          } catch (err) {
+            console.error(err);
+            toast(err.message || "Portal login failed", true);
+          } finally {
+            ["code", "state", "scope", "error", "error_description", "iss"].forEach((p) => url.searchParams.delete(p));
+            const q = url.searchParams.toString();
+            window.history.replaceState({}, "", `${url.pathname}${q ? `?${q}` : ""}${url.hash || ""}`);
+            updatePortalUi();
+          }
+          return true;
+        }
+
+        async function ensurePortalAccessToken() {
+          if (!portalAuth) return null;
+          if (portalAuth.accessToken && Date.now() < Number(portalAuth.expiresAt || 0) - 60000) return portalAuth.accessToken;
+          if (!portalAuth.refreshToken) return null;
+          const form = {
+            grant_type: "refresh_token",
+            refresh_token: portalAuth.refreshToken,
+            client_id: portalAuth.clientId,
+          };
+          if (portalAuth.clientSecret) form.client_secret = portalAuth.clientSecret;
+          const t = await portalJson(
+            portalAuth.tokenEndpoint,
+            { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: new URLSearchParams(form) },
+            "Portal token refresh",
+          );
+          portalAuth.accessToken = t.access_token;
+          portalAuth.expiresAt = Date.now() + Number(t.expires_in || 3600) * 1000;
+          if (t.refresh_token) portalAuth.refreshToken = t.refresh_token;
+          persistPortalAuthState();
+          return portalAuth.accessToken;
+        }
+
+        async function portalRpc(method, params, notification) {
+          const token = await ensurePortalAccessToken();
+          if (!token) throw new Error("Portal session expired — click Connect Portal.");
+          const id = notification ? undefined : `p${Date.now()}${Math.random().toString(16).slice(2, 8)}`;
+          const payload = { jsonrpc: "2.0", method };
+          if (id) payload.id = id;
+          if (params !== undefined) payload.params = params;
+          const headers = {
+            "Content-Type": "application/json",
+            Accept: "application/json, text/event-stream",
+            Authorization: `Bearer ${token}`,
+          };
+          if (portalSessionId) headers["mcp-session-id"] = portalSessionId;
+          const res = await portalFetch(PORTAL_MCP_URL, { method: "POST", headers, body: JSON.stringify(payload) });
+          const sid = res.headers.get("mcp-session-id");
+          if (sid) portalSessionId = sid;
+          const text = await res.text();
+          if (res.status === 401) {
+            portalAuth.accessToken = null;
+            persistPortalAuthState();
+            throw new Error("Portal login expired — click Connect Portal.");
+          }
+          if (!res.ok) throw new Error(`Portal request failed (${res.status}): ${text.slice(0, 200)}`);
+          if (notification) return null;
+          let rpc = null;
+          try {
+            rpc = JSON.parse(text);
+          } catch (e) {
+            rpc = parseRpcFromSse(text, id);
+          }
+          if (!rpc) throw new Error("Unable to parse Portal response");
+          if (rpc.error) throw new Error(rpc.error.message || JSON.stringify(rpc.error));
+          return rpc.result;
+        }
+
+        async function ensurePortalTools() {
+          if (portalToolNames) return portalToolNames;
+          try {
+            await portalRpc("initialize", {
+              protocolVersion: "2025-06-18",
+              capabilities: {},
+              clientInfo: { name: "gametruck-ads-dashboard", version: "1.0.0" },
+            });
+            await portalRpc("notifications/initialized", undefined, true);
+          } catch (e) {
+            if (/expired|login/i.test(e.message || "")) throw e;
+          }
+          const listed = await portalRpc("tools/list", {});
+          const tools = (listed && listed.tools) || [];
+          portalToolNames = {
+            leadChannel: resolveToolName(tools, "lead_channel_report"),
+            leadStatus: resolveToolName(tools, "lead_status_report"),
+          };
+          if (!portalToolNames.leadChannel || !portalToolNames.leadStatus) {
+            throw new Error("Portal is missing the lead_channel / lead_status reports");
+          }
+          return portalToolNames;
+        }
+
+        // Reads summary_by_franchise → Map<franchiseId, {label, counts}>.
+        function readPortalFranchiseSummary(report, column) {
+          const out = new Map();
+          const rows = (report && report.summary_by_franchise) || [];
+          rows.forEach((r) => {
+            const id = Number(r && r.meta && r.meta.key);
+            if (!Number.isFinite(id)) return;
+            const base = (r.data && r.data[column] && r.data[column].base) || {};
+            out.set(id, { label: String((r.meta && r.meta.label) || id), base });
+          });
+          return out;
+        }
+
+        async function fetchPortalData(startDate, endDate) {
+          const names = await ensurePortalTools();
+          const args = { start_date: startDate, end_date: endDate, group_by: "year" };
+          const [channelRes, statusRes] = await Promise.all([
+            portalRpc("tools/call", { name: names.leadChannel, arguments: args }),
+            portalRpc("tools/call", { name: names.leadStatus, arguments: args }),
+          ]);
+          const channel = readPortalFranchiseSummary(parseToolResult(channelRes), "channel");
+          const status = readPortalFranchiseSummary(parseToolResult(statusRes), "status");
+          const franchises = new Map();
+          const ids = new Set([...channel.keys(), ...status.keys()]);
+          ids.forEach((id) => {
+            const ch = (channel.get(id) || {}).base || {};
+            const st = (status.get(id) || {}).base || {};
+            const sumCounts = (o) => Object.values(o).reduce((s, v) => s + (Number(v && v.count) || 0), 0);
+            franchises.set(id, {
+              id,
+              label: (channel.get(id) || status.get(id)).label,
+              ppcLeads: Number(ch.PPC && ch.PPC.count) || 0,
+              ppcValueCents: Number(ch.PPC && ch.PPC.sum) || 0,
+              totalLeads: sumCounts(ch) || sumCounts(st),
+              booked: Number(st.Booked && st.Booked.count) || 0,
+              bookedValueCents: Number(st.Booked && st.Booked.sum) || 0,
+            });
+          });
+          return { range: { startDate, endDate }, franchises, fetchedAt: new Date() };
+        }
+
+        const portalNameTokens = (s) =>
+          String(s || "")
+            .toLowerCase()
+            .replace(/\(\s*\d+\s*\)/g, " ")
+            .replace(/[^a-z0-9]+/g, " ")
+            .split(" ")
+            .filter((w) => w && w.length > 1 && !["v2", "the"].includes(w));
+
+        // Franchise IDs an ad account maps to: the number in its name
+        // ("(062)"), else the best name match, plus any known extras.
+        function franchiseIdsForAccount(a, franchises) {
+          if (!a || PORTAL_NO_MATCH.has(String(a.customerId))) return [];
+          const ids = [];
+          const m = String(a.name || "").match(/\((\d{1,4})\)/);
+          if (m && franchises.has(Number(m[1]))) ids.push(Number(m[1]));
+          if (!ids.length) {
+            const mine = new Set(portalNameTokens(a.name));
+            let best = null;
+            let bestScore = 0;
+            franchises.forEach((f) => {
+              const theirs = portalNameTokens(f.label);
+              if (!theirs.length) return;
+              const shared = theirs.filter((w) => mine.has(w)).length;
+              const score = shared / Math.max(mine.size, theirs.length);
+              if (score > bestScore) {
+                bestScore = score;
+                best = f.id;
+              }
+            });
+            if (best != null && bestScore >= 0.6) ids.push(best);
+          }
+          (PORTAL_EXTRA_FRANCHISES[String(a.customerId)] || []).forEach((id) => {
+            if (franchises.has(id) && !ids.includes(id)) ids.push(id);
+          });
+          return ids;
+        }
+
+        // Combines Portal leads/bookings with ad spend for one account.
+        function portalMetricsForAccount(a) {
+          if (!portalData || !liveRange) return null;
+          if (portalData.range.startDate !== liveRange.startDate || portalData.range.endDate !== liveRange.endDate) return null;
+          const ids = franchiseIdsForAccount(a, portalData.franchises);
+          if (!ids.length) return null;
+          const fs = ids.map((id) => portalData.franchises.get(id));
+          const t = fs.reduce(
+            (s, f) => ({
+              ppcLeads: s.ppcLeads + f.ppcLeads,
+              totalLeads: s.totalLeads + f.totalLeads,
+              booked: s.booked + f.booked,
+              bookedValue: s.bookedValue + f.bookedValueCents / 100,
+            }),
+            { ppcLeads: 0, totalLeads: 0, booked: 0, bookedValue: 0 },
+          );
+          const bookRate = t.totalLeads > 0 ? t.booked / t.totalLeads : 0;
+          const estBookings = t.ppcLeads * bookRate;
+          const avgBooking = t.booked > 0 ? t.bookedValue / t.booked : 0;
+          const estRevenue = estBookings * avgBooking;
+          const hasSpend = (a.cost || 0) > 0;
+          if (!hasSpend) {
+            // Leads but no spend in this account: they came from other
+            // campaigns (e.g. national GTHQ), so no cost or tracking maths.
+            return {
+              labels: fs.map((f) => f.label),
+              ppcLeads: t.ppcLeads,
+              totalLeads: t.totalLeads,
+              booked: t.booked,
+              bookRate,
+              estBookings,
+              avgBooking,
+              noSpend: true,
+              costPerLead: null,
+              costPerBooking: null,
+              estRoas: null,
+              trackingRatio: null,
+            };
+          }
+          return {
+            labels: fs.map((f) => f.label),
+            ppcLeads: t.ppcLeads,
+            totalLeads: t.totalLeads,
+            booked: t.booked,
+            bookRate,
+            estBookings,
+            avgBooking,
+            costPerLead: t.ppcLeads > 0 ? a.cost / t.ppcLeads : null,
+            costPerBooking: estBookings > 0 ? a.cost / estBookings : null,
+            estRoas: a.cost > 0 && estRevenue > 0 ? estRevenue / a.cost : null,
+            // Share of Portal PPC leads that Google Ads counted as conversions.
+            trackingRatio: t.ppcLeads > 0 ? (a.conv || 0) / t.ppcLeads : null,
+          };
+        }
+
+        function portalCellHtml(a) {
+          if (!isPortalConnected()) return `<span style="color:var(--ink-muted)" title="Connect Portal to see real leads and bookings">—</span>`;
+          const p = portalMetricsForAccount(a);
+          if (!p) return `<span style="color:var(--ink-muted)" title="${portalData ? "No matching franchise in the Portal" : "Loading Portal data…"}">—</span>`;
+          const tip = `${p.labels.join(" + ")}: ${p.ppcLeads} PPC leads of ${p.totalLeads} total · ${p.booked} booked (${Math.round(p.bookRate * 100)}% of all leads). Portal 'PPC' can include leads from the national GTHQ campaigns; bookings are estimated from the franchise's overall booking rate.`;
+          if (p.noSpend) return `<div title="${escapeHtml(tip)}" style="color:var(--ink-muted)">${fmtN(p.ppcLeads)} leads</div><div class="delta" style="color:var(--ink-muted)">no spend in this account</div>`;
+          return `<div title="${escapeHtml(tip)}">${fmtN(p.ppcLeads)} leads${p.costPerLead != null ? ` · ${fmt$(p.costPerLead)}` : ""}</div>
+            <div class="delta" style="color:var(--ink-muted)">~${p.estBookings.toFixed(1)} bookings${p.costPerBooking != null ? ` · ${fmt$(p.costPerBooking)}/bkg` : ""}${p.estRoas != null ? ` · ${p.estRoas.toFixed(1)}× ROAS` : ""}</div>`;
+        }
+
+        function portalDrillNoteHtml(a) {
+          const p = isPortalConnected() ? portalMetricsForAccount(a) : null;
+          if (!p) return "";
+          const lines = [
+            `Portal (${p.labels.join(" + ")}): ${fmtN(p.ppcLeads)} PPC leads${p.costPerLead != null ? ` (${fmt$(p.costPerLead)}/lead)` : ""} · ${Math.round(p.bookRate * 100)}% of all leads book · est. ${p.estBookings.toFixed(1)} bookings from ads${p.costPerBooking != null ? ` at ${fmt$(p.costPerBooking)} each` : ""}${p.avgBooking ? ` · avg booking ${fmt$(p.avgBooking)}` : ""}`,
+          ];
+          if (p.trackingRatio != null && p.ppcLeads >= 10) {
+            if (p.trackingRatio < 0.5) {
+              lines.push(`Google Ads counted ${fmtN(a.conv)} conversions vs ${fmtN(p.ppcLeads)} Portal PPC leads (${Math.round(p.trackingRatio * 100)}%) — conversion tracking is likely missing leads, so Google's cost/conv overstates the real cost`);
+            } else if (p.trackingRatio > 1.5) {
+              lines.push(`Google Ads counted ${fmtN(a.conv)} conversions vs ${fmtN(p.ppcLeads)} Portal PPC leads — conversions may be double-counted (e.g. calls + forms for the same lead)`);
+            }
+          }
+          return `<div class="drill-notes">${lines.map((l) => `<div>• ${escapeHtml(l)}</div>`).join("")}</div>`;
+        }
+
+        async function refreshPortalData(startDate, endDate) {
+          if (!isPortalConnected() || IS_FILE_ORIGIN) return;
+          try {
+            portalData = await fetchPortalData(startDate, endDate);
+          } catch (err) {
+            console.warn("Portal fetch failed", err);
+            const statusEl = document.getElementById("liveDataStatus");
+            if (statusEl) statusEl.textContent += ` · Portal: ${err.message || "failed"}`;
+            if (/expired|login/i.test(err.message || "")) updatePortalUi();
+          }
         }
 
         // ============ CHANGE HISTORY ============
@@ -7701,6 +8193,8 @@
               return;
             }
 
+            // Portal leads/bookings load in parallel with the Ads pull.
+            const portalPromise = refreshPortalData(startDate, endDate);
             const live = await fetchGoogleAdsFromMcp(startDate, endDate);
             // A newer click started while this one was loading: drop this result.
             if (isStale()) return;
@@ -7898,6 +8392,8 @@
                   ? "var(--warn, #9a6700)"
                   : "var(--good, #1a7f37)";
             }
+            await portalPromise;
+            if (isStale()) return;
             render();
           } catch (err) {
             if (isStale()) return;
@@ -7930,6 +8426,16 @@
           if (liveBtn && !liveBtn.dataset.boundClick) {
             liveBtn.addEventListener("click", fetchLiveDashboardData);
             liveBtn.dataset.boundClick = "true";
+          }
+          const portalC = document.getElementById("portalConnectBtn");
+          if (portalC && !portalC.dataset.boundClick) {
+            portalC.addEventListener("click", connectPortal);
+            portalC.dataset.boundClick = "true";
+          }
+          const portalD = document.getElementById("portalDisconnectBtn");
+          if (portalD && !portalD.dataset.boundClick) {
+            portalD.addEventListener("click", disconnectPortal);
+            portalD.dataset.boundClick = "true";
           }
           const changeBtn = document.getElementById("loadChangeHistoryBtn");
           if (changeBtn && !changeBtn.dataset.boundClick) {
@@ -8008,15 +8514,23 @@
           await runInitStep("loadColumnPrefs", loadColumnPrefs);
           await runInitStep("loadHistory", loadHistory);
           await runInitStep("loadAdsMcpAuthState", loadAdsMcpAuthState);
-          await runInitStep(
-            "maybeHandleAdsMcpOAuthCallback",
-            maybeHandleAdsMcpOAuthCallback,
-          );
+          await runInitStep("loadPortalAuthState", loadPortalAuthState);
+          let portalCallbackHandled = false;
+          await runInitStep("maybeHandlePortalOAuthCallback", async () => {
+            portalCallbackHandled = await maybeHandlePortalOAuthCallback();
+          });
+          if (!portalCallbackHandled) {
+            await runInitStep(
+              "maybeHandleAdsMcpOAuthCallback",
+              maybeHandleAdsMcpOAuthCallback,
+            );
+          }
 
           seedIfEmpty();
           bindEvents();
           render();
           updateAdsMcpUi();
+          updatePortalUi();
 
           if (initError) {
             const statusEl = document.getElementById("liveDataStatus");
@@ -12363,12 +12877,16 @@ levis@gametruck`;
             const label = `${formatDateShort(liveRange.startDate)} – ${formatDateShort(liveRange.endDate)}`;
             return accounts
               .filter((a) => a && a._liveFetchId === liveRange.fetchId)
-              .map((a) => ({
-                ...a,
-                _scope: scope,
-                _scopeLabel: label,
-                _isFallback: false,
-              }));
+              .map((a) => {
+                const pm = portalMetricsForAccount(a);
+                return {
+                  ...a,
+                  portalCpl: pm && pm.costPerLead != null ? pm.costPerLead : null,
+                  _scope: scope,
+                  _scopeLabel: label,
+                  _isFallback: false,
+                };
+              });
           }
           // 'mtd', 'monthly', 'weekly', 'daily', 'custom'
           // We use history granularity for filtering: daily → most recent day, etc.
@@ -14342,6 +14860,15 @@ levis@gametruck`;
                     msg: `Campaign <strong>${escapeHtml(c.name)}</strong> spent <strong>${fmt$(c.cost)}</strong> with <strong>0 conversions</strong>`,
                   });
                 });
+              const pm = isPortalConnected() ? portalMetricsForAccount(a) : null;
+              if (pm && pm.ppcLeads >= 10 && pm.trackingRatio != null && pm.trackingRatio < 0.5) {
+                alerts.push({
+                  accountName: a.name,
+                  severity: "warning",
+                  type: "tracking-gap",
+                  msg: `Conversion tracking gap — Google Ads counted <strong>${fmtN(a.conv)}</strong> conversions but the Portal logged <strong>${fmtN(pm.ppcLeads)}</strong> PPC leads (real cost ≈ <strong>${fmt$(pm.costPerLead)}</strong>/lead, not ${fmt$(a.cpa)})`,
+                });
+              }
               if (
                 a.lostIsBudget != null &&
                 a.lostIsBudget >= 0.25 &&
@@ -14884,7 +15411,7 @@ levis@gametruck`;
         }
 
         // ---- Leaderboard helpers ----
-        const LEADER_COLS = 10;
+        const LEADER_COLS = 11;
         const expandedAccounts = new Set();
 
         function pctChange(cur, prev) {
@@ -14967,6 +15494,7 @@ levis@gametruck`;
             : `<tr><td colspan="9" style="color:var(--ink-muted)">No campaign data for this period — click Refresh Live Data.</td></tr>`;
           return `<tr class="drill-row"><td colspan="${LEADER_COLS}">
             ${notes.length ? `<div class="drill-notes">${notes.map((n) => `<div>• ${escapeHtml(n)}</div>`).join("")}</div>` : ""}
+            ${portalDrillNoteHtml(a)}
             ${accountChangeSummaryHtml(a)}
             <table class="drill-table">
               <thead><tr><th>Campaign</th><th>Type</th><th>Budget</th><th>Cost</th><th>Clicks</th><th>Conv</th><th>Cost/Conv</th><th>Imp. Share</th><th>Lost: budget / rank</th></tr></thead>
@@ -15000,6 +15528,7 @@ levis@gametruck`;
         <td>${fmt$(a.cpc)}</td>
         <td>${fmtN(a.conv)}${p ? deltaHtml(a.conv, p.conv, false) : ""}</td>
         <td class="cpa-cell ${h}">${a.conv > 0 ? fmt$(a.cpa) : a.cost > 0 ? "0 conv" : fmt$(0)}${p && a.cpa > 0 ? deltaHtml(a.cpa, p.cpa, true) : ""}</td>
+        <td>${portalCellHtml(a)}</td>
         <td>${isCellHtml(a)}</td>
         <td>${paceBadge(a.paceRatio)}</td>
         <td>
