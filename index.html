@@ -1065,6 +1065,95 @@
       tr.change-auto td {
         background: rgba(212, 160, 23, 0.10);
       }
+      .page-nav {
+        display: flex;
+        gap: 4px;
+        flex-wrap: wrap;
+        margin: 8px 0 20px;
+        border-bottom: 2px solid var(--ink, #111);
+      }
+      .page-nav button {
+        border: none;
+        background: transparent;
+        padding: 10px 14px;
+        font: inherit;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+        cursor: pointer;
+        color: var(--ink-muted);
+        border-radius: 6px 6px 0 0;
+      }
+      .page-nav button.active {
+        background: var(--ink, #111);
+        color: #fff;
+      }
+      .report-controls {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+        margin-bottom: 14px;
+      }
+      .report-controls .btn {
+        padding: 9px 14px;
+        font-size: 11px;
+      }
+      .report-status {
+        font-size: 12px;
+        color: var(--ink-muted);
+      }
+      .report-table {
+        width: 100%;
+      }
+      .report-table tr.status-good td:first-child,
+      .report-table tr.status-warn td:first-child,
+      .report-table tr.status-bad td:first-child {
+        font-size: 15px;
+      }
+      #page-weekly .report-table td:nth-child(2),
+      #page-weekly .report-table th:nth-child(2),
+      #page-mtd .report-table td:nth-child(2),
+      #page-mtd .report-table th:nth-child(2),
+      #page-markets .report-table td:first-child,
+      #page-markets .report-table th:first-child {
+        text-align: left;
+      }
+      .why-cell {
+        font-size: 11.5px;
+        color: var(--ink-muted);
+        max-width: 320px;
+      }
+      .goal-btn {
+        border: 1px dashed var(--line, #cfcabd);
+        background: transparent;
+        border-radius: 4px;
+        padding: 2px 6px;
+        cursor: pointer;
+        font: inherit;
+        font-size: 12px;
+      }
+      .muted-sub {
+        color: var(--ink-muted);
+        margin-left: 6px;
+      }
+      .track-bad {
+        color: #8a6500;
+        font-weight: 600;
+      }
+      .metro-details {
+        margin-top: 14px;
+        font-size: 12px;
+      }
+      .metro-details summary {
+        cursor: pointer;
+        color: var(--ink-muted);
+      }
+      .metro-map {
+        margin-top: 8px;
+        line-height: 1.7;
+      }
       .delta {
         font-size: 10.5px;
         font-family: "JetBrains Mono", monospace;
@@ -3261,6 +3350,18 @@
           </p>
         </section>
 
+
+        <!-- PAGE NAV -->
+        <nav class="page-nav" id="pageNav">
+          <button data-nav="today" class="active">☀️ Today</button>
+          <button data-nav="weekly">📅 Weekly Report</button>
+          <button data-nav="mtd">📈 Month to Date</button>
+          <button data-nav="markets">🗺️ Markets</button>
+          <button data-nav="accounts">📊 Accounts</button>
+          <button data-nav="search">🔍 Search Terms</button>
+          <button data-nav="changes">📜 Changes</button>
+        </nav>
+
         <!-- DATE SCOPE + SETTINGS -->
         <div class="control-bar">
           <div class="control-group">
@@ -3398,6 +3499,7 @@
           />
         </div>
 
+        <div class="page" data-page="today">
         <!-- TODAY'S FOCUS PANEL -->
         <div class="focus-panel" id="focusPanel" style="display: none">
           <div class="focus-head">
@@ -3498,6 +3600,58 @@
           </div>
         </div>
 
+        </div>
+
+        <div class="page" data-page="weekly" id="page-weekly" style="display: none">
+          <div class="section-head">
+            <h2>Weekly Report</h2>
+            <div class="meta report-meta">Last full week (Mon–Sun) vs the week before</div>
+          </div>
+          <div class="report-controls">
+            <div class="date-scope" style="height: 34px"><button class="scope-btn active" data-weekly-mode="lastWeek">Last week</button><button class="scope-btn" data-weekly-mode="weekly">This week so far</button></div>
+            <button class="btn btn-ghost" onclick="renderCurrentPage(true)">🔄 Refresh</button>
+            <button class="btn btn-ghost" onclick="copyReport('page-weekly')" title="Copies a summary line + table you can paste into email, Slack or Google Sheets">📋 Copy for report</button>
+            <button class="btn btn-ghost" onclick="exportReportCsv('page-weekly', 'weekly-report')">↓ CSV</button>
+            <span class="report-status"></span>
+          </div>
+          <div class="summary report-kpis"></div>
+          <div class="table-wrap"><table class="report-table"></table></div>
+        </div>
+
+        <div class="page" data-page="mtd" id="page-mtd" style="display: none">
+          <div class="section-head">
+            <h2>Month to Date</h2>
+            <div class="meta report-meta">Month to date vs the same days last month · pacing projected to month-end</div>
+          </div>
+          <div class="report-controls">
+            
+            <button class="btn btn-ghost" onclick="renderCurrentPage(true)">🔄 Refresh</button>
+            <button class="btn btn-ghost" onclick="copyReport('page-mtd')" title="Copies a summary line + table you can paste into email, Slack or Google Sheets">📋 Copy for report</button>
+            <button class="btn btn-ghost" onclick="exportReportCsv('page-mtd', 'mtd-report')">↓ CSV</button>
+            <span class="report-status"></span>
+          </div>
+          <div class="summary report-kpis"></div>
+          <div class="table-wrap"><table class="report-table"></table></div>
+        </div>
+
+        <div class="page" data-page="markets" id="page-markets" style="display: none">
+          <div class="section-head">
+            <h2>Markets</h2>
+            <div class="meta report-meta">Ad spend by metro (all accounts incl. GTHQ) vs Portal leads and bookings</div>
+          </div>
+          <div class="report-controls">
+            <div class="date-scope" style="height: 34px"><button class="scope-btn active" data-markets-scope="mtd">MTD</button><button class="scope-btn" data-markets-scope="lastWeek">Last week</button><button class="scope-btn" data-markets-scope="lastMonth">Last month</button></div>
+            <button class="btn btn-ghost" onclick="renderCurrentPage(true)">🔄 Refresh</button>
+            <button class="btn btn-ghost" onclick="copyReport('page-markets')" title="Copies a summary line + table you can paste into email, Slack or Google Sheets">📋 Copy for report</button>
+            <button class="btn btn-ghost" onclick="exportReportCsv('page-markets', 'markets-report')">↓ CSV</button>
+            <span class="report-status"></span>
+          </div>
+          <div class="summary report-kpis"></div>
+          <div class="table-wrap"><table class="report-table"></table></div>
+          <details class="metro-details"><summary>Which franchises are counted in each metro</summary><div class="metro-map">Connect Portal to see the franchise list.</div></details>
+        </div>
+
+        <div class="page" data-page="accounts" style="display: none">
         <div class="table-section">
           <div class="section-head">
             <h2>Leaderboard</h2>
@@ -3560,9 +3714,6 @@
                   <th data-sort="cpa">
                     Cost/Conv <span class="sort-indicator">↕</span>
                   </th>
-                  <th data-sort="portalCpl" title="From the GameTruck Portal: PPC leads and cost per lead; estimated bookings, cost per booking and ROAS">
-                    Portal Leads <span class="sort-indicator">↕</span>
-                  </th>
                   <th data-sort="searchIS" title=""Search impression share, and how much was lost to budget vs ad rank">
                     Imp. Share <span class="sort-indicator">↕</span>
                   </th>
@@ -3608,6 +3759,8 @@
           </table>
         </div>
 
+        </div>
+        <div class="page" data-page="changes" style="display: none">
         <!-- CHANGE HISTORY -->
         <div class="section-head" style="margin-top: 64px">
           <h2>Change History</h2>
@@ -3635,6 +3788,8 @@
           </table>
         </div>
 
+        </div>
+        <div class="page" data-page="search" style="display: none">
         <!-- SEARCH TERM PERFORMANCE -->
         <div class="section-head" style="margin-top: 64px">
           <h2>Search Term Performance</h2>
@@ -3690,6 +3845,8 @@
           </table>
         </div>
 
+        </div>
+        <div class="page" data-page="accounts" style="display: none">
         <!-- CAMPAIGN OVERVIEW -->
         <div
           id="campaignOverviewSection"
@@ -3737,6 +3894,8 @@
               <tbody id="campaignTbody"></tbody>
             </table>
           </div>
+        </div>
+
         </div>
 
         <!-- FOOTER -->
@@ -6582,7 +6741,8 @@
           return results;
         }
 
-        async function fetchGoogleAdsFromMcp(startDate, endDate) {
+        async function fetchGoogleAdsFromMcp(startDate, endDate, opts) {
+          const fetchScope = (opts && opts.scope) || dateScope;
           const tools = await ensureAdsMcpTools();
           seedAdsMcpDailyBudgetCacheFromAccounts();
           const customersRaw = await mcpCallTool(
@@ -6668,8 +6828,8 @@
             );
           }
 
-          const pacing = getPacingWindowForDates(startDate, endDate, dateScope);
-          const prevRange = computePreviousRange(startDate, endDate, dateScope);
+          const pacing = getPacingWindowForDates(startDate, endDate, fetchScope);
+          const prevRange = computePreviousRange(startDate, endDate, fetchScope);
 
           if (customerIds.length > 0) {
             const primeCustomerId = customerIds[0];
@@ -7155,6 +7315,559 @@
           }));
           termRows.sort((a, b) => b.cost - a.cost);
           return termRows;
+        }
+
+        // ============ REPORT PAGES (Weekly · Month to Date · Markets) ============
+        // Each page pulls its own date range from Google Ads (and the Portal
+        // for Markets) and keeps it in memory, so switching pages is instant
+        // after the first load. "Refresh" re-pulls.
+        const reportCache = new Map(); // key → { range, scope, accounts, pacingWindow, prevRange, fetchedAt }
+        const reportLoading = new Map(); // key → Promise
+        let weeklyMode = "lastWeek"; // "lastWeek" | "weekly" (this week so far)
+        let marketsScope = "mtd";
+        const marketsExpanded = new Set();
+
+        function reportKey(scope, range) {
+          return `${scope}|${range.startDate}|${range.endDate}`;
+        }
+
+        function goalFor(row) {
+          const main = accounts.find((x) => x.customerId && x.customerId === row.customerId);
+          const g = Number((main && main.goalTargetCpa) || row.goalTargetCpa);
+          return g > 0 ? g : settings.goodMax || 15;
+        }
+
+        async function setAccountGoal(customerId) {
+          const main = accounts.find((x) => x.customerId === customerId);
+          if (!main) return;
+          const current = goalFor(main);
+          const raw = window.prompt(`Cost/conv goal for ${main.name} (blank = default $${settings.goodMax || 15}):`, String(current));
+          if (raw === null) return;
+          const v = parseFloat(String(raw).replace(/[^0-9.]/g, ""));
+          if (raw.trim() === "") delete main.goalTargetCpa;
+          else if (Number.isFinite(v) && v > 0) main.goalTargetCpa = v;
+          else return toast("Enter a dollar amount, e.g. 18", true);
+          await saveData();
+          renderCurrentPage();
+          render();
+        }
+
+        // Live accounts for a scope's range, reusing the main refresh when it
+        // already covers exactly that range.
+        async function getReport(scope, force) {
+          const range = resolveClientDateRange(scope);
+          const key = reportKey(scope, range);
+          if (!force && reportCache.has(key)) return reportCache.get(key);
+          if (
+            !force &&
+            liveRange &&
+            liveRange.scope === scope &&
+            liveRange.startDate === range.startDate &&
+            liveRange.endDate === range.endDate
+          ) {
+            const entry = {
+              range,
+              scope,
+              accounts: accounts.filter((a) => a._liveFetchId === liveRange.fetchId),
+              pacingWindow,
+              prevRange: liveRange.prevRange,
+              fetchedAt: lastLiveFetch || new Date(),
+            };
+            reportCache.set(key, entry);
+            return entry;
+          }
+          if (reportLoading.has(key)) return reportLoading.get(key);
+          const p = (async () => {
+            const token = await ensureAdsMcpAccessToken();
+            if (!token) throw new Error("Connect Ads MCP first (button at the top).");
+            const live = await fetchGoogleAdsFromMcp(range.startDate, range.endDate, { scope });
+            const entry = {
+              range,
+              scope,
+              accounts: live.accounts,
+              pacingWindow: live.pacingWindow,
+              prevRange: live.prevRange,
+              fetchedAt: new Date(),
+            };
+            reportCache.set(key, entry);
+            return entry;
+          })();
+          reportLoading.set(key, p);
+          try {
+            return await p;
+          } finally {
+            reportLoading.delete(key);
+          }
+        }
+
+        function statusFor(row) {
+          const goal = goalFor(row);
+          if (!(row.cost > 0)) return { key: "none", icon: "—", label: "No spend", rank: 4 };
+          if (!(row.conv > 0)) return { key: "bad", icon: "❌", label: "No conversions", rank: 0 };
+          if (row.cpa <= goal) return { key: "good", icon: "✅", label: "Within goal", rank: 3 };
+          if (row.cpa <= goal * 1.25) return { key: "warn", icon: "⚠️", label: "Close (≤25% over)", rank: 2 };
+          return { key: "bad", icon: "❌", label: "Over goal", rank: 1 };
+        }
+
+        function sumRows(rows, pick) {
+          return rows.reduce((s, r) => s + (Number(pick(r)) || 0), 0);
+        }
+
+        function kpiCard(label, value, sub) {
+          return `<div class="stat"><div class="label">${label}</div><div class="value">${value}</div><div class="sub">${sub || ""}</div></div>`;
+        }
+
+        function rangeLabel(r) {
+          return r ? `${formatDateShort(r.startDate)} – ${formatDateShort(r.endDate)}` : "";
+        }
+
+        // Shared builder for the Weekly and MTD pages.
+        function renderPerformanceReport(el, entry, opts) {
+          const rows = entry.accounts
+            .filter((a) => (a.cost || 0) > 0 || (a.prev && a.prev.cost > 0))
+            .map((a) => ({ ...a, _goal: goalFor(a), _status: statusFor(a) }))
+            .sort((x, y) => x._status.rank - y._status.rank || (y.cost || 0) - (x.cost || 0));
+          const spent = rows.filter((r) => r.cost > 0);
+          const cost = sumRows(spent, (r) => r.cost);
+          const conv = sumRows(spent, (r) => r.conv);
+          const pCost = sumRows(rows, (r) => r.prev && r.prev.cost);
+          const pConv = sumRows(rows, (r) => r.prev && r.prev.conv);
+          const cpa = conv > 0 ? cost / conv : 0;
+          const pCpa = pConv > 0 ? pCost / pConv : 0;
+          const within = spent.filter((r) => r._status.key === "good").length;
+          const close = spent.filter((r) => r._status.key === "warn").length;
+          const pw = entry.pacingWindow || {};
+          const showProjection = opts.projection && pw.daysInProjection > pw.daysElapsed;
+
+          const deltaTxt = (c, p, lower, neutral) => {
+            const d = pctChange(c, p);
+            if (d == null) return "";
+            return deltaHtml(c, p, lower, neutral);
+          };
+
+          el.querySelector(".report-kpis").innerHTML = [
+            kpiCard("Spend", fmt$(cost), `${deltaTxt(cost, pCost, false, true)}<span class="muted-sub">prev ${fmt$(pCost)}</span>`),
+            kpiCard("Conversions", fmtN(conv), `${deltaTxt(conv, pConv, false)}<span class="muted-sub">prev ${fmtN(pConv)}</span>`),
+            kpiCard("Cost / Conv", fmt$(cpa), `${deltaTxt(cpa, pCpa, true)}<span class="muted-sub">prev ${fmt$(pCpa)}</span>`),
+            kpiCard("Within goal", `${within} / ${spent.length}`, `${close} close · ${spent.length - within - close} over or no conv`),
+          ].join("");
+
+          el.querySelector(".report-meta").textContent = `${rangeLabel(entry.range)} vs ${rangeLabel(entry.prevRange)} · updated ${new Date(entry.fetchedAt).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}${showProjection ? ` · day ${pw.daysElapsed} of ${pw.daysInProjection}` : ""}`;
+
+          const head = `<tr>
+            <th>Status</th><th>Account</th><th>Spend</th><th>Conv</th><th>Cost/Conv</th><th>Goal</th>
+            <th title="${escapeHtml(rangeLabel(entry.prevRange))}">Prev Cost/Conv</th>
+            <th>Pace</th>${showProjection ? "<th>Projected month spend</th><th>Month budget</th>" : ""}<th>Why</th></tr>`;
+          const body = rows
+            .map((r) => {
+              const p = r.prev || {};
+              const why = r.cost > 0 ? (diagnoseAccount(r)[0] || "") : "";
+              const monthBudget = r.dailyBudget > 0 && pw.daysInProjection ? r.dailyBudget * pw.daysInProjection : null;
+              return `<tr class="status-${r._status.key}">
+                <td title="${r._status.label}">${r._status.icon}</td>
+                <td>${escapeHtml(r.name)}</td>
+                <td>${fmt$(r.cost)}${deltaHtml(r.cost, p.cost, false, true)}</td>
+                <td>${fmtN(r.conv)}${deltaHtml(r.conv, p.conv, false)}</td>
+                <td class="cpa-cell ${r._status.key === "good" ? "good" : r._status.key === "warn" ? "warn" : r._status.key === "bad" ? "bad" : ""}">${r.conv > 0 ? fmt$(r.cpa) : r.cost > 0 ? "0 conv" : "—"}${r.cpa > 0 && p.cpa > 0 ? deltaHtml(r.cpa, p.cpa, true) : ""}</td>
+                <td><button class="goal-btn" onclick="setAccountGoal('${escapeHtml(r.customerId || "")}')" title="Click to change this account's goal">≤ ${fmt$(r._goal)}</button></td>
+                <td>${p.cpa > 0 ? fmt$(p.cpa) : p.cost > 0 ? "0 conv" : "—"}</td>
+                <td>${paceBadge(r.paceRatio)}</td>
+                ${showProjection ? `<td>${r.projectedPeriodSpend != null ? fmt$(r.projectedPeriodSpend) : "—"}</td><td>${monthBudget != null ? fmt$(monthBudget) : "—"}</td>` : ""}
+                <td class="why-cell">${escapeHtml(why)}</td>
+              </tr>`;
+            })
+            .join("");
+          el.querySelector(".report-table").innerHTML = `<thead>${head}</thead><tbody>${body || `<tr><td colspan="10" style="text-align:center;padding:24px;color:var(--ink-muted)">No spend in this period.</td></tr>`}</tbody>`;
+
+          // Plain-text version for pasting into email / Slack / Sheets.
+          el._copyRows = [
+            ["Status", "Account", "Spend", "Conv", "Cost/Conv", "Goal", "Prev Cost/Conv", "Pace", ...(showProjection ? ["Projected month spend"] : [])],
+            ...rows.map((r) => [
+              r._status.label,
+              r.name,
+              (r.cost || 0).toFixed(2),
+              (r.conv || 0).toFixed(1),
+              r.conv > 0 ? r.cpa.toFixed(2) : "",
+              r._goal.toFixed(2),
+              r.prev && r.prev.cpa > 0 ? r.prev.cpa.toFixed(2) : "",
+              r.paceRatio != null ? `${Math.round(r.paceRatio * 100)}%` : "",
+              ...(showProjection ? [r.projectedPeriodSpend != null ? r.projectedPeriodSpend.toFixed(2) : ""] : []),
+            ]),
+          ];
+          el._summaryText = `${opts.title} (${rangeLabel(entry.range)}): spend ${fmt$(cost)} (prev ${fmt$(pCost)}), ${fmtN(conv)} conversions (prev ${fmtN(pConv)}), cost/conv ${fmt$(cpa)} (prev ${fmt$(pCpa)}). ${within} of ${spent.length} accounts within goal, ${close} close.`;
+        }
+
+        function copyReport(pageId) {
+          const el = document.getElementById(pageId);
+          if (!el || !el._copyRows) return toast("Nothing loaded yet", true);
+          const text = `${el._summaryText}\n\n${el._copyRows.map((r) => r.join("\t")).join("\n")}`;
+          const done = () => toast("Copied — paste into email, Slack or Google Sheets");
+          try {
+            navigator.clipboard.writeText(text).then(done, () => window.prompt("Copy:", text));
+          } catch (e) {
+            window.prompt("Copy:", text);
+          }
+        }
+
+        function exportReportCsv(pageId, name) {
+          const el = document.getElementById(pageId);
+          if (!el || !el._copyRows) return toast("Nothing loaded yet", true);
+          const csv = el._copyRows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
+          const a = document.createElement("a");
+          a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
+          a.download = `${name}-${__localYMD(new Date())}.csv`;
+          a.click();
+          setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+        }
+
+        async function loadPerformancePage(pageId, scope, opts, force) {
+          const el = document.getElementById(pageId);
+          if (!el) return;
+          const status = el.querySelector(".report-status");
+          const range = resolveClientDateRange(scope);
+          const cached = reportCache.get(reportKey(scope, range));
+          if (cached && !force) {
+            status.textContent = "";
+            renderPerformanceReport(el, cached, opts);
+            return;
+          }
+          status.textContent = `Loading ${rangeLabel(range)} from Google Ads… (about a minute for all accounts)`;
+          try {
+            const entry = await getReport(scope, force);
+            status.textContent = "";
+            renderPerformanceReport(el, entry, opts);
+          } catch (err) {
+            status.textContent = `Couldn't load: ${err.message || err}`;
+          }
+        }
+
+        function loadWeeklyPage(force) {
+          const title = weeklyMode === "weekly" ? "This week so far" : "Last week";
+          document.querySelectorAll("[data-weekly-mode]").forEach((b) => b.classList.toggle("active", b.dataset.weeklyMode === weeklyMode));
+          return loadPerformancePage("page-weekly", weeklyMode, { title: `Weekly Google Ads report — ${title}`, projection: false }, force);
+        }
+
+        function loadMtdPage(force) {
+          return loadPerformancePage("page-mtd", "mtd", { title: "Month-to-date Google Ads report", projection: true }, force);
+        }
+
+        // ---------- Markets ----------
+        // Franchise → Nielsen metro (Google "DMA Region" id). Shown on the
+        // Markets page so a wrong one is easy to spot.
+        const FRANCHISE_METRO = {
+          1: 200753, 2: 200803, 3: 200825, 5: 200515, 6: 200807, 7: 200803, 8: 200753, 9: 200825, 10: 200641,
+          11: 200566, 12: 200524, 15: 200511, 16: 200751, 17: 200679, 18: 200790, 19: 200623, 20: 200820,
+          21: 200820, 22: 200501, 23: 200524, 24: 200623, 25: 200541, 26: 200504, 27: 200803, 28: 200602,
+          29: 200881, 30: 200534, 31: 200819, 32: 200504, 33: 200825, 34: 200618, 35: 200556, 36: 200570,
+          37: 200501, 38: 200544, 39: 200862, 40: 200501, 41: 200803, 42: 200630, 43: 200640, 44: 200560,
+          45: 200839, 46: 200517, 47: 200623, 48: 200634, 49: 200753, 50: 200524, 51: 200567, 52: 200524,
+          53: 200691, 54: 200807, 55: 200501, 56: 200510, 57: 200803, 58: 200803, 59: 200623, 60: 200527,
+          61: 200635, 62: 200501, 63: 200625, 64: 200504, 65: 200765, 66: 200613, 67: 200511, 68: 200528,
+          70: 200527, 71: 200749, 72: 200652, 73: 200602, 74: 200561, 75: 200528, 76: 200618, 77: 200803,
+          78: 200542, 79: 200507, 80: 200505, 81: 200504, 82: 200557, 83: 200505, 84: 200618, 85: 200555,
+          86: 200512, 87: 200546, 88: 200501, 89: 200602, 90: 200506, 91: 200623, 92: 200819, 93: 200751,
+          94: 200501, 95: 200507, 96: 200752, 97: 200511, 98: 200501, 99: 200753, 100: 200524, 101: 200527,
+          102: 200635,
+        };
+        const METRO_NAMES = {
+          200501: "New York, NY", 200504: "Philadelphia, PA", 200505: "Detroit, MI", 200506: "Boston, MA",
+          200507: "Savannah, GA", 200510: "Cleveland-Akron, OH", 200511: "Washington, DC", 200512: "Baltimore, MD",
+          200515: "Cincinnati, OH", 200517: "Charlotte, NC", 200524: "Atlanta, GA", 200527: "Indianapolis, IN",
+          200528: "Miami-Ft. Lauderdale, FL", 200534: "Orlando, FL", 200541: "Lexington, KY", 200542: "Dayton, OH",
+          200544: "Norfolk / Hampton Roads, VA", 200546: "Columbia, SC", 200555: "Syracuse, NY", 200556: "Richmond, VA",
+          200557: "Knoxville, TN", 200560: "Raleigh-Durham, NC", 200561: "Jacksonville, FL", 200566: "Harrisburg-Lancaster, PA",
+          200567: "Greenville-Spartanburg, SC", 200570: "Myrtle Beach, SC", 200602: "Chicago, IL", 200613: "Minneapolis-St. Paul, MN",
+          200618: "Houston, TX", 200623: "Dallas-Ft. Worth, TX", 200625: "Waco-Temple, TX", 200630: "Birmingham, AL",
+          200634: "Amarillo, TX", 200635: "Austin, TX", 200640: "Memphis, TN", 200641: "San Antonio, TX",
+          200652: "Omaha, NE", 200679: "Des Moines, IA", 200691: "Huntsville, AL", 200749: "Laredo, TX",
+          200751: "Denver, CO", 200752: "Colorado Springs, CO", 200753: "Phoenix, AZ", 200765: "El Paso, TX",
+          200790: "Albuquerque, NM", 200803: "Los Angeles, CA", 200807: "San Francisco Bay Area, CA", 200819: "Seattle-Tacoma, WA",
+          200820: "Portland, OR", 200825: "San Diego, CA", 200839: "Las Vegas, NV", 200862: "Sacramento, CA", 200881: "Spokane, WA",
+        };
+        const marketGeoCache = new Map(); // range key → { rows, failed, fetchedAt }
+        const portalRangeCache = new Map(); // range key → portalData-like
+
+        function metroIdFromResource(v) {
+          const m = String(v || "").match(/(\d{6})/);
+          return m ? Number(m[1]) : null;
+        }
+
+        // Spend/conversions per account × campaign × metro (Google location report).
+        async function fetchMarketGeo(range, targets) {
+          const key = `${range.startDate}|${range.endDate}`;
+          const tools = await ensureAdsMcpTools();
+          const results = await runWithConcurrencyLimit(targets, 3, async (a) => {
+            const res = await mcpSearchRows(
+              tools,
+              a.customerId,
+              {
+                fields: ["campaign.name", "segments.geo_target_metro", "metrics.cost_micros", "metrics.conversions", "metrics.clicks"],
+                resource: "geographic_view",
+                conditions: [`segments.date BETWEEN '${range.startDate}' AND '${range.endDate}'`, "metrics.impressions > 0"],
+                limit: 5000,
+              },
+              { loginCustomerId: ADS_MCP_ANCHOR_MCC_ID },
+            );
+            return { a, res };
+          });
+          const rows = [];
+          let failed = 0;
+          results.forEach((r) => {
+            if (r.status !== "fulfilled" || !r.value || r.value.res.mode === "empty") {
+              failed += 1;
+              return;
+            }
+            r.value.res.rows.forEach((row) => {
+              rows.push({
+                account: r.value.a.name,
+                customerId: r.value.a.customerId,
+                campaign: String(rowValue(row, ["campaign.name"]) || ""),
+                metro: metroIdFromResource(rowValue(row, ["segments.geo_target_metro", "segments.geoTargetMetro"])),
+                cost: asNumber(rowValue(row, ["metrics.cost_micros", "metrics.costMicros"]), 0) / 1e6,
+                conv: asNumber(rowValue(row, ["metrics.conversions"]), 0),
+                clicks: asNumber(rowValue(row, ["metrics.clicks"]), 0),
+              });
+            });
+          });
+          const entry = { rows, failed, fetchedAt: new Date() };
+          marketGeoCache.set(key, entry);
+          return entry;
+        }
+
+        function buildMarkets(geo, portal) {
+          const markets = new Map();
+          const ensure = (metro) => {
+            if (!markets.has(metro)) {
+              markets.set(metro, {
+                metro,
+                name: metro == null ? "Outside franchise metros / unknown" : METRO_NAMES[metro] || `Metro ${metro}`,
+                cost: 0, conv: 0, clicks: 0, sources: new Map(), franchises: [],
+                ppcLeads: 0, totalLeads: 0, booked: 0, bookedValue: 0,
+              });
+            }
+            return markets.get(metro);
+          };
+          const franchiseMetros = new Set(Object.values(FRANCHISE_METRO));
+          geo.rows.forEach((r) => {
+            const metro = r.metro != null && franchiseMetros.has(r.metro) ? r.metro : null;
+            const m = ensure(metro);
+            m.cost += r.cost;
+            m.conv += r.conv;
+            m.clicks += r.clicks;
+            const sk = `${r.account}||${r.campaign}`;
+            const s = m.sources.get(sk) || { account: r.account, campaign: r.campaign, cost: 0, conv: 0, hq: r.customerId === "8261103563" };
+            s.cost += r.cost;
+            s.conv += r.conv;
+            m.sources.set(sk, s);
+          });
+          if (portal) {
+            portal.franchises.forEach((f) => {
+              const metro = FRANCHISE_METRO[f.id];
+              if (metro == null || !(f.totalLeads > 0)) return;
+              const m = ensure(metro);
+              m.franchises.push(f);
+              m.ppcLeads += f.ppcLeads;
+              m.totalLeads += f.totalLeads;
+              m.booked += f.booked;
+              m.bookedValue += f.bookedValueCents / 100;
+            });
+          }
+          const list = Array.from(markets.values()).filter((m) => m.cost >= 1 || m.ppcLeads > 0);
+          list.forEach((m) => {
+            m.cpa = m.conv > 0 ? m.cost / m.conv : null;
+            m.costPerLead = m.ppcLeads > 0 && m.cost > 0 ? m.cost / m.ppcLeads : null;
+            m.bookRate = m.totalLeads > 0 ? m.booked / m.totalLeads : 0;
+            m.estBookings = m.ppcLeads * m.bookRate;
+            m.costPerBooking = m.estBookings > 0 && m.cost > 0 ? m.cost / m.estBookings : null;
+            m.avgBooking = m.booked > 0 ? m.bookedValue / m.booked : 0;
+            m.estRoas = m.cost > 0 && m.estBookings > 0 && m.avgBooking > 0 ? (m.estBookings * m.avgBooking) / m.cost : null;
+            m.trackingRatio = m.ppcLeads > 0 ? m.conv / m.ppcLeads : null;
+            m.hqCost = Array.from(m.sources.values()).filter((s) => s.hq).reduce((t, s) => t + s.cost, 0);
+          });
+          list.sort((a, b) => (a.metro == null) - (b.metro == null) || b.cost - a.cost);
+          return list;
+        }
+
+        function toggleMarket(metro) {
+          const k = String(metro);
+          if (marketsExpanded.has(k)) marketsExpanded.delete(k);
+          else marketsExpanded.add(k);
+          renderMarketsTable();
+        }
+
+        let marketsLast = null; // { list, range, geo, portal }
+
+        function renderMarketsTable() {
+          const el = document.getElementById("page-markets");
+          if (!el || !marketsLast) return;
+          const { list, range, geo, portal } = marketsLast;
+          const totals = list.reduce((t, m) => ({ cost: t.cost + m.cost, conv: t.conv + m.conv, leads: t.leads + m.ppcLeads, bk: t.bk + m.estBookings }), { cost: 0, conv: 0, leads: 0, bk: 0 });
+          el.querySelector(".report-kpis").innerHTML = [
+            kpiCard("Ad spend (all accounts)", fmt$(totals.cost), `${fmt$(list.reduce((t, m) => t + m.hqCost, 0))} from GTHQ`),
+            kpiCard("Google conversions", fmtN(totals.conv), totals.conv > 0 ? `${fmt$(totals.cost / totals.conv)} / conv` : ""),
+            kpiCard("Portal PPC leads", portal ? fmtN(totals.leads) : "—", portal ? (totals.leads > 0 ? `${fmt$(totals.cost / totals.leads)} / lead` : "") : "Connect Portal to see leads"),
+            kpiCard("Est. bookings from ads", portal ? totals.bk.toFixed(0) : "—", portal && totals.bk > 0 ? `${fmt$(totals.cost / totals.bk)} / booking` : ""),
+          ].join("");
+          const unloc = marketsLast.unlocated;
+          el.querySelector(".report-meta").textContent = `${rangeLabel(range)} · spend split by metro using Google's location report (every account, incl. GTHQ)${unloc >= 1 ? ` · ${fmt$(unloc)} of ${fmt$(marketsLast.acctTotal)} couldn't be placed in a metro by Google` : ""}${geo.failed ? ` · ${geo.failed} account(s) failed to load` : ""}`;
+          const rows = list
+            .map((m) => {
+              const open = marketsExpanded.has(String(m.metro));
+              const tr = m.trackingRatio;
+              const trackCell = !portal || tr == null || m.ppcLeads < 5 || !(m.cost >= 20)
+                ? "—"
+                : tr < 0.5
+                  ? `<span class="track-bad" title="Google counts far fewer conversions than Portal PPC leads — tracking is likely missing leads">${Math.round(tr * 100)}% ⚠️</span>`
+                  : tr > 1.5
+                    ? `<span class="track-bad" title="Google counts more conversions than Portal PPC leads — possible double counting">${Math.round(tr * 100)}% ⚠️</span>`
+                    : `${Math.round(tr * 100)}%`;
+              const sources = Array.from(m.sources.values()).filter((s) => s.cost >= 0.5).sort((a, b) => b.cost - a.cost);
+              const drill = open
+                ? `<tr class="drill-row"><td colspan="11">
+                    <div class="drill-notes"><strong>Franchises:</strong> ${m.franchises.length ? m.franchises.map((f) => `${escapeHtml(f.label)} — ${f.ppcLeads} PPC / ${f.totalLeads} leads, ${f.booked} booked`).join(" · ") : "none with leads in this period"}</div>
+                    <table class="drill-table"><thead><tr><th>Account</th><th>Campaign</th><th>Spend in this metro</th><th>Conv</th><th>Cost/Conv</th></tr></thead><tbody>
+                    ${sources.map((s) => `<tr><td>${s.hq ? "🏢 " : ""}${escapeHtml(s.account)}</td><td>${escapeHtml(s.campaign)}</td><td>${fmt$(s.cost)}</td><td>${fmtN(s.conv)}</td><td>${s.conv > 0 ? fmt$(s.cost / s.conv) : "—"}</td></tr>`).join("") || `<tr><td colspan="5" style="color:var(--ink-muted)">No ad spend located in this metro.</td></tr>`}
+                    </tbody></table></td></tr>`
+                : "";
+              return `<tr class="${open ? "drill-open" : ""}">
+                <td><button class="drill-btn" onclick="toggleMarket('${m.metro}')">${open ? "▾" : "▸"}</button> ${escapeHtml(m.name)}</td>
+                <td>${fmt$(m.cost)}${m.hqCost >= 1 ? `<div class="delta" style="color:var(--ink-muted)">${fmt$(m.hqCost)} GTHQ</div>` : ""}</td>
+                <td>${fmtN(m.conv)}</td>
+                <td>${m.cpa != null ? fmt$(m.cpa) : "—"}</td>
+                <td>${portal ? fmtN(m.ppcLeads) : "—"}</td>
+                <td>${m.costPerLead != null ? fmt$(m.costPerLead) : "—"}</td>
+                <td>${portal && m.totalLeads ? `${Math.round(m.bookRate * 100)}%` : "—"}</td>
+                <td>${portal && m.ppcLeads ? m.estBookings.toFixed(1) : "—"}</td>
+                <td>${m.costPerBooking != null ? fmt$(m.costPerBooking) : "—"}</td>
+                <td>${m.estRoas != null ? `${m.estRoas.toFixed(1)}×` : "—"}</td>
+                <td>${trackCell}</td>
+              </tr>${drill}`;
+            })
+            .join("");
+          el.querySelector(".report-table").innerHTML = `<thead><tr>
+              <th>Metro</th><th>Ad spend</th><th>Google conv</th><th>Cost/Conv</th><th>Portal PPC leads</th><th>Cost/Lead</th>
+              <th title="Share of ALL Portal leads in the metro that booked">Book rate</th><th title="PPC leads × book rate">Est. bookings</th><th>Cost/Booking</th>
+              <th title="Est. bookings × average booking value ÷ spend">Est. ROAS</th><th title="Google conversions ÷ Portal PPC leads">Tracking</th>
+            </tr></thead><tbody>${rows || `<tr><td colspan="11" style="text-align:center;padding:24px;color:var(--ink-muted)">No data.</td></tr>`}</tbody>`;
+          el._copyRows = [
+            ["Metro", "Ad spend", "GTHQ spend", "Google conv", "Cost/Conv", "Portal PPC leads", "Cost/Lead", "Book rate", "Est. bookings", "Cost/Booking", "Est. ROAS"],
+            ...list.map((m) => [
+              m.name, m.cost.toFixed(2), m.hqCost.toFixed(2), m.conv.toFixed(1), m.cpa != null ? m.cpa.toFixed(2) : "",
+              portal ? m.ppcLeads : "", m.costPerLead != null ? m.costPerLead.toFixed(2) : "", portal ? `${Math.round(m.bookRate * 100)}%` : "",
+              portal ? m.estBookings.toFixed(1) : "", m.costPerBooking != null ? m.costPerBooking.toFixed(2) : "", m.estRoas != null ? m.estRoas.toFixed(1) : "",
+            ]),
+          ];
+          el._summaryText = `Markets (${rangeLabel(range)}): ${fmt$(totals.cost)} ad spend, ${fmtN(totals.conv)} Google conversions${portal ? `, ${fmtN(totals.leads)} Portal PPC leads (${totals.leads ? fmt$(totals.cost / totals.leads) : "—"}/lead), ~${totals.bk.toFixed(0)} bookings` : ""}.`;
+          const mapEl = el.querySelector(".metro-map");
+          if (mapEl && portal) {
+            const groups = new Map();
+            portal.franchises.forEach((f) => {
+              const metro = FRANCHISE_METRO[f.id];
+              const name = metro ? METRO_NAMES[metro] || metro : "❓ not mapped";
+              if (!groups.has(name)) groups.set(name, []);
+              groups.get(name).push(f.label);
+            });
+            mapEl.innerHTML = Array.from(groups.entries())
+              .sort((a, b) => String(a[0]).localeCompare(String(b[0])))
+              .map(([k, v]) => `<div><strong>${escapeHtml(String(k))}:</strong> ${v.map(escapeHtml).join(", ")}</div>`)
+              .join("");
+          }
+        }
+
+        async function loadMarketsPage(force) {
+          const el = document.getElementById("page-markets");
+          if (!el) return;
+          document.querySelectorAll("[data-markets-scope]").forEach((b) => b.classList.toggle("active", b.dataset.marketsScope === marketsScope));
+          const status = el.querySelector(".report-status");
+          const range = resolveClientDateRange(marketsScope);
+          const key = `${range.startDate}|${range.endDate}`;
+          try {
+            const token = await ensureAdsMcpAccessToken();
+            if (!token) throw new Error("Connect Ads MCP first (button at the top).");
+            const targets = (liveRange ? accounts.filter((a) => a._liveFetchId === liveRange.fetchId) : accounts).filter((a) => a.customerId);
+            if (!targets.length) throw new Error("Accounts haven't loaded yet — wait for the live refresh to finish, then click Refresh.");
+            status.textContent = `Loading ${rangeLabel(range)}: location split for ${targets.length} accounts${isPortalConnected() ? " + Portal leads" : ""}…`;
+            const geoP = !force && marketGeoCache.has(key) ? Promise.resolve(marketGeoCache.get(key)) : fetchMarketGeo(range, targets);
+            const portalP = !isPortalConnected()
+              ? Promise.resolve(null)
+              : !force && portalRangeCache.has(key)
+                ? Promise.resolve(portalRangeCache.get(key))
+                : fetchPortalData(range.startDate, range.endDate)
+                    .then((d) => (portalRangeCache.set(key, d), d))
+                    .catch((e) => {
+                      toast(`Portal: ${e.message || e}`, true);
+                      return null;
+                    });
+            const [geo, portal] = await Promise.all([geoP, portalP]);
+            marketsLast = { list: buildMarkets(geo, portal), range, geo, portal };
+            // How much account spend Google could not place in any metro.
+            const rep = reportCache.get(reportKey(marketsScope, range));
+            if (rep) {
+              const acctTotal = rep.accounts.reduce((t, a) => t + (a.cost || 0), 0);
+              const geoTotal = geo.rows.reduce((t, r) => t + r.cost, 0);
+              marketsLast.unlocated = Math.max(0, acctTotal - geoTotal);
+              marketsLast.acctTotal = acctTotal;
+            }
+            status.textContent = portal ? "" : "Connect Portal (button at the top) to add real leads, bookings and cost per booking.";
+            renderMarketsTable();
+          } catch (err) {
+            status.textContent = `Couldn't load: ${err.message || err}`;
+          }
+        }
+
+        // ---------- Page router ----------
+        const PAGES = ["today", "weekly", "mtd", "markets", "accounts", "search", "changes"];
+        let activePage = "today";
+
+        function renderCurrentPage(force) {
+          if (activePage === "weekly") return loadWeeklyPage(force);
+          if (activePage === "mtd") return loadMtdPage(force);
+          if (activePage === "markets") return loadMarketsPage(force);
+        }
+
+        function showPage(name, opts) {
+          if (!PAGES.includes(name)) name = "today";
+          activePage = name;
+          document.querySelectorAll("[data-page]").forEach((el) => {
+            el.style.display = el.dataset.page === name ? "" : "none";
+          });
+          document.querySelectorAll("[data-nav]").forEach((b) => b.classList.toggle("active", b.dataset.nav === name));
+          // The View (date range) buttons only drive Today and Accounts.
+          const scopeBar = document.getElementById("dateScope");
+          const scopeGroup = scopeBar && scopeBar.closest(".control-group");
+          if (scopeGroup) scopeGroup.style.display = name === "today" || name === "accounts" ? "" : "none";
+          if (!opts || !opts.fromHash) {
+            try {
+              window.history.replaceState(null, "", `${location.pathname}${location.search}#${name}`);
+            } catch (e) {}
+          }
+          renderCurrentPage(false);
+        }
+
+        function initPageRouter() {
+          document.querySelectorAll("[data-nav]").forEach((b) => {
+            if (b.dataset.boundClick) return;
+            b.addEventListener("click", () => showPage(b.dataset.nav));
+            b.dataset.boundClick = "true";
+          });
+          document.querySelectorAll("[data-weekly-mode]").forEach((b) => {
+            if (b.dataset.boundClick) return;
+            b.addEventListener("click", () => {
+              weeklyMode = b.dataset.weeklyMode;
+              loadWeeklyPage(false);
+            });
+            b.dataset.boundClick = "true";
+          });
+          document.querySelectorAll("[data-markets-scope]").forEach((b) => {
+            if (b.dataset.boundClick) return;
+            b.addEventListener("click", () => {
+              marketsScope = b.dataset.marketsScope;
+              loadMarketsPage(false);
+            });
+            b.dataset.boundClick = "true";
+          });
+          window.addEventListener("hashchange", () => showPage(location.hash.replace("#", ""), { fromHash: true }));
+          showPage(location.hash.replace("#", "") || "today", { fromHash: true });
         }
 
         // ============ PORTAL REPORTS (leads & bookings) ============
@@ -8193,8 +8906,7 @@
               return;
             }
 
-            // Portal leads/bookings load in parallel with the Ads pull.
-            const portalPromise = refreshPortalData(startDate, endDate);
+            const portalPromise = Promise.resolve(); // Portal data now loads on the Markets page
             const live = await fetchGoogleAdsFromMcp(startDate, endDate);
             // A newer click started while this one was loading: drop this result.
             if (isStale()) return;
@@ -8394,6 +9106,14 @@
             }
             await portalPromise;
             if (isStale()) return;
+            reportCache.set(reportKey(dateScope, { startDate, endDate }), {
+              range: { startDate, endDate },
+              scope: dateScope,
+              accounts: accounts.filter((a) => a._liveFetchId === mySeq),
+              pacingWindow,
+              prevRange: live.prevRange || null,
+              fetchedAt: lastLiveFetch,
+            });
             render();
           } catch (err) {
             if (isStale()) return;
@@ -8531,6 +9251,7 @@
           render();
           updateAdsMcpUi();
           updatePortalUi();
+          initPageRouter();
 
           if (initError) {
             const statusEl = document.getElementById("liveDataStatus");
@@ -14860,15 +15581,6 @@ levis@gametruck`;
                     msg: `Campaign <strong>${escapeHtml(c.name)}</strong> spent <strong>${fmt$(c.cost)}</strong> with <strong>0 conversions</strong>`,
                   });
                 });
-              const pm = isPortalConnected() ? portalMetricsForAccount(a) : null;
-              if (pm && pm.ppcLeads >= 10 && pm.trackingRatio != null && pm.trackingRatio < 0.5) {
-                alerts.push({
-                  accountName: a.name,
-                  severity: "warning",
-                  type: "tracking-gap",
-                  msg: `Conversion tracking gap — Google Ads counted <strong>${fmtN(a.conv)}</strong> conversions but the Portal logged <strong>${fmtN(pm.ppcLeads)}</strong> PPC leads (real cost ≈ <strong>${fmt$(pm.costPerLead)}</strong>/lead, not ${fmt$(a.cpa)})`,
-                });
-              }
               if (
                 a.lostIsBudget != null &&
                 a.lostIsBudget >= 0.25 &&
@@ -15411,7 +16123,7 @@ levis@gametruck`;
         }
 
         // ---- Leaderboard helpers ----
-        const LEADER_COLS = 11;
+        const LEADER_COLS = 10;
         const expandedAccounts = new Set();
 
         function pctChange(cur, prev) {
@@ -15494,7 +16206,6 @@ levis@gametruck`;
             : `<tr><td colspan="9" style="color:var(--ink-muted)">No campaign data for this period — click Refresh Live Data.</td></tr>`;
           return `<tr class="drill-row"><td colspan="${LEADER_COLS}">
             ${notes.length ? `<div class="drill-notes">${notes.map((n) => `<div>• ${escapeHtml(n)}</div>`).join("")}</div>` : ""}
-            ${portalDrillNoteHtml(a)}
             ${accountChangeSummaryHtml(a)}
             <table class="drill-table">
               <thead><tr><th>Campaign</th><th>Type</th><th>Budget</th><th>Cost</th><th>Clicks</th><th>Conv</th><th>Cost/Conv</th><th>Imp. Share</th><th>Lost: budget / rank</th></tr></thead>
@@ -15528,7 +16239,6 @@ levis@gametruck`;
         <td>${fmt$(a.cpc)}</td>
         <td>${fmtN(a.conv)}${p ? deltaHtml(a.conv, p.conv, false) : ""}</td>
         <td class="cpa-cell ${h}">${a.conv > 0 ? fmt$(a.cpa) : a.cost > 0 ? "0 conv" : fmt$(0)}${p && a.cpa > 0 ? deltaHtml(a.cpa, p.cpa, true) : ""}</td>
-        <td>${portalCellHtml(a)}</td>
         <td>${isCellHtml(a)}</td>
         <td>${paceBadge(a.paceRatio)}</td>
         <td>
