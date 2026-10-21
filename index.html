@@ -1297,6 +1297,16 @@
         color: var(--ink-muted);
         font-size: 11px;
       }
+      .sub-head {
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin: 24px 0 8px;
+      }
+      #page-traffic .report-table td:nth-child(-n + 2),
+      #page-traffic .report-table th:nth-child(-n + 2) {
+        text-align: left;
+      }
       .delta {
         font-size: 10.5px;
         font-family: "JetBrains Mono", monospace;
@@ -3500,6 +3510,7 @@
           <button data-nav="weekly">📅 Weekly Report</button>
           <button data-nav="mtd">📈 Month to Date</button>
           <button data-nav="markets">🗺️ Markets</button>
+          <button data-nav="traffic">📱 Traffic</button>
           <button data-nav="accounts">📊 Accounts</button>
           <button data-nav="search">🔍 Search Terms</button>
           <button data-nav="changes">📜 Changes</button>
@@ -3591,6 +3602,22 @@
             title="Disconnect the Portal login"
           >
             ⎋ Disconnect Portal
+          </button>
+          <button
+            class="btn btn-ghost"
+            id="ga4ConnectBtn"
+            style="padding: 9px 14px; font-size: 11px"
+            title="Connect Google Analytics (GA4) for lead checks and traffic quality"
+          >
+            🔐 Connect GA4
+          </button>
+          <button
+            class="btn btn-ghost"
+            id="ga4DisconnectBtn"
+            style="padding: 9px 14px; font-size: 11px; display: none"
+            title="Disconnect GA4"
+          >
+            ⎋ Disconnect GA4
           </button>
           <span
             class="control-label"
@@ -3795,6 +3822,25 @@
           <div class="summary report-kpis"></div>
           <div class="table-wrap"><table class="report-table"></table></div>
           <details class="metro-details"><summary>Which franchises are counted in each metro</summary><div class="metro-map">Connect Portal to see the franchise list.</div></details>
+        </div>
+
+        <div class="page" data-page="traffic" id="page-traffic" style="display: none">
+          <div class="section-head">
+            <h2>Traffic Quality</h2>
+            <div class="meta report-meta">What Google Ads visitors do on the site (GA4), by campaign and device</div>
+          </div>
+          <div class="report-controls">
+            <div class="date-scope" style="height: 34px"><button class="scope-btn active" data-traffic-scope="mtd">MTD</button><button class="scope-btn" data-traffic-scope="lastWeek">Last week</button><button class="scope-btn" data-traffic-scope="lastMonth">Last month</button></div>
+            <button class="btn btn-ghost" onclick="loadTrafficPage(true)">🔄 Refresh</button>
+            <button class="btn btn-ghost" onclick="copyReport('page-traffic')">📋 Copy for report</button>
+            <button class="btn btn-ghost" onclick="exportReportCsv('page-traffic', 'traffic-quality')">↓ CSV</button>
+            <span class="report-status"></span>
+          </div>
+          <div class="summary report-kpis"></div>
+          <h3 class="sub-head">By campaign</h3>
+          <div class="table-wrap"><table class="report-table" id="trafficCampaignTable"></table></div>
+          <h3 class="sub-head">By device (bid-adjustment hints)</h3>
+          <div class="table-wrap"><table class="report-table" id="trafficDeviceTable"></table></div>
         </div>
 
         <div class="page" data-page="accounts" style="display: none">
@@ -7208,7 +7254,7 @@
           const code = url.searchParams.get("code");
           const state = url.searchParams.get("state");
           if (!error && !code) return;
-          if (state && state.startsWith("portal.")) return; // Portal login, handled elsewhere
+          if (state && (state.startsWith("portal.") || state.startsWith("ga4."))) return; // Portal/GA4 logins, handled elsewhere
 
           const hadAuthBeforeCallback = !!(
             adsMcpAuth && adsMcpAuth.accessToken
@@ -7851,6 +7897,8 @@
           "ad-strength": "Weak ad strength",
           "low-qs": "Low quality score",
           "check-failed": "Check failed",
+          "ga4-noncustomer-leads": "Non-customer forms counted as leads",
+          "lead-mismatch": "Lead counts disagree (3-way)",
         };
         let healthState = null; // { runAt, findings: [...], checked, failed }
         let healthRunning = false;
@@ -8056,6 +8104,41 @@
               done += 1;
               if (status) status.textContent = `${auto ? "Daily health check" : "Checking"}: ${done} / ${targets.length} accounts…`;
             });
+            // GA4-based checks (site-wide), when GA4 is connected.
+            if (isGa4Connected()) {
+              try {
+                const t = __localYMD(new Date());
+                const g = await fetchGa4Leads({ startDate: ymdAddDays(t, -28), endDate: ymdAddDays(t, -1) });
+                if (g.nonCustomer > 0) {
+                  all.push({
+                    severity: "warning",
+                    check: "ga4-noncustomer-leads",
+                    account: "Website (GA4)",
+                    customerId: null,
+                    detail: `GA4 "lead_submitted" also fires on non-customer forms — ${Array.from(g.nonCustomerPages.entries()).sort((x, y) => y[1] - x[1]).map(([pg, n]) => `${pg} (${n})`).join(", ")} in the last 28 days. They count as leads in GA4, and in Google Ads anywhere this key event is imported as a conversion.`,
+                    fix: "In GA4 (Admin → Events) stop lead_submitted firing on these pages, or send a different event from those forms.",
+                  });
+                }
+              } catch (e) {
+                all.push({ severity: "info", check: "check-failed", account: "Website (GA4)", customerId: null, detail: `GA4 check couldn't run: ${e.message || e}`, fix: "Reconnect GA4 and run again." });
+              }
+            }
+            if (marketsLast && marketsLast.ga4) {
+              marketsLast.list.forEach((m) => {
+                const x = leadCheckMismatch(m);
+                if (!x || m.metro == null) return;
+                const parts = [m.cost >= 20 ? `Google Ads ${Math.round(m.conv)} conv` : null, m.ga4PaidLeads ? `GA4 ${m.ga4PaidLeads} paid leads` : null, m.ppcLeads ? `Portal ${m.ppcLeads} PPC leads` : null].filter(Boolean);
+                all.push({
+                  severity: "warning",
+                  check: "lead-mismatch",
+                  account: m.name,
+                  customerId: null,
+                  detail: `Lead counts disagree ${x.toFixed(1)}× (${rangeLabel(marketsLast.range)}): ${parts.join(" vs ")}`,
+                  fix: "Lowest number is usually the broken one: check that market's Google Ads conversion actions, the GA4 lead form on its city page, and Portal lead source (PPC) tagging.",
+                });
+              });
+            }
+
             // Same structural setup issue in many accounts → one grouped row.
             ["mixed-goals", "duplicate-leads", "odd-primary"].forEach((check) => {
               const hits = all.filter((x) => x.check === check);
@@ -8164,6 +8247,509 @@
               type: `health-${x.check}`,
               msg: `<strong>${escapeHtml(HEALTH_CHECK_LABELS[x.check] || x.check)}</strong> — ${escapeHtml(x.detail)}`,
             }));
+        }
+
+        // ============ GA4 (Google Analytics) ============
+        // Connects to the GameTruck analytics MCP with the user's own Google
+        // login (OAuth + PKCE, like Ads MCP). Calls go through
+        // /api/ga4-mcp-proxy because the MCP endpoint blocks browser (CORS)
+        // requests.
+        const GA4_MCP_URL = "https://analytics-mcp.microservices.gametrucksys.com/mcp";
+        const GA4_PROPERTY_ID = "372590551";
+        const GA4_AUTH_KEY = "gt_ga4_mcp_auth_v1";
+        const GA4_PENDING_KEY = "gt_ga4_mcp_pending_v1";
+        const GA4_STATE_PREFIX = "ga4.";
+        // GA4 channels that are Google Ads traffic.
+        const GA4_PAID_CHANNELS = new Set(["Paid Search", "Cross-network", "Paid Other", "Display", "Paid Video", "Paid Shopping"]);
+        // Lead-form pages that are not customers (job applicants, partners, reminders).
+        const GA4_NON_CUSTOMER_SLUGS = new Set(["careers", "promotional-partnerships", "reminder", "franchise", "franchising"]);
+        // Website city slug → metro (Google DMA id). Unknown slugs are listed on the Markets page.
+        const GA4_SLUG_METRO = {
+          "howard-county": 200512, "long-island": 200501, "minneapolis": 200613, "berkeley-heights-warren": 200501,
+          "princeton": 200504, "cleveland-akron": 200510, "richmond": 200556, "portland": 200820, "dayton": 200542,
+          "chicago": 200602, "san-marcos": 200635, "illiana-south-chicago": 200602, "denver": 200751,
+          "los-angeles": 200803, "gig-harbor": 200819, "east-valley": 200753, "jacksonville": 200561,
+          "arlington": 200623, "north-dallas": 200623, "north-indy": 200527, "westchester": 200501,
+          "orange-county": 200803, "houston-north": 200618, "north-tarrant-county": 200623, "cincinnati": 200515,
+          "atlanta-north": 200524, "san-jose": 200807, "orlando": 200534, "cherry-hill": 200504, "austin": 200635,
+          "knoxville": 200557, "houston": 200618, "hershey": 200566, "north-san-diego": 200825,
+          "inland-empire": 200803, "west-inland-empire": 200803, "el-paso": 200765, "charlotte": 200517,
+          "northern-virginia-dc": 200511, "san-antonio": 200641, "staten-island": 200501, "chicago-2": 200602,
+        };
+
+        let ga4Auth = null;
+        let ga4SessionId = null;
+        let ga4ToolName = null;
+        const ga4LeadsCache = new Map(); // range key → result
+        const ga4TrafficCache = new Map();
+
+        async function ga4Fetch(url, init) {
+          const i = init || {};
+          return await fetch("/api/ga4-mcp-proxy", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              forwardUrl: url,
+              method: i.method || "GET",
+              headers: headersToObject(i.headers),
+              body: i.body != null ? bodyToProxyString(i.body) : undefined,
+            }),
+          });
+        }
+
+        async function ga4Json(url, init, label) {
+          const res = await ga4Fetch(url, init);
+          const text = await res.text();
+          if (!res.ok) throw new Error(`${label} failed (${res.status}): ${text.slice(0, 300)}`);
+          try {
+            return JSON.parse(text);
+          } catch (e) {
+            throw new Error(`${label} returned non-JSON`);
+          }
+        }
+
+        function loadGa4AuthState() {
+          try {
+            const raw = localStorage.getItem(GA4_AUTH_KEY);
+            ga4Auth = raw ? JSON.parse(raw) : null;
+          } catch (e) {
+            ga4Auth = null;
+          }
+        }
+        function persistGa4AuthState() {
+          try {
+            if (ga4Auth) localStorage.setItem(GA4_AUTH_KEY, JSON.stringify(ga4Auth));
+            else localStorage.removeItem(GA4_AUTH_KEY);
+          } catch (e) {}
+        }
+        function isGa4Connected() {
+          return !!(ga4Auth && (ga4Auth.accessToken || ga4Auth.refreshToken));
+        }
+        function updateGa4Ui() {
+          const c = document.getElementById("ga4ConnectBtn");
+          const d = document.getElementById("ga4DisconnectBtn");
+          const on = isGa4Connected();
+          if (c) {
+            c.style.display = on ? "none" : "inline-flex";
+            c.disabled = IS_FILE_ORIGIN;
+          }
+          if (d) d.style.display = on ? "inline-flex" : "none";
+        }
+
+        async function connectGa4() {
+          if (IS_FILE_ORIGIN) return toast(FILE_MODE_HINT, true);
+          try {
+            toast("Connecting to GA4…");
+            const base = new URL(GA4_MCP_URL);
+            const resourceMeta = await ga4Json(`${base.origin}/.well-known/oauth-protected-resource${base.pathname}`, {}, "GA4 resource discovery");
+            const authServer = String((resourceMeta.authorization_servers || [])[0] || base.origin).replace(/\/+$/, "");
+            const authMeta = await ga4Json(`${authServer}/.well-known/oauth-authorization-server`, {}, "GA4 authorization-server discovery");
+            const scope = (resourceMeta.scopes_supported || authMeta.scopes_supported || ["openid"]).join(" ");
+            let clientId = ga4Auth && ga4Auth.clientId;
+            let clientSecret = ga4Auth && ga4Auth.clientSecret;
+            if (!clientId) {
+              const reg = await ga4Json(
+                authMeta.registration_endpoint,
+                {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    client_name: "GameTruck Ads Dashboard (GA4)",
+                    redirect_uris: [getAdsRedirectUri()],
+                    grant_types: ["authorization_code", "refresh_token"],
+                    response_types: ["code"],
+                    token_endpoint_auth_method: "client_secret_post",
+                    scope,
+                  }),
+                },
+                "GA4 app registration",
+              );
+              clientId = reg.client_id;
+              clientSecret = reg.client_secret || null;
+              if (!clientId) throw new Error("GA4 registration returned no client_id");
+            }
+            const codeVerifier = randomString(96);
+            const codeChallenge = await pkceChallenge(codeVerifier);
+            const state = GA4_STATE_PREFIX + randomString(40);
+            const redirectUri = getAdsRedirectUri();
+            sessionStorage.setItem(
+              GA4_PENDING_KEY,
+              JSON.stringify({ state, codeVerifier, redirectUri, clientId, clientSecret, tokenEndpoint: authMeta.token_endpoint, resource: resourceMeta.resource || GA4_MCP_URL }),
+            );
+            const authUrl = new URL(authMeta.authorization_endpoint);
+            authUrl.searchParams.set("response_type", "code");
+            authUrl.searchParams.set("client_id", clientId);
+            authUrl.searchParams.set("redirect_uri", redirectUri);
+            authUrl.searchParams.set("scope", scope);
+            authUrl.searchParams.set("state", state);
+            authUrl.searchParams.set("code_challenge", codeChallenge);
+            authUrl.searchParams.set("code_challenge_method", "S256");
+            authUrl.searchParams.set("resource", resourceMeta.resource || GA4_MCP_URL);
+            window.location.assign(authUrl.toString());
+          } catch (err) {
+            console.error(err);
+            toast(err.message || "Unable to connect GA4", true);
+          }
+        }
+
+        function disconnectGa4() {
+          ga4Auth = null;
+          ga4SessionId = null;
+          ga4ToolName = null;
+          ga4LeadsCache.clear();
+          ga4TrafficCache.clear();
+          persistGa4AuthState();
+          updateGa4Ui();
+          toast("GA4 disconnected");
+        }
+
+        async function maybeHandleGa4OAuthCallback() {
+          if (IS_FILE_ORIGIN) return false;
+          const url = new URL(window.location.href);
+          const state = url.searchParams.get("state") || "";
+          if (!state.startsWith(GA4_STATE_PREFIX)) return false;
+          try {
+            const pendingRaw = sessionStorage.getItem(GA4_PENDING_KEY);
+            sessionStorage.removeItem(GA4_PENDING_KEY);
+            const error = url.searchParams.get("error");
+            if (error) throw new Error(`GA4 login failed: ${url.searchParams.get("error_description") || error}`);
+            const pending = pendingRaw ? JSON.parse(pendingRaw) : null;
+            if (!pending || pending.state !== state) throw new Error("GA4 login state mismatch — click Connect GA4 again.");
+            const form = {
+              grant_type: "authorization_code",
+              code: url.searchParams.get("code"),
+              redirect_uri: pending.redirectUri,
+              client_id: pending.clientId,
+              code_verifier: pending.codeVerifier,
+            };
+            if (pending.clientSecret) form.client_secret = pending.clientSecret;
+            const token = await ga4Json(pending.tokenEndpoint, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: new URLSearchParams(form) }, "GA4 token exchange");
+            ga4Auth = {
+              clientId: pending.clientId,
+              clientSecret: pending.clientSecret || null,
+              tokenEndpoint: pending.tokenEndpoint,
+              accessToken: token.access_token,
+              refreshToken: token.refresh_token || null,
+              expiresAt: Date.now() + Number(token.expires_in || 3600) * 1000,
+            };
+            persistGa4AuthState();
+            toast("GA4 connected");
+          } catch (err) {
+            console.error(err);
+            toast(err.message || "GA4 login failed", true);
+          } finally {
+            ["code", "state", "scope", "error", "error_description", "iss", "authuser", "prompt", "hd"].forEach((p) => url.searchParams.delete(p));
+            const q = url.searchParams.toString();
+            window.history.replaceState({}, "", `${url.pathname}${q ? `?${q}` : ""}${url.hash || ""}`);
+            updateGa4Ui();
+          }
+          return true;
+        }
+
+        async function ensureGa4AccessToken() {
+          if (!ga4Auth) return null;
+          if (ga4Auth.accessToken && Date.now() < Number(ga4Auth.expiresAt || 0) - 60000) return ga4Auth.accessToken;
+          if (!ga4Auth.refreshToken) return null;
+          const form = { grant_type: "refresh_token", refresh_token: ga4Auth.refreshToken, client_id: ga4Auth.clientId };
+          if (ga4Auth.clientSecret) form.client_secret = ga4Auth.clientSecret;
+          const t = await ga4Json(ga4Auth.tokenEndpoint, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: new URLSearchParams(form) }, "GA4 token refresh");
+          ga4Auth.accessToken = t.access_token;
+          ga4Auth.expiresAt = Date.now() + Number(t.expires_in || 3600) * 1000;
+          if (t.refresh_token) ga4Auth.refreshToken = t.refresh_token;
+          persistGa4AuthState();
+          return ga4Auth.accessToken;
+        }
+
+        async function ga4Rpc(method, params, notification) {
+          const token = await ensureGa4AccessToken();
+          if (!token) throw new Error("GA4 session expired — click Connect GA4.");
+          const id = notification ? undefined : `g${Date.now()}${Math.random().toString(16).slice(2, 8)}`;
+          const payload = { jsonrpc: "2.0", method };
+          if (id) payload.id = id;
+          if (params !== undefined) payload.params = params;
+          const headers = { "Content-Type": "application/json", Accept: "application/json, text/event-stream", Authorization: `Bearer ${token}` };
+          if (ga4SessionId) headers["mcp-session-id"] = ga4SessionId;
+          const res = await ga4Fetch(GA4_MCP_URL, { method: "POST", headers, body: JSON.stringify(payload) });
+          const sid = res.headers.get("mcp-session-id");
+          if (sid) ga4SessionId = sid;
+          const text = await res.text();
+          if (res.status === 401) {
+            ga4Auth.accessToken = null;
+            persistGa4AuthState();
+            throw new Error("GA4 login expired — click Connect GA4.");
+          }
+          if (!res.ok) throw new Error(`GA4 request failed (${res.status}): ${text.slice(0, 200)}`);
+          if (notification) return null;
+          let rpc = null;
+          try {
+            rpc = JSON.parse(text);
+          } catch (e) {
+            rpc = parseRpcFromSse(text, id);
+          }
+          if (!rpc) throw new Error("Unable to parse GA4 response");
+          if (rpc.error) throw new Error(rpc.error.message || JSON.stringify(rpc.error));
+          return rpc.result;
+        }
+
+        async function ga4RunReport(dimensions, metrics, range, limit) {
+          if (!ga4ToolName) {
+            try {
+              await ga4Rpc("initialize", { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "gametruck-ads-dashboard", version: "1.0.0" } });
+              await ga4Rpc("notifications/initialized", undefined, true);
+            } catch (e) {
+              if (/expired|login/i.test(e.message || "")) throw e;
+            }
+            const listed = await ga4Rpc("tools/list", {});
+            ga4ToolName = resolveToolName((listed && listed.tools) || [], "run_report");
+            if (!ga4ToolName) throw new Error("GA4 connection has no run_report tool");
+          }
+          const res = await ga4Rpc("tools/call", {
+            name: ga4ToolName,
+            arguments: {
+              property_id: GA4_PROPERTY_ID,
+              dimensions_csv: dimensions.join(","),
+              metrics_csv: metrics.join(","),
+              start_date: range.startDate,
+              end_date: range.endDate,
+              limit: limit || 10000,
+            },
+          });
+          const parsed = parseToolResult(res);
+          const out = typeof parsed === "string" ? JSON.parse(parsed) : parsed;
+          return (out && out.rows) || [];
+        }
+
+        function ga4SlugFromPath(path) {
+          const m = String(path || "").match(/^\/([a-z0-9-]+)\//i);
+          return m ? m[1].toLowerCase() : null;
+        }
+
+        // Leads by market from GA4 (lead_submitted, split paid vs all).
+        async function fetchGa4Leads(range) {
+          const key = `${range.startDate}|${range.endDate}`;
+          if (ga4LeadsCache.has(key)) return ga4LeadsCache.get(key);
+          const rows = await ga4RunReport(["pagePath", "sessionDefaultChannelGroup"], ["keyEvents:lead_submitted"], range, 10000);
+          const byMetro = new Map();
+          const unmapped = new Map();
+          let nonCustomer = 0;
+          const nonCustomerPages = new Map();
+          rows.forEach((r) => {
+            const n = Number(r["keyEvents:lead_submitted"]) || 0;
+            if (!n) return;
+            const slug = ga4SlugFromPath(r.pagePath);
+            if (slug && GA4_NON_CUSTOMER_SLUGS.has(slug)) {
+              nonCustomer += n;
+              nonCustomerPages.set(r.pagePath, (nonCustomerPages.get(r.pagePath) || 0) + n);
+              return;
+            }
+            const metro = slug ? GA4_SLUG_METRO[slug] : null;
+            if (!metro) {
+              const k = slug || r.pagePath;
+              unmapped.set(k, (unmapped.get(k) || 0) + n);
+              return;
+            }
+            const e = byMetro.get(metro) || { all: 0, paid: 0 };
+            e.all += n;
+            if (GA4_PAID_CHANNELS.has(r.sessionDefaultChannelGroup)) e.paid += n;
+            byMetro.set(metro, e);
+          });
+          const result = { byMetro, unmapped, nonCustomer, nonCustomerPages, fetchedAt: new Date() };
+          ga4LeadsCache.set(key, result);
+          return result;
+        }
+
+        // Google Ads traffic quality from GA4: account × campaign × device.
+        async function fetchGa4Traffic(range) {
+          const key = `${range.startDate}|${range.endDate}`;
+          if (ga4TrafficCache.has(key)) return ga4TrafficCache.get(key);
+          const rows = await ga4RunReport(
+            ["sessionGoogleAdsCustomerId", "sessionGoogleAdsCampaignName", "deviceCategory"],
+            ["sessions", "engagedSessions", "keyEvents:lead_submitted", "keyEvents:GA4_Phone_Call_Click", "keyEvents:olb_sale"],
+            range,
+            10000,
+          );
+          const out = rows
+            .filter((r) => r.sessionGoogleAdsCustomerId && r.sessionGoogleAdsCustomerId !== "(not set)")
+            .map((r) => ({
+              customerId: String(r.sessionGoogleAdsCustomerId).replace(/\D+/g, ""),
+              campaign: r.sessionGoogleAdsCampaignName || "(not set)",
+              device: r.deviceCategory || "unknown",
+              sessions: Number(r.sessions) || 0,
+              engaged: Number(r.engagedSessions) || 0,
+              leads: Number(r["keyEvents:lead_submitted"]) || 0,
+              calls: Number(r["keyEvents:GA4_Phone_Call_Click"]) || 0,
+              sales: Number(r["keyEvents:olb_sale"]) || 0,
+            }));
+          const result = { rows: out, fetchedAt: new Date() };
+          ga4TrafficCache.set(key, result);
+          return result;
+        }
+
+        // ---------- Traffic quality page ----------
+        let trafficScope = "mtd";
+        let trafficLast = null;
+
+        function rateOf(x, y) {
+          return y > 0 ? x / y : null;
+        }
+
+        function suggestedBidAdj(rate, best) {
+          if (rate == null || !best) return null;
+          const pct = Math.round((rate / best - 1) * 100 / 5) * 5;
+          return Math.max(-90, Math.min(0, pct));
+        }
+
+        async function loadTrafficPage(force) {
+          const el = document.getElementById("page-traffic");
+          if (!el) return;
+          document.querySelectorAll("[data-traffic-scope]").forEach((b) => b.classList.toggle("active", b.dataset.trafficScope === trafficScope));
+          const status = el.querySelector(".report-status");
+          const range = resolveClientDateRange(trafficScope);
+          if (!isGa4Connected()) {
+            status.textContent = "Connect GA4 (button at the top) to see traffic quality by campaign and device.";
+            el.querySelector(".report-kpis").innerHTML = "";
+            el.querySelector("#trafficCampaignTable").innerHTML = "";
+            el.querySelector("#trafficDeviceTable").innerHTML = "";
+            return;
+          }
+          try {
+            status.textContent = `Loading ${rangeLabel(range)} from GA4${force ? "" : " (and spend from Google Ads)"}…`;
+            if (force) ga4TrafficCache.delete(`${range.startDate}|${range.endDate}`);
+            const [traffic, adsReport] = await Promise.all([
+              fetchGa4Traffic(range),
+              getReport(trafficScope, false).catch(() => null),
+            ]);
+            trafficLast = { range, traffic, adsReport };
+            status.textContent = "";
+            renderTrafficPage();
+          } catch (err) {
+            status.textContent = `Couldn't load: ${err.message || err}`;
+          }
+        }
+
+        function renderTrafficPage() {
+          const el = document.getElementById("page-traffic");
+          if (!el || !trafficLast) return;
+          const { range, traffic, adsReport } = trafficLast;
+          const nameById = new Map(accounts.filter((a) => a.customerId).map((a) => [a.customerId, a.name]));
+          const costByCampaign = new Map();
+          if (adsReport) {
+            adsReport.accounts.forEach((a) => (a.campaigns || []).forEach((c) => costByCampaign.set(`${a.customerId}||${c.name}`, c.cost)));
+          }
+          // Campaign rollup
+          const camp = new Map();
+          traffic.rows.forEach((r) => {
+            const k = `${r.customerId}||${r.campaign}`;
+            const e = camp.get(k) || { customerId: r.customerId, campaign: r.campaign, sessions: 0, engaged: 0, leads: 0, calls: 0, sales: 0 };
+            e.sessions += r.sessions;
+            e.engaged += r.engaged;
+            e.leads += r.leads;
+            e.calls += r.calls;
+            e.sales += r.sales;
+            camp.set(k, e);
+          });
+          const camps = Array.from(camp.values());
+          const tot = camps.reduce((t, c) => ({ s: t.s + c.sessions, e: t.e + c.engaged, l: t.l + c.leads, c: t.c + c.calls, o: t.o + c.sales }), { s: 0, e: 0, l: 0, c: 0, o: 0 });
+          const avgLeadRate = rateOf(tot.l, tot.s) || 0;
+          camps.forEach((c) => {
+            c.account = nameById.get(c.customerId) || c.customerId;
+            c.engRate = rateOf(c.engaged, c.sessions);
+            c.leadRate = rateOf(c.leads, c.sessions);
+            c.cost = costByCampaign.has(`${c.customerId}||${c.campaign}`) ? costByCampaign.get(`${c.customerId}||${c.campaign}`) : null;
+            c.costPerLead = c.cost != null && c.leads > 0 ? c.cost / c.leads : null;
+            c.flags = [];
+            if (c.sessions >= 100 && c.engRate != null && c.engRate < 0.45) c.flags.push(`Low engagement (${Math.round(c.engRate * 100)}%)`);
+            if (c.sessions >= 150 && c.leadRate != null && c.leadRate < avgLeadRate * 0.5) c.flags.push(`Lead rate ${(c.leadRate * 100).toFixed(1)}% vs ${(avgLeadRate * 100).toFixed(1)}% avg`);
+            if (c.sessions >= 30 && c.leads === 0 && (c.cost || 0) >= 100) c.flags.push("Spend but no GA4 leads");
+          });
+          camps.sort((x, y) => y.flags.length - x.flags.length || y.sessions - x.sessions);
+
+          el.querySelector(".report-kpis").innerHTML = [
+            kpiCard("Google Ads visits (GA4)", fmtN(tot.s), `${Math.round((rateOf(tot.e, tot.s) || 0) * 100)}% engaged`),
+            kpiCard("GA4 leads from ads", fmtN(tot.l), `${(avgLeadRate * 100).toFixed(1)}% of visits`),
+            kpiCard("Call clicks · online sales", `${fmtN(tot.c)} · ${fmtN(tot.o)}`, "from ad visits"),
+            kpiCard("Flagged campaigns", camps.filter((c) => c.flags.length).length, `of ${camps.length}`),
+          ].join("");
+          el.querySelector(".report-meta").textContent = `${rangeLabel(range)} · GA4 visits from Google Ads (linked accounts), by campaign and device`;
+
+          el.querySelector("#trafficCampaignTable").innerHTML = `<thead><tr><th>Account</th><th>Campaign</th><th>Visits</th><th>Engaged</th><th>Lead rate</th><th>GA4 leads</th><th>Call clicks</th><th>Online sales</th><th>Ad spend</th><th>Cost / GA4 lead</th><th>Flag</th></tr></thead><tbody>${
+            camps
+              .map(
+                (c) => `<tr class="${c.flags.length ? "status-warn" : ""}">
+                <td>${escapeHtml(c.account)}</td><td>${escapeHtml(c.campaign)}</td><td>${fmtN(c.sessions)}</td>
+                <td>${fmtPctCell(c.engRate)}</td><td>${fmtPctCell(c.leadRate)}</td><td>${fmtN(c.leads)}</td><td>${fmtN(c.calls)}</td><td>${fmtN(c.sales)}</td>
+                <td>${c.cost != null ? fmt$(c.cost) : "—"}</td><td>${c.costPerLead != null ? fmt$(c.costPerLead) : "—"}</td>
+                <td class="why-cell">${c.flags.length ? `⚠️ ${escapeHtml(c.flags.join(" · "))}` : ""}</td></tr>`,
+              )
+              .join("") || `<tr><td colspan="11" style="text-align:center;padding:24px;color:var(--ink-muted)">No Google Ads visits found in GA4 for this period.</td></tr>`
+          }</tbody>`;
+
+          // Device per account, with a bid-adjustment hint vs the account's best device.
+          const dev = new Map();
+          traffic.rows.forEach((r) => {
+            const k = `${r.customerId}||${r.device}`;
+            const e = dev.get(k) || { customerId: r.customerId, device: r.device, sessions: 0, engaged: 0, leads: 0 };
+            e.sessions += r.sessions;
+            e.engaged += r.engaged;
+            e.leads += r.leads;
+            dev.set(k, e);
+          });
+          const byAcct = new Map();
+          dev.forEach((d) => {
+            if (!byAcct.has(d.customerId)) byAcct.set(d.customerId, []);
+            byAcct.get(d.customerId).push(d);
+          });
+          const devRows = [];
+          byAcct.forEach((list, id) => {
+            const eligible = list.filter((d) => d.sessions >= 40);
+            const best = eligible.reduce((m, d) => Math.max(m, rateOf(d.leads, d.sessions) || 0), 0);
+            list
+              .sort((a, b) => b.sessions - a.sessions)
+              .forEach((d) => {
+                const rate = rateOf(d.leads, d.sessions);
+                const adj = d.sessions >= 40 && best > 0 && rate != null && rate < best * 0.5 ? suggestedBidAdj(rate, best) : null;
+                devRows.push({ account: nameById.get(id) || id, device: d.device, sessions: d.sessions, eng: rateOf(d.engaged, d.sessions), rate, best, adj });
+              });
+          });
+          devRows.sort((a, b) => (a.adj == null) - (b.adj == null) || a.account.localeCompare(b.account) || b.sessions - a.sessions);
+          el.querySelector("#trafficDeviceTable").innerHTML = `<thead><tr><th>Account</th><th>Device</th><th>Visits</th><th>Engaged</th><th>Lead rate</th><th>Best device in account</th><th>Suggestion</th></tr></thead><tbody>${
+            devRows
+              .map(
+                (d) => `<tr class="${d.adj != null ? "status-warn" : ""}"><td>${escapeHtml(d.account)}</td><td>${escapeHtml(d.device)}</td><td>${fmtN(d.sessions)}</td>
+                <td>${fmtPctCell(d.eng)}</td><td>${fmtPctCell(d.rate)}</td><td>${d.best ? fmtPctCell(d.best) : "—"}</td>
+                <td class="why-cell">${d.adj != null ? `Converts at ${(d.rate * 100).toFixed(1)}% vs ${(d.best * 100).toFixed(1)}% — try a ${d.adj}% ${escapeHtml(d.device)} bid adjustment` : d.sessions < 40 ? "Too few visits to judge" : ""}</td></tr>`,
+              )
+              .join("") || `<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--ink-muted)">No data.</td></tr>`
+          }</tbody>`;
+          el._copyRows = [
+            ["Account", "Campaign", "Visits", "Engaged %", "Lead rate %", "GA4 leads", "Call clicks", "Online sales", "Ad spend", "Cost/GA4 lead", "Flag"],
+            ...camps.map((c) => [c.account, c.campaign, c.sessions, c.engRate != null ? (c.engRate * 100).toFixed(1) : "", c.leadRate != null ? (c.leadRate * 100).toFixed(2) : "", c.leads, c.calls, c.sales, c.cost != null ? c.cost.toFixed(2) : "", c.costPerLead != null ? c.costPerLead.toFixed(2) : "", c.flags.join("; ")]),
+          ];
+          el._summaryText = `Traffic quality (${rangeLabel(range)}): ${fmtN(tot.s)} Google Ads visits, ${Math.round((rateOf(tot.e, tot.s) || 0) * 100)}% engaged, ${fmtN(tot.l)} GA4 leads (${(avgLeadRate * 100).toFixed(1)}%). ${camps.filter((c) => c.flags.length).length} campaigns flagged.`;
+        }
+
+        // 3-way lead cell for the Markets table.
+        function leadCheckCell(m, portal, ga4) {
+          const g = m.cost >= 20 ? m.conv : null;
+          const a = ga4 ? m.ga4PaidLeads : null;
+          const p = portal ? m.ppcLeads : null;
+          const vals = [g, a, p].filter((x) => x != null && x > 0);
+          if (vals.length < 2) return "—";
+          const hi = Math.max(...vals);
+          const lo = Math.min(...vals);
+          const off = hi >= 10 && lo > 0 && hi / lo > 1.6;
+          const parts = [g != null ? `G ${Math.round(g)}` : null, a != null ? `GA4 ${a}` : null, p != null ? `P ${p}` : null].filter(Boolean).join(" · ");
+          return off
+            ? `<span class="track-bad" title="Google Ads conversions (G), GA4 paid leads (GA4) and Portal PPC leads (P) differ by ${(hi / lo).toFixed(1)}× — one of them is mis-tracking">${parts} ⚠️</span>`
+            : `<span title="Google Ads conversions (G) · GA4 paid leads (GA4) · Portal PPC leads (P) — roughly agree">${parts}</span>`;
+        }
+
+        function leadCheckMismatch(m) {
+          const vals = [m.cost >= 20 ? m.conv : null, m.ga4PaidLeads, m.ppcLeads].filter((x) => x != null && x > 0);
+          if (vals.length < 2) return null;
+          const hi = Math.max(...vals);
+          const lo = Math.min(...vals);
+          return hi >= 10 && hi / lo > 1.6 ? hi / lo : null;
         }
 
         // ============ REPORT PAGES (Weekly · Month to Date · Markets) ============
@@ -8467,7 +9053,7 @@
           return entry;
         }
 
-        function buildMarkets(geo, portal) {
+        function buildMarkets(geo, portal, ga4) {
           const markets = new Map();
           const ensure = (metro) => {
             if (!markets.has(metro)) {
@@ -8476,6 +9062,7 @@
                 name: metro == null ? "Outside franchise metros / unknown" : METRO_NAMES[metro] || `Metro ${metro}`,
                 cost: 0, conv: 0, clicks: 0, sources: new Map(), franchises: [],
                 ppcLeads: 0, totalLeads: 0, booked: 0, bookedValue: 0,
+                ga4PaidLeads: ga4 ? 0 : null, ga4AllLeads: ga4 ? 0 : null,
               });
             }
             return markets.get(metro);
@@ -8505,7 +9092,14 @@
               m.bookedValue += f.bookedValueCents / 100;
             });
           }
-          const list = Array.from(markets.values()).filter((m) => m.cost >= 1 || m.ppcLeads > 0);
+          if (ga4) {
+            ga4.byMetro.forEach((e, metro) => {
+              const m = ensure(metro);
+              m.ga4PaidLeads = (m.ga4PaidLeads || 0) + e.paid;
+              m.ga4AllLeads = (m.ga4AllLeads || 0) + e.all;
+            });
+          }
+          const list = Array.from(markets.values()).filter((m) => m.cost >= 1 || m.ppcLeads > 0 || (m.ga4PaidLeads || 0) > 0);
           list.forEach((m) => {
             m.cpa = m.conv > 0 ? m.cost / m.conv : null;
             m.costPerLead = m.ppcLeads > 0 && m.cost > 0 ? m.cost / m.ppcLeads : null;
@@ -8533,27 +9127,23 @@
         function renderMarketsTable() {
           const el = document.getElementById("page-markets");
           if (!el || !marketsLast) return;
-          const { list, range, geo, portal } = marketsLast;
+          const { list, range, geo, portal, ga4 } = marketsLast;
           const totals = list.reduce((t, m) => ({ cost: t.cost + m.cost, conv: t.conv + m.conv, leads: t.leads + m.ppcLeads, bk: t.bk + m.estBookings }), { cost: 0, conv: 0, leads: 0, bk: 0 });
           el.querySelector(".report-kpis").innerHTML = [
             kpiCard("Ad spend (all accounts)", fmt$(totals.cost), `${fmt$(list.reduce((t, m) => t + m.hqCost, 0))} from GTHQ`),
-            kpiCard("Google conversions", fmtN(totals.conv), totals.conv > 0 ? `${fmt$(totals.cost / totals.conv)} / conv` : ""),
+            kpiCard("Google conversions", fmtN(totals.conv), `${totals.conv > 0 ? `${fmt$(totals.cost / totals.conv)} / conv` : ""}${ga4 ? ` · GA4 paid leads ${fmtN(list.reduce((t, m) => t + (m.ga4PaidLeads || 0), 0))}` : ""}`),
             kpiCard("Portal PPC leads", portal ? fmtN(totals.leads) : "—", portal ? (totals.leads > 0 ? `${fmt$(totals.cost / totals.leads)} / lead` : "") : "Connect Portal to see leads"),
             kpiCard("Est. bookings from ads", portal ? totals.bk.toFixed(0) : "—", portal && totals.bk > 0 ? `${fmt$(totals.cost / totals.bk)} / booking` : ""),
           ].join("");
           const unloc = marketsLast.unlocated;
-          el.querySelector(".report-meta").textContent = `${rangeLabel(range)} · spend split by metro using Google's location report (every account, incl. GTHQ)${unloc >= 1 ? ` · ${fmt$(unloc)} of ${fmt$(marketsLast.acctTotal)} couldn't be placed in a metro by Google` : ""}${geo.failed ? ` · ${geo.failed} account(s) failed to load` : ""}`;
+          const ga4Note = ga4
+            ? `${ga4.nonCustomer ? ` · GA4 also counted ${ga4.nonCustomer} "leads" from careers/partnership/reminder forms (excluded here)` : ""}${ga4.unmapped.size ? ` · GA4 lead pages not mapped to a metro: ${Array.from(ga4.unmapped.entries()).sort((x, y) => y[1] - x[1]).slice(0, 5).map(([k, v]) => `${k} (${v})`).join(", ")}` : ""}`
+            : " · Connect GA4 for the 3-way lead check";
+          el.querySelector(".report-meta").textContent = `${rangeLabel(range)} · spend split by metro using Google's location report (every account, incl. GTHQ)${unloc >= 1 ? ` · ${fmt$(unloc)} of ${fmt$(marketsLast.acctTotal)} couldn't be placed in a metro by Google` : ""}${geo.failed ? ` · ${geo.failed} account(s) failed to load` : ""}${ga4Note}`;
           const rows = list
             .map((m) => {
               const open = marketsExpanded.has(String(m.metro));
-              const tr = m.trackingRatio;
-              const trackCell = !portal || tr == null || m.ppcLeads < 5 || !(m.cost >= 20)
-                ? "—"
-                : tr < 0.5
-                  ? `<span class="track-bad" title="Google counts far fewer conversions than Portal PPC leads — tracking is likely missing leads">${Math.round(tr * 100)}% ⚠️</span>`
-                  : tr > 1.5
-                    ? `<span class="track-bad" title="Google counts more conversions than Portal PPC leads — possible double counting">${Math.round(tr * 100)}% ⚠️</span>`
-                    : `${Math.round(tr * 100)}%`;
+              const trackCell = leadCheckCell(m, portal, ga4);
               const sources = Array.from(m.sources.values()).filter((s) => s.cost >= 0.5).sort((a, b) => b.cost - a.cost);
               const drill = open
                 ? `<tr class="drill-row"><td colspan="11">
@@ -8580,12 +9170,12 @@
           el.querySelector(".report-table").innerHTML = `<thead><tr>
               <th>Metro</th><th>Ad spend</th><th>Google conv</th><th>Cost/Conv</th><th>Portal PPC leads</th><th>Cost/Lead</th>
               <th title="Share of ALL Portal leads in the metro that booked">Book rate</th><th title="PPC leads × book rate">Est. bookings</th><th>Cost/Booking</th>
-              <th title="Est. bookings × average booking value ÷ spend">Est. ROAS</th><th title="Google conversions ÷ Portal PPC leads">Tracking</th>
+              <th title="Est. bookings × average booking value ÷ spend">Est. ROAS</th><th title="Google Ads conversions (G) · GA4 paid leads (GA4) · Portal PPC leads (P) — ⚠️ when they differ by more than 1.6×">Lead check</th>
             </tr></thead><tbody>${rows || `<tr><td colspan="11" style="text-align:center;padding:24px;color:var(--ink-muted)">No data.</td></tr>`}</tbody>`;
           el._copyRows = [
-            ["Metro", "Ad spend", "GTHQ spend", "Google conv", "Cost/Conv", "Portal PPC leads", "Cost/Lead", "Book rate", "Est. bookings", "Cost/Booking", "Est. ROAS"],
+            ["Metro", "Ad spend", "GTHQ spend", "Google conv", "GA4 paid leads", "Cost/Conv", "Portal PPC leads", "Cost/Lead", "Book rate", "Est. bookings", "Cost/Booking", "Est. ROAS"],
             ...list.map((m) => [
-              m.name, m.cost.toFixed(2), m.hqCost.toFixed(2), m.conv.toFixed(1), m.cpa != null ? m.cpa.toFixed(2) : "",
+              m.name, m.cost.toFixed(2), m.hqCost.toFixed(2), m.conv.toFixed(1), m.ga4PaidLeads ?? "", m.cpa != null ? m.cpa.toFixed(2) : "",
               portal ? m.ppcLeads : "", m.costPerLead != null ? m.costPerLead.toFixed(2) : "", portal ? `${Math.round(m.bookRate * 100)}%` : "",
               portal ? m.estBookings.toFixed(1) : "", m.costPerBooking != null ? m.costPerBooking.toFixed(2) : "", m.estRoas != null ? m.estRoas.toFixed(1) : "",
             ]),
@@ -8631,8 +9221,14 @@
                       toast(`Portal: ${e.message || e}`, true);
                       return null;
                     });
-            const [geo, portal] = await Promise.all([geoP, portalP]);
-            marketsLast = { list: buildMarkets(geo, portal), range, geo, portal };
+            const ga4P = !isGa4Connected()
+              ? Promise.resolve(null)
+              : (force ? (ga4LeadsCache.delete(key), fetchGa4Leads(range)) : fetchGa4Leads(range)).catch((e) => {
+                  toast(`GA4: ${e.message || e}`, true);
+                  return null;
+                });
+            const [geo, portal, ga4] = await Promise.all([geoP, portalP, ga4P]);
+            marketsLast = { list: buildMarkets(geo, portal, ga4), range, geo, portal, ga4 };
             // How much account spend Google could not place in any metro.
             const rep = reportCache.get(reportKey(marketsScope, range));
             if (rep) {
@@ -8649,7 +9245,7 @@
         }
 
         // ---------- Page router ----------
-        const PAGES = ["today", "weekly", "mtd", "markets", "accounts", "search", "changes", "health"];
+        const PAGES = ["today", "weekly", "mtd", "markets", "traffic", "accounts", "search", "changes", "health"];
         let activePage = "today";
 
         function renderCurrentPage(force) {
@@ -8657,6 +9253,7 @@
           if (activePage === "mtd") return loadMtdPage(force);
           if (activePage === "markets") return loadMarketsPage(force);
           if (activePage === "health") return renderHealthPage();
+          if (activePage === "traffic") return loadTrafficPage(force);
         }
 
         function showPage(name, opts) {
@@ -8689,6 +9286,14 @@
             b.addEventListener("click", () => {
               weeklyMode = b.dataset.weeklyMode;
               loadWeeklyPage(false);
+            });
+            b.dataset.boundClick = "true";
+          });
+          document.querySelectorAll("[data-traffic-scope]").forEach((b) => {
+            if (b.dataset.boundClick) return;
+            b.addEventListener("click", () => {
+              trafficScope = b.dataset.trafficScope;
+              loadTrafficPage(false);
             });
             b.dataset.boundClick = "true";
           });
@@ -9998,6 +10603,16 @@
             portalD.addEventListener("click", disconnectPortal);
             portalD.dataset.boundClick = "true";
           }
+          const ga4C = document.getElementById("ga4ConnectBtn");
+          if (ga4C && !ga4C.dataset.boundClick) {
+            ga4C.addEventListener("click", connectGa4);
+            ga4C.dataset.boundClick = "true";
+          }
+          const ga4D = document.getElementById("ga4DisconnectBtn");
+          if (ga4D && !ga4D.dataset.boundClick) {
+            ga4D.addEventListener("click", disconnectGa4);
+            ga4D.dataset.boundClick = "true";
+          }
           const changeBtn = document.getElementById("loadChangeHistoryBtn");
           if (changeBtn && !changeBtn.dataset.boundClick) {
             changeBtn.addEventListener("click", loadChangeHistory);
@@ -10077,10 +10692,16 @@
           await runInitStep("loadAdsMcpAuthState", loadAdsMcpAuthState);
           await runInitStep("loadPortalAuthState", loadPortalAuthState);
           await runInitStep("loadHealthState", loadHealthState);
+          await runInitStep("loadGa4AuthState", loadGa4AuthState);
           let portalCallbackHandled = false;
           await runInitStep("maybeHandlePortalOAuthCallback", async () => {
             portalCallbackHandled = await maybeHandlePortalOAuthCallback();
           });
+          if (!portalCallbackHandled) {
+            await runInitStep("maybeHandleGa4OAuthCallback", async () => {
+              portalCallbackHandled = await maybeHandleGa4OAuthCallback();
+            });
+          }
           if (!portalCallbackHandled) {
             await runInitStep(
               "maybeHandleAdsMcpOAuthCallback",
@@ -10093,6 +10714,7 @@
           render();
           updateAdsMcpUi();
           updatePortalUi();
+          updateGa4Ui();
           bindHealthControls();
           initPageRouter();
           refreshViewSelects();
