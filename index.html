@@ -1001,6 +1001,312 @@
         font-size: 13.5px;
       }
 
+      #negativeFinder {
+        margin-bottom: 16px;
+      }
+      .neg-intro {
+        font-size: 12px;
+        color: var(--ink-muted);
+        margin-bottom: 10px;
+        line-height: 1.5;
+      }
+      .neg-empty {
+        padding: 16px;
+        color: var(--ink-muted);
+        font-size: 13px;
+      }
+      .neg-group {
+        border: 1px solid var(--line, #e2ded3);
+        border-radius: 8px;
+        padding: 12px 14px;
+        margin-bottom: 10px;
+        background: var(--bg-soft, #f7f5ef);
+      }
+      .neg-head {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        flex-wrap: wrap;
+        font-size: 13px;
+        margin-bottom: 6px;
+      }
+      .neg-head span {
+        color: var(--ink-muted);
+        font-size: 12px;
+      }
+      .neg-row {
+        margin-top: 8px;
+      }
+      .neg-label {
+        font-size: 11.5px;
+        font-weight: 600;
+        margin-bottom: 4px;
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .neg-chip {
+        display: inline-block;
+        font-size: 11.5px;
+        padding: 3px 8px;
+        margin: 2px 4px 2px 0;
+        border-radius: 12px;
+        background: rgba(0, 0, 0, 0.05);
+      }
+      .neg-chip b {
+        font-weight: 600;
+        margin-left: 2px;
+      }
+      .neg-more {
+        font-size: 11px;
+        color: var(--ink-muted);
+      }
+      tr.change-auto td {
+        background: rgba(212, 160, 23, 0.10);
+      }
+      .page-nav {
+        display: flex;
+        gap: 4px;
+        flex-wrap: wrap;
+        margin: 8px 0 20px;
+        border-bottom: 2px solid var(--ink, #111);
+      }
+      .page-nav button {
+        border: none;
+        background: transparent;
+        padding: 10px 14px;
+        font: inherit;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+        cursor: pointer;
+        color: var(--ink-muted);
+        border-radius: 6px 6px 0 0;
+      }
+      .page-nav button.active {
+        background: var(--ink, #111);
+        color: #fff;
+      }
+      .report-controls {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+        margin-bottom: 14px;
+      }
+      .report-controls .btn {
+        padding: 9px 14px;
+        font-size: 11px;
+      }
+      .report-status {
+        font-size: 12px;
+        color: var(--ink-muted);
+      }
+      .report-table {
+        width: 100%;
+      }
+      .report-table tr.status-good td:first-child,
+      .report-table tr.status-warn td:first-child,
+      .report-table tr.status-bad td:first-child {
+        font-size: 15px;
+      }
+      #page-weekly .report-table td:nth-child(2),
+      #page-weekly .report-table th:nth-child(2),
+      #page-mtd .report-table td:nth-child(2),
+      #page-mtd .report-table th:nth-child(2),
+      #page-markets .report-table td:first-child,
+      #page-markets .report-table th:first-child,
+      #healthTable td:nth-child(2),
+      #healthTable td:nth-child(4),
+      #healthTable th {
+        text-align: left;
+      }
+      .why-cell {
+        font-size: 11.5px;
+        color: var(--ink-muted);
+        max-width: 320px;
+      }
+      .goal-btn {
+        border: 1px dashed var(--line, #cfcabd);
+        background: transparent;
+        border-radius: 4px;
+        padding: 2px 6px;
+        cursor: pointer;
+        font: inherit;
+        font-size: 12px;
+      }
+      .muted-sub {
+        color: var(--ink-muted);
+        margin-left: 6px;
+      }
+      .track-bad {
+        color: #8a6500;
+        font-weight: 600;
+      }
+      .metro-details {
+        margin-top: 14px;
+        font-size: 12px;
+      }
+      .metro-details summary {
+        cursor: pointer;
+        color: var(--ink-muted);
+      }
+      .metro-map {
+        margin-top: 8px;
+        line-height: 1.7;
+      }
+      .view-ctl {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-left: auto;
+      }
+      .view-select {
+        font: inherit;
+        font-size: 12px;
+        padding: 6px 8px;
+        border: 1px solid var(--line, #cfcabd);
+        border-radius: 6px;
+        background: transparent;
+        color: inherit;
+      }
+      .colpicker-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.35);
+        z-index: 9999;
+        display: none;
+        align-items: flex-start;
+        justify-content: center;
+        padding: 40px 16px;
+        overflow-y: auto;
+      }
+      .colpicker {
+        background: var(--bg, #fff);
+        color: var(--ink, #111);
+        border-radius: 10px;
+        width: min(880px, 100%);
+        padding: 18px 20px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+      }
+      .cp-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+        font-size: 15px;
+      }
+      .cp-close {
+        border: none;
+        background: transparent;
+        font-size: 18px;
+        cursor: pointer;
+        color: inherit;
+      }
+      .cp-views {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+        margin-bottom: 14px;
+        font-size: 12px;
+      }
+      .cp-views .btn {
+        padding: 6px 10px;
+        font-size: 11px;
+      }
+      .cp-views select {
+        font: inherit;
+        padding: 5px 8px;
+        margin-left: 6px;
+      }
+      .cp-edited {
+        font-size: 11px;
+        color: #8a6500;
+        background: rgba(212, 160, 23, 0.15);
+        padding: 2px 6px;
+        border-radius: 4px;
+      }
+      .cp-body {
+        display: grid;
+        grid-template-columns: 1.6fr 1fr;
+        gap: 20px;
+      }
+      @media (max-width: 700px) {
+        .cp-body {
+          grid-template-columns: 1fr;
+        }
+      }
+      .cp-catalog {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 12px;
+      }
+      .cp-group-title {
+        font-size: 10.5px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--ink-muted);
+        margin-bottom: 6px;
+        font-weight: 600;
+      }
+      .cp-item {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        font-size: 12.5px;
+        padding: 2px 0;
+        cursor: pointer;
+      }
+      .cp-order ol {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+      .cp-order li {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 8px;
+        border: 1px solid var(--line, #e2ded3);
+        border-radius: 6px;
+        margin-bottom: 5px;
+        font-size: 12.5px;
+        background: var(--bg-soft, #f7f5ef);
+        cursor: grab;
+      }
+      .cp-order li .cp-name {
+        flex: 1;
+      }
+      .cp-order li button {
+        border: 1px solid var(--line, #d8d4c8);
+        background: transparent;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 11px;
+        padding: 1px 6px;
+        color: inherit;
+      }
+      .cp-order li button:disabled {
+        opacity: 0.3;
+        cursor: default;
+      }
+      .cp-grip {
+        color: var(--ink-muted);
+        font-size: 11px;
+      }
+      .sub-head {
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin: 24px 0 8px;
+      }
+      #page-traffic .report-table td:nth-child(-n + 2),
+      #page-traffic .report-table th:nth-child(-n + 2) {
+        text-align: left;
+      }
       .delta {
         font-size: 10.5px;
         font-family: "JetBrains Mono", monospace;
@@ -3197,6 +3503,20 @@
           </p>
         </section>
 
+
+        <!-- PAGE NAV -->
+        <nav class="page-nav" id="pageNav">
+          <button data-nav="today" class="active">☀️ Today</button>
+          <button data-nav="weekly">📅 Weekly Report</button>
+          <button data-nav="mtd">📈 Month to Date</button>
+          <button data-nav="markets">🗺️ Markets</button>
+          <button data-nav="traffic">📱 Traffic</button>
+          <button data-nav="accounts">📊 Accounts</button>
+          <button data-nav="search">🔍 Search Terms</button>
+          <button data-nav="changes">📜 Changes</button>
+          <button data-nav="health">🩺 Health</button>
+        </nav>
+
         <!-- DATE SCOPE + SETTINGS -->
         <div class="control-bar">
           <div class="control-group">
@@ -3267,6 +3587,38 @@
           >
             ⎋ Disconnect Ads MCP
           </button>
+          <button
+            class="btn btn-ghost"
+            id="portalConnectBtn"
+            style="padding: 9px 14px; font-size: 11px"
+            title="Connect your GameTruck Portal login to see real PPC leads, bookings and cost per booking"
+          >
+            🔐 Connect Portal
+          </button>
+          <button
+            class="btn btn-ghost"
+            id="portalDisconnectBtn"
+            style="padding: 9px 14px; font-size: 11px; display: none"
+            title="Disconnect the Portal login"
+          >
+            ⎋ Disconnect Portal
+          </button>
+          <button
+            class="btn btn-ghost"
+            id="ga4ConnectBtn"
+            style="padding: 9px 14px; font-size: 11px"
+            title="Connect Google Analytics (GA4) for lead checks and traffic quality"
+          >
+            🔐 Connect GA4
+          </button>
+          <button
+            class="btn btn-ghost"
+            id="ga4DisconnectBtn"
+            style="padding: 9px 14px; font-size: 11px; display: none"
+            title="Disconnect GA4"
+          >
+            ⎋ Disconnect GA4
+          </button>
           <span
             class="control-label"
             id="adsMcpAuthStatus"
@@ -3318,6 +3670,7 @@
           />
         </div>
 
+        <div class="page" data-page="today">
         <!-- TODAY'S FOCUS PANEL -->
         <div class="focus-panel" id="focusPanel" style="display: none">
           <div class="focus-head">
@@ -3418,6 +3771,79 @@
           </div>
         </div>
 
+        </div>
+
+        <div class="page" data-page="weekly" id="page-weekly" style="display: none">
+          <div class="section-head">
+            <h2>Weekly Report</h2>
+            <div class="meta report-meta">Last full week (Mon–Sun) vs the week before</div>
+          </div>
+          <div class="report-controls">
+            <div class="date-scope" style="height: 34px"><button class="scope-btn active" data-weekly-mode="lastWeek">Last week</button><button class="scope-btn" data-weekly-mode="weekly">This week so far</button></div>
+            <span class="view-ctl"><label class="control-label">View</label><select class="view-select" data-view-select="weekly" onchange="if (this.value) selectView('weekly', this.value)"></select><button class="pill" onclick="openMetricPicker('weekly')" title="Choose which metrics to show">⚙ Columns</button></span>
+            <button class="btn btn-ghost" onclick="renderCurrentPage(true)">🔄 Refresh</button>
+            <button class="btn btn-ghost" onclick="copyReport('page-weekly')" title="Copies a summary line + table you can paste into email, Slack or Google Sheets">📋 Copy for report</button>
+            <button class="btn btn-ghost" onclick="exportReportCsv('page-weekly', 'weekly-report')">↓ CSV</button>
+            <span class="report-status"></span>
+          </div>
+          <div class="summary report-kpis"></div>
+          <div class="table-wrap"><table class="report-table"></table></div>
+        </div>
+
+        <div class="page" data-page="mtd" id="page-mtd" style="display: none">
+          <div class="section-head">
+            <h2>Month to Date</h2>
+            <div class="meta report-meta">Month to date vs the same days last month · pacing projected to month-end</div>
+          </div>
+          <div class="report-controls">
+            
+            <span class="view-ctl"><label class="control-label">View</label><select class="view-select" data-view-select="mtd" onchange="if (this.value) selectView('mtd', this.value)"></select><button class="pill" onclick="openMetricPicker('mtd')" title="Choose which metrics to show">⚙ Columns</button></span>
+            <button class="btn btn-ghost" onclick="renderCurrentPage(true)">🔄 Refresh</button>
+            <button class="btn btn-ghost" onclick="copyReport('page-mtd')" title="Copies a summary line + table you can paste into email, Slack or Google Sheets">📋 Copy for report</button>
+            <button class="btn btn-ghost" onclick="exportReportCsv('page-mtd', 'mtd-report')">↓ CSV</button>
+            <span class="report-status"></span>
+          </div>
+          <div class="summary report-kpis"></div>
+          <div class="table-wrap"><table class="report-table"></table></div>
+        </div>
+
+        <div class="page" data-page="markets" id="page-markets" style="display: none">
+          <div class="section-head">
+            <h2>Markets</h2>
+            <div class="meta report-meta">Ad spend by metro (all accounts incl. GTHQ) vs Portal leads and bookings</div>
+          </div>
+          <div class="report-controls">
+            <div class="date-scope" style="height: 34px"><button class="scope-btn active" data-markets-scope="mtd">MTD</button><button class="scope-btn" data-markets-scope="lastWeek">Last week</button><button class="scope-btn" data-markets-scope="lastMonth">Last month</button></div>
+            <button class="btn btn-ghost" onclick="renderCurrentPage(true)">🔄 Refresh</button>
+            <button class="btn btn-ghost" onclick="copyReport('page-markets')" title="Copies a summary line + table you can paste into email, Slack or Google Sheets">📋 Copy for report</button>
+            <button class="btn btn-ghost" onclick="exportReportCsv('page-markets', 'markets-report')">↓ CSV</button>
+            <span class="report-status"></span>
+          </div>
+          <div class="summary report-kpis"></div>
+          <div class="table-wrap"><table class="report-table"></table></div>
+          <details class="metro-details"><summary>Which franchises are counted in each metro</summary><div class="metro-map">Connect Portal to see the franchise list.</div></details>
+        </div>
+
+        <div class="page" data-page="traffic" id="page-traffic" style="display: none">
+          <div class="section-head">
+            <h2>Traffic Quality</h2>
+            <div class="meta report-meta">What Google Ads visitors do on the site (GA4), by campaign and device</div>
+          </div>
+          <div class="report-controls">
+            <div class="date-scope" style="height: 34px"><button class="scope-btn active" data-traffic-scope="mtd">MTD</button><button class="scope-btn" data-traffic-scope="lastWeek">Last week</button><button class="scope-btn" data-traffic-scope="lastMonth">Last month</button></div>
+            <button class="btn btn-ghost" onclick="loadTrafficPage(true)">🔄 Refresh</button>
+            <button class="btn btn-ghost" onclick="copyReport('page-traffic')">📋 Copy for report</button>
+            <button class="btn btn-ghost" onclick="exportReportCsv('page-traffic', 'traffic-quality')">↓ CSV</button>
+            <span class="report-status"></span>
+          </div>
+          <div class="summary report-kpis"></div>
+          <h3 class="sub-head">By campaign</h3>
+          <div class="table-wrap"><table class="report-table" id="trafficCampaignTable"></table></div>
+          <h3 class="sub-head">By device (bid-adjustment hints)</h3>
+          <div class="table-wrap"><table class="report-table" id="trafficDeviceTable"></table></div>
+        </div>
+
+        <div class="page" data-page="accounts" style="display: none">
         <div class="table-section">
           <div class="section-head">
             <h2>Leaderboard</h2>
@@ -3453,6 +3879,7 @@
             >
               ⊞ Group by Region
             </button>
+            <span class="view-ctl"><label class="control-label">View</label><select class="view-select" data-view-select="accounts" onchange="if (this.value) selectView('accounts', this.value)"></select><button class="pill" onclick="openMetricPicker('accounts')" title="Choose which metrics to show">⚙ Columns</button></span>
           </div>
 
           <div class="table-wrap">
@@ -3480,7 +3907,7 @@
                   <th data-sort="cpa">
                     Cost/Conv <span class="sort-indicator">↕</span>
                   </th>
-                  <th data-sort="searchIS" title="Search impression share, and how much was lost to budget vs ad rank">
+                  <th data-sort="searchIS" title=""Search impression share, and how much was lost to budget vs ad rank">
                     Imp. Share <span class="sort-indicator">↕</span>
                   </th>
                   <th data-sort="paceRatio">
@@ -3525,6 +3952,60 @@
           </table>
         </div>
 
+        </div>
+        <div class="page" data-page="changes" style="display: none">
+        <!-- CHANGE HISTORY -->
+        <div class="section-head" style="margin-top: 64px">
+          <h2>Change History</h2>
+          <div class="meta" id="changeHistoryLabel">
+            Who changed what in each account over the last 30 days, including Google's auto-applied recommendations · not loaded yet
+          </div>
+        </div>
+        <div style="margin-bottom: 12px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap">
+          <button class="btn btn-ghost" id="loadChangeHistoryBtn" style="padding: 9px 14px; font-size: 11px" title="One query per account — run on demand">
+            📜 Load Change History
+          </button>
+          <div class="date-scope" style="height: 34px">
+            <button class="scope-btn active" data-change-filter="all">All changes</button>
+            <button class="scope-btn" data-change-filter="auto">🤖 Auto-applied only</button>
+          </div>
+        </div>
+        <div class="table-wrap" style="max-height: 460px; overflow-y: auto">
+          <table id="changeHistoryTable">
+            <thead>
+              <tr><th>Date</th><th>Account</th><th>Who</th><th>What</th><th>Campaign</th></tr>
+            </thead>
+            <tbody id="changeHistoryBody">
+              <tr><td colspan="5" style="text-align:center; padding: 32px; color: var(--ink-muted); font-family: 'Jost';">Click "📜 Load Change History" to pull the last 30 days of changes.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        </div>
+        <div class="page" data-page="health" style="display: none">
+          <div class="section-head">
+            <h2>Account Health</h2>
+            <div class="meta">Conversion tracking, ad approvals, ad strength and quality score across every account with spend</div>
+          </div>
+          <div class="report-controls">
+            <button class="btn btn-ghost" id="runHealthBtn">🩺 Run health check</button>
+            <div class="date-scope" style="height: 34px">
+              <button class="scope-btn active" data-health-filter="all">All</button>
+              <button class="scope-btn" data-health-filter="critical">Critical</button>
+              <button class="scope-btn" data-health-filter="warning">Warnings</button>
+              <button class="scope-btn" data-health-filter="info">Info</button>
+            </div>
+            <span class="report-status" id="healthStatus"></span>
+          </div>
+          <div class="summary" id="healthKpis"></div>
+          <div class="table-wrap">
+            <table id="healthTable">
+              <thead><tr><th></th><th>Account</th><th>Check</th><th>Finding</th><th>What to do</th></tr></thead>
+              <tbody id="healthBody"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="page" data-page="search" style="display: none">
         <!-- SEARCH TERM PERFORMANCE -->
         <div class="section-head" style="margin-top: 64px">
           <h2>Search Term Performance</h2>
@@ -3553,8 +4034,10 @@
             <button class="scope-btn active" data-term-filter="all">All</button>
             <button class="scope-btn" data-term-filter="converting">Converting</button>
             <button class="scope-btn" data-term-filter="wasted">Wasted (0 conv)</button>
+            <button class="scope-btn" data-term-filter="negatives" title="Suggested negative keywords, with guardrails for core service terms">🚫 Negative Finder</button>
           </div>
         </div>
+        <div id="negativeFinder" style="display: none"></div>
         <div class="table-wrap">
           <table id="searchTermWasteTable">
             <thead>
@@ -3578,6 +4061,8 @@
           </table>
         </div>
 
+        </div>
+        <div class="page" data-page="accounts" style="display: none">
         <!-- CAMPAIGN OVERVIEW -->
         <div
           id="campaignOverviewSection"
@@ -3625,6 +4110,8 @@
               <tbody id="campaignTbody"></tbody>
             </table>
           </div>
+        </div>
+
         </div>
 
         <!-- FOOTER -->
@@ -6247,6 +6734,11 @@
                 "metrics.search_impression_share",
                 "metrics.search_budget_lost_impression_share",
                 "metrics.search_rank_lost_impression_share",
+                "metrics.search_top_impression_share",
+                "metrics.search_absolute_top_impression_share",
+                "metrics.all_conversions",
+                "metrics.conversions_value",
+                "metrics.phone_calls",
               ],
               resource: "campaign",
               conditions: [
@@ -6332,6 +6824,11 @@
               is,
               lostBudget: num(row, ["metrics.search_budget_lost_impression_share", "metrics.searchBudgetLostImpressionShare"]),
               lostRank: num(row, ["metrics.search_rank_lost_impression_share", "metrics.searchRankLostImpressionShare"]),
+              topIS: num(row, ["metrics.search_top_impression_share", "metrics.searchTopImpressionShare"]),
+              absTopIS: num(row, ["metrics.search_absolute_top_impression_share", "metrics.searchAbsoluteTopImpressionShare"]),
+              allConv: num(row, ["metrics.all_conversions", "metrics.allConversions"]),
+              convValue: num(row, ["metrics.conversions_value", "metrics.conversionsValue"]),
+              phoneCalls: num(row, ["metrics.phone_calls", "metrics.phoneCalls"]),
             };
           });
 
@@ -6345,7 +6842,11 @@
           // Impression share is a ratio; to combine campaigns we rebuild the
           // eligible impressions (impr / IS) and divide total impr by that.
           let eligible = 0, lostBudgetEligible = 0, lostRankEligible = 0;
+          let topEligible = 0, absTopEligible = 0, allConv = 0, convValue = 0, phoneCalls = 0;
           campaigns.forEach((c) => {
+            allConv += c.allConv || 0;
+            convValue += c.convValue || 0;
+            phoneCalls += c.phoneCalls || 0;
             cost += c.cost;
             clicks += c.clicks;
             conv += c.conv;
@@ -6355,6 +6856,8 @@
               eligible += e;
               lostBudgetEligible += e * c.lostBudget;
               lostRankEligible += e * c.lostRank;
+              topEligible += e * (c.topIS || 0);
+              absTopEligible += e * (c.absTopIS || 0);
             }
           });
 
@@ -6419,6 +6922,11 @@
                 searchIS: eligible > 0 ? impr / eligible : null,
                 lostIsBudget: eligible > 0 ? lostBudgetEligible / eligible : null,
                 lostIsRank: eligible > 0 ? lostRankEligible / eligible : null,
+                topIS: eligible > 0 ? topEligible / eligible : null,
+                absTopIS: eligible > 0 ? absTopEligible / eligible : null,
+                allConv: Number(allConv.toFixed(2)),
+                convValue: Number(convValue.toFixed(2)),
+                phoneCalls,
                 campaigns: relevantCampaigns,
                 idleCampaigns,
                 enabledCampaignCount: enabledCount,
@@ -6470,7 +6978,8 @@
           return results;
         }
 
-        async function fetchGoogleAdsFromMcp(startDate, endDate) {
+        async function fetchGoogleAdsFromMcp(startDate, endDate, opts) {
+          const fetchScope = (opts && opts.scope) || dateScope;
           const tools = await ensureAdsMcpTools();
           seedAdsMcpDailyBudgetCacheFromAccounts();
           const customersRaw = await mcpCallTool(
@@ -6556,8 +7065,8 @@
             );
           }
 
-          const pacing = getPacingWindowForDates(startDate, endDate, dateScope);
-          const prevRange = computePreviousRange(startDate, endDate, dateScope);
+          const pacing = getPacingWindowForDates(startDate, endDate, fetchScope);
+          const prevRange = computePreviousRange(startDate, endDate, fetchScope);
 
           if (customerIds.length > 0) {
             const primeCustomerId = customerIds[0];
@@ -6745,6 +7254,7 @@
           const code = url.searchParams.get("code");
           const state = url.searchParams.get("state");
           if (!error && !code) return;
+          if (state && (state.startsWith("portal.") || state.startsWith("ga4."))) return; // Portal/GA4 logins, handled elsewhere
 
           const hadAuthBeforeCallback = !!(
             adsMcpAuth && adsMcpAuth.accessToken
@@ -6968,9 +7478,13 @@
 
         async function fetchSearchTermPerformanceFromMcp(startDate, endDate, accountFilter) {
           const tools = await ensureAdsMcpTools();
-          const targets = accounts
+          const source = liveRange
+            ? accounts.filter((a) => a._liveFetchId === liveRange.fetchId)
+            : accounts;
+          const targets = source
             .filter((a) => a.customerId)
             .filter((a) => !accountFilter || a.customerId === accountFilter)
+            .filter((a) => accountFilter || (a.cost || 0) > 0 || !liveRange)
             .map((a) => ({ customerId: a.customerId, name: a.name }));
 
           const results = await runWithConcurrencyLimit(
@@ -6983,6 +7497,8 @@
                 {
                   fields: [
                     "search_term_view.search_term",
+                    "search_term_view.status",
+                    "campaign.name",
                     "metrics.clicks",
                     "metrics.cost_micros",
                     "metrics.conversions",
@@ -6992,51 +7508,2636 @@
                     `segments.date BETWEEN '${startDate}' AND '${endDate}'`,
                     "metrics.clicks > 0",
                   ],
-                  limit: 500,
+                  orderings: ["metrics.cost_micros DESC"],
+                  limit: 1000,
                 },
                 { loginCustomerId: ADS_MCP_ANCHOR_MCC_ID },
               );
-              return { account: target.name, rows: search.rows };
+              return { account: target.name, customerId: target.customerId, rows: search.rows };
             },
           );
 
-          const termRows = [];
+          // search_term_view returns one row per ad group; merge them per
+          // account + campaign + term.
+          const merged = new Map();
           results.forEach((r) => {
             if (r.status !== "fulfilled" || !r.value) return;
             r.value.rows.forEach((row) => {
-              const term = rowValue(row, [
-                "search_term_view.search_term",
-                "searchTermView.searchTerm",
-              ]);
+              const term = rowValue(row, ["search_term_view.search_term", "searchTermView.searchTerm"]);
               if (!term) return;
-              const cost =
-                asNumber(
-                  rowValue(row, ["metrics.cost_micros", "metrics.costMicros"]),
-                  0,
-                ) / 1000000;
-              const clicks = asNumber(rowValue(row, ["metrics.clicks"]), 0);
-              const conv = asNumber(
-                rowValue(row, ["metrics.conversions"]),
-                0,
-              );
-              // Keep every term with a click, converting or not — the
-              // filter toggle in the UI handles narrowing to just the
-              // wasted (0-conversion) ones, rather than throwing the
-              // converting terms away at fetch time.
-              termRows.push({
+              const campaign = String(rowValue(row, ["campaign.name", "campaignName"]) || "");
+              const status = String(rowValue(row, ["search_term_view.status", "searchTermView.status"]) || "").toUpperCase();
+              const key = `${r.value.customerId}||${campaign}||${String(term).toLowerCase()}`;
+              const e = merged.get(key) || {
                 account: r.value.account,
-                term,
-                cost,
-                clicks,
-                conv,
-                convRate: clicks > 0 ? conv / clicks : 0,
-                costPerConv: conv > 0 ? cost / conv : null,
+                customerId: r.value.customerId,
+                term: String(term),
+                campaigns: campaign ? [campaign] : [],
+                cost: 0,
+                clicks: 0,
+                conv: 0,
+                excluded: false,
+              };
+              e.cost += asNumber(rowValue(row, ["metrics.cost_micros", "metrics.costMicros"]), 0) / 1000000;
+              e.clicks += asNumber(rowValue(row, ["metrics.clicks"]), 0);
+              e.conv += asNumber(rowValue(row, ["metrics.conversions"]), 0);
+              if (status === "EXCLUDED" || status === "ADDED_EXCLUDED") e.excluded = true;
+              merged.set(key, e);
+            });
+          });
+          const termRows = Array.from(merged.values()).map((e) => ({
+            ...e,
+            convRate: e.clicks > 0 ? e.conv / e.clicks : 0,
+            costPerConv: e.conv > 0 ? e.cost / e.conv : null,
+          }));
+          termRows.sort((a, b) => b.cost - a.cost);
+          return termRows;
+        }
+
+        // ============ COLUMN PICKER + SAVED VIEWS ============
+        // Every table that supports it (Accounts, Weekly, MTD) draws its
+        // columns from this catalog. Users pick/reorder columns and save
+        // named views; choices are remembered per browser.
+        const COLVIEWS_KEY = "gt_colviews_v1";
+        const COL_GROUPS = ["Status", "Volume", "Cost", "Efficiency", "Competition", "Budget & pacing", "Leads (market)", "Comparison", "Notes"];
+
+        function fmtPctCell(v) {
+          return v == null || !Number.isFinite(v) ? `<span style="color:var(--ink-muted)">—</span>` : `${(v * 100).toFixed(v < 0.1 ? 1 : 0)}%`;
+        }
+
+        // The market (metro) an account mostly spends in, for the same range.
+        function marketForAccount(a, range) {
+          if (!marketsLast || !range || !a || !a.customerId) return null;
+          if (marketsLast.range.startDate !== range.startDate || marketsLast.range.endDate !== range.endDate) return null;
+          const byMetro = new Map();
+          marketsLast.geo.rows.forEach((r) => {
+            if (r.customerId !== a.customerId || r.metro == null) return;
+            byMetro.set(r.metro, (byMetro.get(r.metro) || 0) + r.cost);
+          });
+          let best = null;
+          byMetro.forEach((c, m) => {
+            if (!best || c > best.c) best = { m, c };
+          });
+          if (!best) return null;
+          return marketsLast.list.find((x) => x.metro === best.m) || null;
+        }
+
+        // Derived values used for sorting and display.
+        function enrichRow(a, range, pw) {
+          const p = a.prev || {};
+          const mk = marketForAccount(a, range);
+          return Object.assign(a, {
+            convRate: a.clicks > 0 ? (a.conv || 0) / a.clicks : null,
+            prevCpa: p.cpa > 0 ? p.cpa : null,
+            costChange: pctDelta(a.cost, p.cost),
+            cpaChange: a.cpa > 0 ? pctDelta(a.cpa, p.cpa) : null,
+            convValueRoas: a.cost > 0 && a.convValue > 0 ? a.convValue / a.cost : null,
+            activeCampaigns: (a.campaigns || []).filter((c) => c.status === "ENABLED" && c.impr > 0).length,
+            goalValue: goalFor(a),
+            marketCpl: mk && mk.costPerLead != null ? mk.costPerLead : null,
+            marketLeads: mk ? mk.ppcLeads : null,
+            marketName: mk ? mk.name : null,
+            periodBudget: pw && pw.daysInProjection && a.dailyBudget > 0 ? a.dailyBudget * pw.daysInProjection : null,
+          });
+        }
+
+        const COLUMN_CATALOG = {
+          health: { label: "Health", group: "Status", sort: "health", render: (a) => healthBadge(a.cpa, a), csv: (a) => healthLabel(getHealth(a.cpa, a)) },
+          status: { label: "Status", group: "Status", sort: "_statusRank", render: (a) => `<span title="${statusFor(a).label}" style="font-size:15px">${statusFor(a).icon}</span>`, csv: (a) => statusFor(a).label },
+          cost: { label: "Spend", group: "Cost", sort: "cost", render: (a) => `${fmt$(a.cost)}${a.prev ? deltaHtml(a.cost, a.prev.cost, false, true) : ""}`, csv: (a) => (a.cost || 0).toFixed(2) },
+          impr: { label: "Impr.", group: "Volume", sort: "impr", render: (a) => fmtN(a.impr || 0), csv: (a) => a.impr || 0 },
+          clicks: { label: "Clicks", group: "Volume", sort: "clicks", render: (a) => fmtN(a.clicks || 0), csv: (a) => a.clicks || 0 },
+          ctr: { label: "CTR", group: "Efficiency", sort: "ctr", render: (a) => (a.impr > 0 ? `${(a.ctr || 0).toFixed(2)}%` : "—"), csv: (a) => (a.impr > 0 ? (a.ctr || 0).toFixed(2) : "") },
+          cpc: { label: "Avg CPC", group: "Cost", sort: "cpc", render: (a) => fmt$(a.cpc || 0), csv: (a) => (a.cpc || 0).toFixed(2) },
+          conv: { label: "Conv", group: "Volume", sort: "conv", render: (a) => `${fmtN(a.conv || 0)}${a.prev ? deltaHtml(a.conv, a.prev.conv, false) : ""}`, csv: (a) => (a.conv || 0).toFixed(1) },
+          convRate: { label: "Conv rate", group: "Efficiency", sort: "convRate", render: (a) => fmtPctCell(a.convRate), csv: (a) => (a.convRate != null ? (a.convRate * 100).toFixed(1) : "") },
+          cpa: {
+            label: "Cost/Conv", group: "Cost", sort: "cpa",
+            cellClass: (a) => `cpa-cell ${getHealth(a.cpa, a)}`,
+            render: (a) => `${a.conv > 0 ? fmt$(a.cpa) : a.cost > 0 ? "0 conv" : "—"}${a.prev && a.cpa > 0 ? deltaHtml(a.cpa, a.prev.cpa, true) : ""}`,
+            csv: (a) => (a.conv > 0 ? a.cpa.toFixed(2) : ""),
+          },
+          goal: { label: "Goal", group: "Status", sort: "goalValue", render: (a) => (a.customerId ? `<button class="goal-btn" onclick="setAccountGoal('${escapeHtml(a.customerId)}')" title="Click to change this account's cost/conv goal">≤ ${fmt$(goalFor(a))}</button>` : `≤ ${fmt$(goalFor(a))}`), csv: (a) => goalFor(a).toFixed(2) },
+          prevCpa: { label: "Prev Cost/Conv", group: "Comparison", sort: "prevCpa", render: (a) => (a.prevCpa ? fmt$(a.prevCpa) : a.prev && a.prev.cost > 0 ? "0 conv" : "—"), csv: (a) => (a.prevCpa ? a.prevCpa.toFixed(2) : "") },
+          costChange: { label: "Spend Δ", group: "Comparison", sort: "costChange", render: (a) => (a.costChange == null ? "—" : `${a.costChange > 0 ? "▲" : "▼"} ${Math.abs(a.costChange).toFixed(0)}%`), csv: (a) => (a.costChange == null ? "" : a.costChange.toFixed(1)) },
+          cpaChange: { label: "Cost/Conv Δ", group: "Comparison", sort: "cpaChange", render: (a) => (a.cpaChange == null ? "—" : `<span style="color:${a.cpaChange > 5 ? "var(--bad)" : a.cpaChange < -5 ? "var(--good)" : "inherit"}">${a.cpaChange > 0 ? "▲" : "▼"} ${Math.abs(a.cpaChange).toFixed(0)}%</span>`), csv: (a) => (a.cpaChange == null ? "" : a.cpaChange.toFixed(1)) },
+          allConv: { label: "All conv", group: "Volume", sort: "allConv", render: (a) => (a.allConv != null ? fmtN(a.allConv) : "—"), csv: (a) => (a.allConv != null ? a.allConv.toFixed(1) : "") },
+          phoneCalls: { label: "Calls", group: "Volume", sort: "phoneCalls", render: (a) => (a.phoneCalls != null ? fmtN(a.phoneCalls) : "—"), csv: (a) => a.phoneCalls ?? "" },
+          convValue: { label: "Conv value", group: "Efficiency", sort: "convValue", render: (a) => (a.convValue > 0 ? fmt$(a.convValue) : "—"), csv: (a) => (a.convValue || 0).toFixed(2) },
+          convValueRoas: { label: "Conv value ÷ spend", group: "Efficiency", sort: "convValueRoas", render: (a) => (a.convValueRoas != null ? `${a.convValueRoas.toFixed(1)}×` : "—"), csv: (a) => (a.convValueRoas != null ? a.convValueRoas.toFixed(2) : "") },
+          searchIS: { label: "Imp. Share", group: "Competition", sort: "searchIS", render: (a) => isCellHtml(a), csv: (a) => (a.searchIS != null ? (a.searchIS * 100).toFixed(1) : "") },
+          lostIsBudget: { label: "Lost IS (budget)", group: "Competition", sort: "lostIsBudget", render: (a) => fmtPctCell(a.lostIsBudget), csv: (a) => (a.lostIsBudget != null ? (a.lostIsBudget * 100).toFixed(1) : "") },
+          lostIsRank: { label: "Lost IS (rank)", group: "Competition", sort: "lostIsRank", render: (a) => fmtPctCell(a.lostIsRank), csv: (a) => (a.lostIsRank != null ? (a.lostIsRank * 100).toFixed(1) : "") },
+          topIS: { label: "Top-of-page IS", group: "Competition", sort: "topIS", render: (a) => fmtPctCell(a.topIS), csv: (a) => (a.topIS != null ? (a.topIS * 100).toFixed(1) : "") },
+          absTopIS: { label: "Abs. top IS", group: "Competition", sort: "absTopIS", render: (a) => fmtPctCell(a.absTopIS), csv: (a) => (a.absTopIS != null ? (a.absTopIS * 100).toFixed(1) : "") },
+          dailyBudget: { label: "Daily budget", group: "Budget & pacing", sort: "dailyBudget", render: (a) => (a.dailyBudget > 0 ? fmt$(a.dailyBudget) : "—"), csv: (a) => (a.dailyBudget || 0).toFixed(2) },
+          pace: { label: "Pace", group: "Budget & pacing", sort: "paceRatio", render: (a) => paceBadge(a.paceRatio), csv: (a) => (a.paceRatio != null ? Math.round(a.paceRatio * 100) : "") },
+          periodBudget: { label: "Period budget", group: "Budget & pacing", sort: "periodBudget", render: (a) => (a.periodBudget != null ? `<span title="Daily budget × days in the period (to month-end for MTD)">${fmt$(a.periodBudget)}</span>` : "—"), csv: (a) => (a.periodBudget != null ? a.periodBudget.toFixed(2) : "") },
+          projected: { label: "Projected spend", group: "Budget & pacing", sort: "projectedPeriodSpend", render: (a) => (a.projectedPeriodSpend != null ? fmt$(a.projectedPeriodSpend) : "—"), csv: (a) => (a.projectedPeriodSpend != null ? a.projectedPeriodSpend.toFixed(2) : "") },
+          activeCampaigns: { label: "Active campaigns", group: "Budget & pacing", sort: "activeCampaigns", render: (a) => fmtN(a.activeCampaigns || 0), csv: (a) => a.activeCampaigns || 0 },
+          marketLeads: { label: "Market leads", group: "Leads (market)", sort: "marketLeads", render: (a) => (a.marketLeads != null ? `<span title="${escapeHtml(a.marketName || "")} — Portal PPC leads for the whole metro">${fmtN(a.marketLeads)}</span>` : `<span style="color:var(--ink-muted)" title="Open the Markets page for this date range to fill this in">—</span>`), csv: (a) => a.marketLeads ?? "" },
+          marketCpl: { label: "Market cost/lead", group: "Leads (market)", sort: "marketCpl", render: (a) => (a.marketCpl != null ? `<span title="${escapeHtml(a.marketName || "")} — all ad spend in the metro (incl. GTHQ) ÷ Portal PPC leads">${fmt$(a.marketCpl)}</span>` : `<span style="color:var(--ink-muted)" title="Open the Markets page for this date range to fill this in">—</span>`), csv: (a) => (a.marketCpl != null ? a.marketCpl.toFixed(2) : "") },
+          why: { label: "Why", group: "Notes", sort: null, cellClass: () => "why-cell", render: (a) => escapeHtml(a.cost > 0 ? diagnoseAccount(a)[0] || "" : ""), csv: (a) => (a.cost > 0 ? diagnoseAccount(a)[0] || "" : "") },
+        };
+
+        const COLUMN_TABLES = {
+          accounts: {
+            presets: {
+              Default: ["health", "cost", "clicks", "cpc", "conv", "cpa", "searchIS", "pace"],
+              "Weekly check": ["health", "cost", "conv", "cpa", "goal", "prevCpa", "pace"],
+              "Bids & competition": ["cpc", "ctr", "cpa", "searchIS", "lostIsRank", "topIS", "absTopIS"],
+              Budget: ["cost", "dailyBudget", "pace", "projected", "periodBudget", "lostIsBudget", "cpa"],
+              Leads: ["cost", "conv", "phoneCalls", "cpa", "marketLeads", "marketCpl"],
+            },
+          },
+          weekly: {
+            presets: {
+              Default: ["status", "cost", "conv", "cpa", "goal", "prevCpa", "pace", "why"],
+              Compact: ["status", "cost", "cpa", "goal"],
+              "Bids & competition": ["status", "cpc", "ctr", "cpa", "searchIS", "lostIsRank", "topIS"],
+            },
+          },
+          mtd: {
+            presets: {
+              Default: ["status", "cost", "conv", "cpa", "goal", "prevCpa", "pace", "projected", "periodBudget", "why"],
+              Compact: ["status", "cost", "cpa", "goal", "pace"],
+              Budget: ["status", "cost", "dailyBudget", "pace", "projected", "periodBudget", "lostIsBudget"],
+            },
+          },
+        };
+
+        function loadColViews() {
+          try {
+            return JSON.parse(localStorage.getItem(COLVIEWS_KEY) || "{}") || {};
+          } catch (e) {
+            return {};
+          }
+        }
+        function saveColViews(all) {
+          try {
+            localStorage.setItem(COLVIEWS_KEY, JSON.stringify(all));
+          } catch (e) {}
+        }
+        function tableViewState(tableId) {
+          const all = loadColViews();
+          const st = all[tableId] || {};
+          return { active: st.active || "Default", custom: st.custom || {}, working: st.working || null };
+        }
+        function allViews(tableId) {
+          const st = tableViewState(tableId);
+          return Object.assign({}, COLUMN_TABLES[tableId].presets, st.custom);
+        }
+        function activeColumns(tableId) {
+          const st = tableViewState(tableId);
+          const views = allViews(tableId);
+          const keys = st.working || views[st.active] || COLUMN_TABLES[tableId].presets.Default;
+          return keys.filter((k) => COLUMN_CATALOG[k]);
+        }
+        function setTableState(tableId, patch) {
+          const all = loadColViews();
+          all[tableId] = Object.assign(tableViewState(tableId), patch);
+          saveColViews(all);
+        }
+
+        function rerenderTable(tableId) {
+          if (tableId === "accounts") render();
+          else renderCurrentPage(false);
+          refreshViewSelects();
+        }
+
+        function selectView(tableId, name) {
+          setTableState(tableId, { active: name, working: null });
+          rerenderTable(tableId);
+        }
+
+        function refreshViewSelects() {
+          document.querySelectorAll("select[data-view-select]").forEach((sel) => {
+            const tableId = sel.dataset.viewSelect;
+            const st = tableViewState(tableId);
+            const names = Object.keys(allViews(tableId));
+            sel.innerHTML =
+              names.map((n) => `<option value="${escapeHtml(n)}" ${n === st.active && !st.working ? "selected" : ""}>${escapeHtml(n)}</option>`).join("") +
+              (st.working ? `<option value="" selected>${escapeHtml(st.active)} (edited)</option>` : "");
+          });
+        }
+
+        function columnHeaderHtml(tableId, opts) {
+          const sortable = opts && opts.sortable;
+          return activeColumns(tableId)
+            .map((k) => {
+              const c = COLUMN_CATALOG[k];
+              return sortable && c.sort
+                ? `<th data-sort="${c.sort}">${escapeHtml(c.label)} <span class="sort-indicator">↕</span></th>`
+                : `<th>${escapeHtml(c.label)}</th>`;
+            })
+            .join("");
+        }
+
+        function columnCellsHtml(tableId, row) {
+          return activeColumns(tableId)
+            .map((k) => {
+              const c = COLUMN_CATALOG[k];
+              const cls = c.cellClass ? c.cellClass(row) : "";
+              let html = "";
+              try {
+                html = c.render(row);
+              } catch (e) {
+                html = "—";
+              }
+              return `<td${cls ? ` class="${cls}"` : ""}>${html}</td>`;
+            })
+            .join("");
+        }
+
+        // ---- Picker modal ----
+        let pickerTable = null;
+        let pickerDragKey = null;
+
+        function openMetricPicker(tableId) {
+          pickerTable = tableId;
+          let modal = document.getElementById("colPickerModal");
+          if (!modal) {
+            modal = document.createElement("div");
+            modal.id = "colPickerModal";
+            modal.className = "colpicker-overlay";
+            modal.addEventListener("click", (e) => {
+              if (e.target === modal) closeMetricPicker();
+            });
+            document.body.appendChild(modal);
+          }
+          modal.style.display = "flex";
+          renderMetricPicker();
+        }
+
+        function closeMetricPicker() {
+          const modal = document.getElementById("colPickerModal");
+          if (modal) modal.style.display = "none";
+          pickerTable = null;
+        }
+
+        function pickerSetKeys(keys) {
+          setTableState(pickerTable, { working: keys });
+          rerenderTable(pickerTable);
+          renderMetricPicker();
+        }
+
+        function pickerToggle(key) {
+          const keys = activeColumns(pickerTable).slice();
+          const i = keys.indexOf(key);
+          if (i >= 0) keys.splice(i, 1);
+          else keys.push(key);
+          pickerSetKeys(keys);
+        }
+
+        function pickerMove(key, dir) {
+          const keys = activeColumns(pickerTable).slice();
+          const i = keys.indexOf(key);
+          const j = i + dir;
+          if (i < 0 || j < 0 || j >= keys.length) return;
+          [keys[i], keys[j]] = [keys[j], keys[i]];
+          pickerSetKeys(keys);
+        }
+
+        function pickerDrop(targetKey) {
+          if (!pickerDragKey || pickerDragKey === targetKey) return;
+          const keys = activeColumns(pickerTable).slice();
+          const from = keys.indexOf(pickerDragKey);
+          keys.splice(from, 1);
+          keys.splice(keys.indexOf(targetKey), 0, pickerDragKey);
+          pickerDragKey = null;
+          pickerSetKeys(keys);
+        }
+
+        function pickerSaveAs() {
+          const name = (window.prompt("Name this view (e.g. My weekly check):") || "").trim();
+          if (!name) return;
+          if (COLUMN_TABLES[pickerTable].presets[name]) return toast("That name is a built-in view — pick another", true);
+          const st = tableViewState(pickerTable);
+          st.custom[name] = activeColumns(pickerTable);
+          setTableState(pickerTable, { custom: st.custom, active: name, working: null });
+          rerenderTable(pickerTable);
+          renderMetricPicker();
+          toast(`Saved view "${name}"`);
+        }
+
+        function pickerDeleteView() {
+          const st = tableViewState(pickerTable);
+          if (!st.custom[st.active]) return toast("Built-in views can't be deleted", true);
+          if (!window.confirm(`Delete the view "${st.active}"?`)) return;
+          delete st.custom[st.active];
+          setTableState(pickerTable, { custom: st.custom, active: "Default", working: null });
+          rerenderTable(pickerTable);
+          renderMetricPicker();
+        }
+
+        function pickerResetEdits() {
+          setTableState(pickerTable, { working: null });
+          rerenderTable(pickerTable);
+          renderMetricPicker();
+        }
+
+        function renderMetricPicker() {
+          const modal = document.getElementById("colPickerModal");
+          if (!modal || !pickerTable) return;
+          const keys = activeColumns(pickerTable);
+          const st = tableViewState(pickerTable);
+          const views = Object.keys(allViews(pickerTable));
+          const isCustom = !!st.custom[st.active];
+          const groups = COL_GROUPS.map((g) => {
+            const items = Object.entries(COLUMN_CATALOG).filter(([k, c]) => c.group === g && (pickerTable === "accounts" ? k !== "status" : k !== "health"));
+            if (!items.length) return "";
+            return `<div class="cp-group"><div class="cp-group-title">${g}</div>${items
+              .map(([k, c]) => `<label class="cp-item"><input type="checkbox" ${keys.includes(k) ? "checked" : ""} onchange="pickerToggle('${k}')"> ${escapeHtml(c.label)}</label>`)
+              .join("")}</div>`;
+          }).join("");
+          const order = keys
+            .map(
+              (k, i) => `<li draggable="true" ondragstart="pickerDragKey='${k}'" ondragover="event.preventDefault()" ondrop="pickerDrop('${k}')">
+                <span class="cp-grip">⋮⋮</span><span class="cp-name">${escapeHtml(COLUMN_CATALOG[k].label)}</span>
+                <button onclick="pickerMove('${k}',-1)" ${i === 0 ? "disabled" : ""} title="Move left">↑</button>
+                <button onclick="pickerMove('${k}',1)" ${i === keys.length - 1 ? "disabled" : ""} title="Move right">↓</button>
+                <button onclick="pickerToggle('${k}')" title="Remove">✕</button></li>`,
+            )
+            .join("");
+          const title = { accounts: "Accounts", weekly: "Weekly Report", mtd: "Month to Date" }[pickerTable];
+          modal.innerHTML = `<div class="colpicker">
+            <div class="cp-head"><strong>Columns · ${title}</strong><button class="cp-close" onclick="closeMetricPicker()">✕</button></div>
+            <div class="cp-views">
+              <label>View <select onchange="selectView(pickerTable, this.value); renderMetricPicker()">${views
+                .map((v) => `<option ${v === st.active ? "selected" : ""}>${escapeHtml(v)}</option>`)
+                .join("")}</select></label>
+              ${st.working ? `<span class="cp-edited">edited</span><button class="btn btn-ghost" onclick="pickerResetEdits()">Undo edits</button>` : ""}
+              <button class="btn btn-ghost" onclick="pickerSaveAs()">💾 Save as view</button>
+              ${isCustom ? `<button class="btn btn-ghost" onclick="pickerDeleteView()">🗑 Delete view</button>` : ""}
+            </div>
+            <div class="cp-body">
+              <div class="cp-catalog">${groups}</div>
+              <div class="cp-order"><div class="cp-group-title">Shown, in this order (drag or use ↑↓)</div><ol>${order || "<li>No columns selected</li>"}</ol></div>
+            </div>
+          </div>`;
+        }
+
+        // ============ ACCOUNT HEALTH CHECKS ============
+        // Tracking + ad health across all accounts with spend. ~6 queries per
+        // account, so it runs on demand (Health page) and automatically at
+        // most once a day after the main refresh. Results are kept in this
+        // browser and feed the alerts banner.
+        const HEALTH_KEY = "gt_health_v1";
+        const HEALTH_MAX_AGE_MS = 20 * 60 * 60 * 1000;
+        const LEAD_CATEGORIES = new Set(["SUBMIT_LEAD_FORM", "PHONE_CALL_LEAD", "CONTACT", "BOOK_APPOINTMENT", "REQUEST_QUOTE", "QUALIFIED_LEAD", "IMPORTED_LEAD", "GET_DIRECTIONS", "SIGNUP"]);
+        const SALE_CATEGORIES = new Set(["PURCHASE", "CONVERTED_LEAD", "STORE_SALE"]);
+        const HEALTH_CHECK_LABELS = {
+          "conv-stopped": "Conversions stopped",
+          "action-silent": "Conversion action silent",
+          "mixed-goals": "Leads + sales mixed",
+          "duplicate-leads": "Duplicate lead tracking",
+          "odd-primary": "Unusual counted action",
+          "ads-disapproved": "Disapproved ads",
+          "ads-limited": "Limited ads",
+          "ad-strength": "Weak ad strength",
+          "low-qs": "Low quality score",
+          "check-failed": "Check failed",
+          "ga4-noncustomer-leads": "Non-customer forms counted as leads",
+          "lead-mismatch": "Lead counts disagree (3-way)",
+        };
+        let healthState = null; // { runAt, findings: [...], checked, failed }
+        let healthRunning = false;
+        let healthFilter = "all";
+
+        function loadHealthState() {
+          try {
+            healthState = JSON.parse(localStorage.getItem(HEALTH_KEY) || "null");
+          } catch (e) {
+            healthState = null;
+          }
+        }
+        function saveHealthState() {
+          try {
+            localStorage.setItem(HEALTH_KEY, JSON.stringify(healthState));
+          } catch (e) {}
+        }
+
+        async function healthQuery(tools, customerId, spec) {
+          const res = await mcpSearchRows(tools, customerId, spec, { loginCustomerId: ADS_MCP_ANCHOR_MCC_ID });
+          if (res.mode === "empty") throw new Error(`${spec.resource} query failed`);
+          return res.rows;
+        }
+
+        async function checkAccountHealth(tools, a) {
+          const findings = [];
+          const add = (severity, check, detail, fix) =>
+            findings.push({ severity, check, account: a.name, customerId: a.customerId, detail, fix });
+          const today = __localYMD(new Date());
+          const yesterday = ymdAddDays(today, -1);
+          const goal = goalFor(a);
+          const v = (row, keys) => rowValue(row, keys);
+          const n = (row, keys) => asNumber(rowValue(row, keys), 0);
+
+          // 1. Conversions stopped (daily totals, last 21 days)
+          const daily = await healthQuery(tools, a.customerId, {
+            fields: ["segments.date", "metrics.cost_micros", "metrics.conversions"],
+            resource: "customer",
+            conditions: [`segments.date BETWEEN '${ymdAddDays(today, -21)}' AND '${yesterday}'`],
+          });
+          const days = daily
+            .map((r) => ({ date: String(v(r, ["segments.date"]) || ""), cost: n(r, ["metrics.cost_micros", "metrics.costMicros"]) / 1e6, conv: n(r, ["metrics.conversions"]) }))
+            .sort((x, y) => (x.date < y.date ? -1 : 1));
+          const totalCost = days.reduce((t, d) => t + d.cost, 0);
+          const lastConv = [...days].reverse().find((d) => d.conv > 0);
+          if (totalCost >= 100 && !lastConv) {
+            add("critical", "conv-stopped", `No conversions in the last 21 days while spending ${fmt$(totalCost)}`, "Check the website form/tag and call tracking; in Google Ads open Goals → Conversions → Diagnostics.");
+          } else if (lastConv) {
+            const since = days.filter((d) => d.date > lastConv.date);
+            const sinceCost = since.reduce((t, d) => t + d.cost, 0);
+            const gap = Math.round((new Date(`${yesterday}T00:00:00Z`) - new Date(`${lastConv.date}T00:00:00Z`)) / 86400000);
+            if (gap >= 3 && sinceCost >= Math.max(50, goal * 3)) {
+              add(gap >= 5 ? "critical" : "warning", "conv-stopped", `No conversions for ${gap} days — last on ${formatDateShort(lastConv.date)}, ${fmt$(sinceCost)} spent since`, "Check the website form/tag and call tracking; in Google Ads open Goals → Conversions → Diagnostics.");
+            }
+          }
+
+          // 2. Conversion actions (what counts) + per-action daily conversions
+          const actions = await healthQuery(tools, a.customerId, {
+            fields: ["conversion_action.name", "conversion_action.type", "conversion_action.category", "conversion_action.include_in_conversions_metric"],
+            resource: "conversion_action",
+            conditions: ["conversion_action.status = 'ENABLED'"],
+          });
+          const actionInfo = new Map();
+          actions.forEach((r) => {
+            const name = String(v(r, ["conversion_action.name"]) || "");
+            const counted = asBoolean(v(r, ["conversion_action.include_in_conversions_metric"]));
+            const prev = actionInfo.get(name);
+            actionInfo.set(name, {
+              name,
+              type: String(v(r, ["conversion_action.type"]) || ""),
+              category: String(v(r, ["conversion_action.category"]) || ""),
+              counted: counted || (prev && prev.counted),
+            });
+          });
+          const byAction = await healthQuery(tools, a.customerId, {
+            fields: ["segments.date", "segments.conversion_action_name", "metrics.conversions"],
+            resource: "customer",
+            conditions: [`segments.date BETWEEN '${ymdAddDays(today, -28)}' AND '${yesterday}'`],
+          });
+          const recentCut = ymdAddDays(today, -7);
+          const perAction = new Map();
+          byAction.forEach((r) => {
+            const name = String(v(r, ["segments.conversion_action_name", "segments.conversionActionName"]) || "");
+            const date = String(v(r, ["segments.date"]) || "");
+            const conv = n(r, ["metrics.conversions"]);
+            const e = perAction.get(name) || { recent: 0, earlier: 0 };
+            if (date >= recentCut) e.recent += conv;
+            else e.earlier += conv;
+            perAction.set(name, e);
+          });
+          const recording = (name) => {
+            const e = perAction.get(name);
+            return e ? e.recent + e.earlier : 0;
+          };
+          const countedRecording = Array.from(actionInfo.values()).filter((x) => x.counted && recording(x.name) > 0);
+          const leadActs = countedRecording.filter((x) => LEAD_CATEGORIES.has(x.category));
+          const saleActs = countedRecording.filter((x) => SALE_CATEGORIES.has(x.category) || /purchase|sale|booking/i.test(x.name));
+          if (leadActs.length && saleActs.length) {
+            add(
+              "warning",
+              "mixed-goals",
+              `"Conversions" counts leads (${leadActs.map((x) => x.name).slice(0, 3).join(", ")}) and sales/bookings (${saleActs.map((x) => x.name).slice(0, 3).join(", ")}) together — one customer can count 2–3×, so cost/conv looks lower than real cost per lead`,
+              "In Goals, set purchase/booking actions to Secondary (or use a custom goal) so Conversions = leads; track bookings as a separate column.",
+            );
+          }
+          const formActs = leadActs.filter((x) => x.category === "SUBMIT_LEAD_FORM");
+          if (formActs.length >= 2) {
+            add("warning", "duplicate-leads", `${formActs.length} lead-form actions are all counted (${formActs.map((x) => x.name).join(", ")}) — the same form fill may be counted twice`, "Keep one primary lead-form action and set the others to Secondary.");
+          }
+          countedRecording
+            .filter((x) => /install|youtube|subscri|page_view|PAGE_VIEW|DOWNLOAD/i.test(`${x.name} ${x.category}`))
+            .forEach((x) => add("info", "odd-primary", `"${x.name}" is counted in Conversions (${fmtN(recording(x.name))} in 28 days) but isn't a lead or sale`, "Set it to Secondary so it doesn't inflate Conversions."));
+          actionInfo.forEach((x) => {
+            if (!x.counted || /^UPLOAD|IMPORT|STORE_SALES/i.test(x.type)) return; // offline imports lag — skip
+            const e = perAction.get(x.name);
+            if (e && e.earlier >= 5 && e.recent === 0) {
+              add("warning", "action-silent", `"${x.name}" recorded ${fmtN(e.earlier)} conversions in the 3 weeks before, but 0 in the last 7 days`, "Open Goals → Conversions and check this action's status/diagnostics; for GA4 imports check the GA4 key event.");
+            }
+          });
+
+          // 3. Ad approvals + RSA strength
+          const ads = await healthQuery(tools, a.customerId, {
+            fields: ["campaign.name", "ad_group.name", "ad_group_ad.ad.id", "ad_group_ad.ad.type", "ad_group_ad.policy_summary.approval_status", "ad_group_ad.ad_strength"],
+            resource: "ad_group_ad",
+            conditions: ["ad_group_ad.status = 'ENABLED'", "ad_group.status = 'ENABLED'", "campaign.status = 'ENABLED'"],
+            limit: 2000,
+          });
+          const disapproved = [];
+          const limited = [];
+          const poorAds = [];
+          ads.forEach((r) => {
+            const where = `${v(r, ["campaign.name"])} › ${v(r, ["ad_group.name"])}`;
+            const st = String(v(r, ["ad_group_ad.policy_summary.approval_status", "adGroupAd.policySummary.approvalStatus"]) || "").toUpperCase();
+            if (st === "DISAPPROVED") disapproved.push(where);
+            else if (st === "APPROVED_LIMITED" || st === "AREA_OF_INTEREST_ONLY") limited.push(where);
+            const strength = String(v(r, ["ad_group_ad.ad_strength", "adGroupAd.adStrength"]) || "").toUpperCase();
+            if (strength === "POOR") poorAds.push(where);
+          });
+          if (disapproved.length) add("critical", "ads-disapproved", `${disapproved.length} disapproved ad${disapproved.length === 1 ? "" : "s"}: ${disapproved.slice(0, 3).join("; ")}${disapproved.length > 3 ? "…" : ""}`, "Open the ad's policy details in Google Ads, then edit or appeal.");
+          if (limited.length) add("warning", "ads-limited", `${limited.length} ad${limited.length === 1 ? "" : "s"} approved (limited): ${limited.slice(0, 3).join("; ")}${limited.length > 3 ? "…" : ""}`, "Check the policy reason — limited ads show less often.");
+
+          // 4. PMax asset group strength
+          const groups = await healthQuery(tools, a.customerId, {
+            fields: ["campaign.name", "asset_group.name", "asset_group.ad_strength"],
+            resource: "asset_group",
+            conditions: ["asset_group.status = 'ENABLED'", "campaign.status = 'ENABLED'"],
+          });
+          groups.forEach((r) => {
+            const strength = String(v(r, ["asset_group.ad_strength", "assetGroup.adStrength"]) || "").toUpperCase();
+            if (strength === "POOR") poorAds.push(`${v(r, ["campaign.name"])} › ${v(r, ["asset_group.name"])} (PMax)`);
+          });
+          if (poorAds.length) add("warning", "ad-strength", `Poor ad strength: ${poorAds.slice(0, 3).join("; ")}${poorAds.length > 3 ? ` +${poorAds.length - 3} more` : ""}`, "Add more unique headlines and descriptions (RSA) or more assets (PMax).");
+
+          // 5. Low quality score keywords with spend (last 30 days)
+          const kws = await healthQuery(tools, a.customerId, {
+            fields: ["campaign.name", "ad_group_criterion.keyword.text", "ad_group_criterion.quality_info.quality_score", "metrics.cost_micros", "metrics.conversions"],
+            resource: "keyword_view",
+            conditions: ["segments.date DURING LAST_30_DAYS", "metrics.cost_micros > 0", "ad_group_criterion.status = 'ENABLED'"],
+            limit: 2000,
+          });
+          const lowQs = kws
+            .map((r) => ({
+              kw: String(v(r, ["ad_group_criterion.keyword.text"]) || ""),
+              qs: n(r, ["ad_group_criterion.quality_info.quality_score"]),
+              cost: n(r, ["metrics.cost_micros", "metrics.costMicros"]) / 1e6,
+              conv: n(r, ["metrics.conversions"]),
+            }))
+            .filter((k) => k.qs >= 1 && k.qs <= 4 && k.cost >= 20)
+            .sort((x, y) => y.cost - x.cost);
+          if (lowQs.length) {
+            add("warning", "low-qs", `${lowQs.length} keyword${lowQs.length === 1 ? "" : "s"} with quality score ≤4 spent ${fmt$(lowQs.reduce((t, k) => t + k.cost, 0))} in 30 days: ${lowQs.slice(0, 4).map((k) => `"${k.kw}" (QS ${k.qs}, ${fmt$(k.cost)})`).join(", ")}`, "Tighten ad group themes, use the keyword in headlines, and improve landing-page relevance; pause if it never converts.");
+          }
+          return findings;
+        }
+
+        async function runHealthCheck(opts) {
+          if (healthRunning) return;
+          const auto = opts && opts.auto;
+          const status = document.getElementById("healthStatus");
+          const btn = document.getElementById("runHealthBtn");
+          try {
+            const token = await ensureAdsMcpAccessToken();
+            if (!token) throw new Error("Connect Ads MCP first (button at the top).");
+            const source = liveRange ? accounts.filter((x) => x._liveFetchId === liveRange.fetchId) : accounts;
+            const targets = source.filter((x) => x.customerId && ((x.cost || 0) > 0 || (x.enabledCampaignCount || 0) > 0));
+            if (!targets.length) throw new Error("Accounts haven't loaded yet — wait for the live refresh, then run again.");
+            healthRunning = true;
+            if (btn) {
+              btn.disabled = true;
+              btn.textContent = "⏳ Checking…";
+            }
+            const tools = await ensureAdsMcpTools();
+            let done = 0;
+            const all = [];
+            let failed = 0;
+            await runWithConcurrencyLimit(targets, 3, async (a) => {
+              try {
+                all.push(...(await checkAccountHealth(tools, a)));
+              } catch (err) {
+                failed += 1;
+                all.push({ severity: "info", check: "check-failed", account: a.name, customerId: a.customerId, detail: `Couldn't finish: ${err.message || err}`, fix: "Run the check again." });
+              }
+              done += 1;
+              if (status) status.textContent = `${auto ? "Daily health check" : "Checking"}: ${done} / ${targets.length} accounts…`;
+            });
+            // GA4-based checks (site-wide), when GA4 is connected.
+            if (isGa4Connected()) {
+              try {
+                const t = __localYMD(new Date());
+                const g = await fetchGa4Leads({ startDate: ymdAddDays(t, -28), endDate: ymdAddDays(t, -1) });
+                if (g.nonCustomer > 0) {
+                  all.push({
+                    severity: "warning",
+                    check: "ga4-noncustomer-leads",
+                    account: "Website (GA4)",
+                    customerId: null,
+                    detail: `GA4 "lead_submitted" also fires on non-customer forms — ${Array.from(g.nonCustomerPages.entries()).sort((x, y) => y[1] - x[1]).map(([pg, n]) => `${pg} (${n})`).join(", ")} in the last 28 days. They count as leads in GA4, and in Google Ads anywhere this key event is imported as a conversion.`,
+                    fix: "In GA4 (Admin → Events) stop lead_submitted firing on these pages, or send a different event from those forms.",
+                  });
+                }
+              } catch (e) {
+                all.push({ severity: "info", check: "check-failed", account: "Website (GA4)", customerId: null, detail: `GA4 check couldn't run: ${e.message || e}`, fix: "Reconnect GA4 and run again." });
+              }
+            }
+            if (marketsLast && marketsLast.ga4) {
+              marketsLast.list.forEach((m) => {
+                const x = leadCheckMismatch(m);
+                if (!x || m.metro == null) return;
+                const parts = [m.cost >= 20 ? `Google Ads ${Math.round(m.conv)} conv` : null, m.ga4PaidLeads ? `GA4 ${m.ga4PaidLeads} paid leads` : null, m.ppcLeads ? `Portal ${m.ppcLeads} PPC leads` : null].filter(Boolean);
+                all.push({
+                  severity: "warning",
+                  check: "lead-mismatch",
+                  account: m.name,
+                  customerId: null,
+                  detail: `Lead counts disagree ${x.toFixed(1)}× (${rangeLabel(marketsLast.range)}): ${parts.join(" vs ")}`,
+                  fix: "Lowest number is usually the broken one: check that market's Google Ads conversion actions, the GA4 lead form on its city page, and Portal lead source (PPC) tagging.",
+                });
+              });
+            }
+
+            // Same structural setup issue in many accounts → one grouped row.
+            ["mixed-goals", "duplicate-leads", "odd-primary"].forEach((check) => {
+              const hits = all.filter((x) => x.check === check);
+              if (hits.length < 3) return;
+              const names = [...new Set(hits.map((x) => x.account))];
+              const keep = all.filter((x) => x.check !== check);
+              keep.push({
+                severity: hits[0].severity,
+                check,
+                account: `${names.length} accounts`,
+                customerId: null,
+                detail: `Found in ${names.length} accounts: ${names.join(", ")}. Example — ${hits[0].account}: ${hits[0].detail}`,
+                fix: hits[0].fix,
+              });
+              all.length = 0;
+              all.push(...keep);
+            });
+            const order = { critical: 0, warning: 1, info: 2 };
+            all.sort((x, y) => order[x.severity] - order[y.severity] || x.account.localeCompare(y.account));
+            healthState = { runAt: Date.now(), findings: all, checked: targets.length, failed };
+            saveHealthState();
+            renderHealthPage();
+            render();
+            if (!auto) toast(`Health check done: ${all.filter((f) => f.severity === "critical").length} critical, ${all.filter((f) => f.severity === "warning").length} warnings`);
+          } catch (err) {
+            if (status) status.textContent = `Couldn't run: ${err.message || err}`;
+          } finally {
+            healthRunning = false;
+            if (btn) {
+              btn.disabled = false;
+              btn.textContent = "🩺 Run health check";
+            }
+            if (healthState) renderHealthPage();
+          }
+        }
+
+        function maybeAutoRunHealth() {
+          if (healthRunning) return;
+          if (healthState && Date.now() - healthState.runAt < HEALTH_MAX_AGE_MS) return;
+          runHealthCheck({ auto: true });
+        }
+
+        function renderHealthPage() {
+          const body = document.getElementById("healthBody");
+          const kpis = document.getElementById("healthKpis");
+          const status = document.getElementById("healthStatus");
+          if (!body) return;
+          document.querySelectorAll("[data-health-filter]").forEach((b) => b.classList.toggle("active", b.dataset.healthFilter === healthFilter));
+          if (!healthState) {
+            if (status && !healthRunning) status.textContent = "Not run yet — click Run health check (takes 2–3 minutes for all accounts).";
+            body.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:28px;color:var(--ink-muted)">No results yet.</td></tr>`;
+            if (kpis) kpis.innerHTML = "";
+            return;
+          }
+          const f = healthState.findings || [];
+          const count = (s) => f.filter((x) => x.severity === s).length;
+          if (kpis)
+            kpis.innerHTML = [
+              kpiCard("Critical", count("critical"), "fix today"),
+              kpiCard("Warnings", count("warning"), "fix this week"),
+              kpiCard("Info", count("info"), "worth a look"),
+              kpiCard("Accounts checked", healthState.checked, healthState.failed ? `${healthState.failed} failed` : "all OK"),
+            ].join("");
+          if (status && !healthRunning) status.textContent = `Last run ${new Date(healthState.runAt).toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })} · runs automatically once a day`;
+          const rows = f.filter((x) => healthFilter === "all" || x.severity === healthFilter || x.check === healthFilter);
+          const icon = { critical: "🔴", warning: "🟡", info: "🔵" };
+          body.innerHTML = rows.length
+            ? rows
+                .map(
+                  (x) => `<tr>
+                <td>${icon[x.severity] || ""}</td>
+                <td>${escapeHtml(x.account)}${x.customerId ? ` <button class="icon-btn ga-btn" onclick="openGoogleAds('${escapeHtml(x.customerId)}')" title="Open in Google Ads">↗</button>` : ""}</td>
+                <td>${escapeHtml(HEALTH_CHECK_LABELS[x.check] || x.check)}</td>
+                <td>${escapeHtml(x.detail)}</td>
+                <td class="why-cell">${escapeHtml(x.fix || "")}</td></tr>`,
+                )
+                .join("")
+            : `<tr><td colspan="5" style="text-align:center;padding:28px;color:var(--ink-muted)">Nothing in this filter. ✅</td></tr>`;
+        }
+
+        function bindHealthControls() {
+          const btn = document.getElementById("runHealthBtn");
+          if (btn && !btn.dataset.boundClick) {
+            btn.addEventListener("click", () => runHealthCheck());
+            btn.dataset.boundClick = "true";
+          }
+          document.querySelectorAll("[data-health-filter]").forEach((b) => {
+            if (b.dataset.boundClick) return;
+            b.addEventListener("click", () => {
+              healthFilter = b.dataset.healthFilter;
+              renderHealthPage();
+            });
+            b.dataset.boundClick = "true";
+          });
+        }
+
+        // Health findings → alerts banner (critical + warnings only).
+        function healthAlerts() {
+          if (!healthState || !healthState.findings) return [];
+          return healthState.findings
+            .filter((x) => x.severity === "critical" || x.severity === "warning")
+            .filter((x) => x.check !== "mixed-goals" && x.check !== "duplicate-leads") // structural — shown on Health page
+            .map((x) => ({
+              accountName: x.account,
+              severity: x.severity,
+              type: `health-${x.check}`,
+              msg: `<strong>${escapeHtml(HEALTH_CHECK_LABELS[x.check] || x.check)}</strong> — ${escapeHtml(x.detail)}`,
+            }));
+        }
+
+        // ============ GA4 (Google Analytics) ============
+        // Connects to the GameTruck analytics MCP with the user's own Google
+        // login (OAuth + PKCE, like Ads MCP). Calls go through
+        // /api/ga4-mcp-proxy because the MCP endpoint blocks browser (CORS)
+        // requests.
+        const GA4_MCP_URL = "https://analytics-mcp.microservices.gametrucksys.com/mcp";
+        const GA4_PROPERTY_ID = "372590551";
+        const GA4_AUTH_KEY = "gt_ga4_mcp_auth_v1";
+        const GA4_PENDING_KEY = "gt_ga4_mcp_pending_v1";
+        const GA4_STATE_PREFIX = "ga4.";
+        // GA4 channels that are Google Ads traffic.
+        const GA4_PAID_CHANNELS = new Set(["Paid Search", "Cross-network", "Paid Other", "Display", "Paid Video", "Paid Shopping"]);
+        // Lead-form pages that are not customers (job applicants, partners, reminders).
+        const GA4_NON_CUSTOMER_SLUGS = new Set(["careers", "promotional-partnerships", "reminder", "franchise", "franchising"]);
+        // Website city slug → metro (Google DMA id). Unknown slugs are listed on the Markets page.
+        const GA4_SLUG_METRO = {
+          "howard-county": 200512, "long-island": 200501, "minneapolis": 200613, "berkeley-heights-warren": 200501,
+          "princeton": 200504, "cleveland-akron": 200510, "richmond": 200556, "portland": 200820, "dayton": 200542,
+          "chicago": 200602, "san-marcos": 200635, "illiana-south-chicago": 200602, "denver": 200751,
+          "los-angeles": 200803, "gig-harbor": 200819, "east-valley": 200753, "jacksonville": 200561,
+          "arlington": 200623, "north-dallas": 200623, "north-indy": 200527, "westchester": 200501,
+          "orange-county": 200803, "houston-north": 200618, "north-tarrant-county": 200623, "cincinnati": 200515,
+          "atlanta-north": 200524, "san-jose": 200807, "orlando": 200534, "cherry-hill": 200504, "austin": 200635,
+          "knoxville": 200557, "houston": 200618, "hershey": 200566, "north-san-diego": 200825,
+          "inland-empire": 200803, "west-inland-empire": 200803, "el-paso": 200765, "charlotte": 200517,
+          "northern-virginia-dc": 200511, "san-antonio": 200641, "staten-island": 200501, "chicago-2": 200602,
+        };
+
+        let ga4Auth = null;
+        let ga4SessionId = null;
+        let ga4ToolName = null;
+        const ga4LeadsCache = new Map(); // range key → result
+        const ga4TrafficCache = new Map();
+
+        async function ga4Fetch(url, init) {
+          const i = init || {};
+          return await fetch("/api/ga4-mcp-proxy", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              forwardUrl: url,
+              method: i.method || "GET",
+              headers: headersToObject(i.headers),
+              body: i.body != null ? bodyToProxyString(i.body) : undefined,
+            }),
+          });
+        }
+
+        async function ga4Json(url, init, label) {
+          const res = await ga4Fetch(url, init);
+          const text = await res.text();
+          if (!res.ok) throw new Error(`${label} failed (${res.status}): ${text.slice(0, 300)}`);
+          try {
+            return JSON.parse(text);
+          } catch (e) {
+            throw new Error(`${label} returned non-JSON`);
+          }
+        }
+
+        function loadGa4AuthState() {
+          try {
+            const raw = localStorage.getItem(GA4_AUTH_KEY);
+            ga4Auth = raw ? JSON.parse(raw) : null;
+          } catch (e) {
+            ga4Auth = null;
+          }
+        }
+        function persistGa4AuthState() {
+          try {
+            if (ga4Auth) localStorage.setItem(GA4_AUTH_KEY, JSON.stringify(ga4Auth));
+            else localStorage.removeItem(GA4_AUTH_KEY);
+          } catch (e) {}
+        }
+        function isGa4Connected() {
+          return !!(ga4Auth && (ga4Auth.accessToken || ga4Auth.refreshToken));
+        }
+        function updateGa4Ui() {
+          const c = document.getElementById("ga4ConnectBtn");
+          const d = document.getElementById("ga4DisconnectBtn");
+          const on = isGa4Connected();
+          if (c) {
+            c.style.display = on ? "none" : "inline-flex";
+            c.disabled = IS_FILE_ORIGIN;
+          }
+          if (d) d.style.display = on ? "inline-flex" : "none";
+        }
+
+        async function connectGa4() {
+          if (IS_FILE_ORIGIN) return toast(FILE_MODE_HINT, true);
+          try {
+            toast("Connecting to GA4…");
+            const base = new URL(GA4_MCP_URL);
+            const resourceMeta = await ga4Json(`${base.origin}/.well-known/oauth-protected-resource${base.pathname}`, {}, "GA4 resource discovery");
+            const authServer = String((resourceMeta.authorization_servers || [])[0] || base.origin).replace(/\/+$/, "");
+            const authMeta = await ga4Json(`${authServer}/.well-known/oauth-authorization-server`, {}, "GA4 authorization-server discovery");
+            const scope = (resourceMeta.scopes_supported || authMeta.scopes_supported || ["openid"]).join(" ");
+            let clientId = ga4Auth && ga4Auth.clientId;
+            let clientSecret = ga4Auth && ga4Auth.clientSecret;
+            if (!clientId) {
+              const reg = await ga4Json(
+                authMeta.registration_endpoint,
+                {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    client_name: "GameTruck Ads Dashboard (GA4)",
+                    redirect_uris: [getAdsRedirectUri()],
+                    grant_types: ["authorization_code", "refresh_token"],
+                    response_types: ["code"],
+                    token_endpoint_auth_method: "client_secret_post",
+                    scope,
+                  }),
+                },
+                "GA4 app registration",
+              );
+              clientId = reg.client_id;
+              clientSecret = reg.client_secret || null;
+              if (!clientId) throw new Error("GA4 registration returned no client_id");
+            }
+            const codeVerifier = randomString(96);
+            const codeChallenge = await pkceChallenge(codeVerifier);
+            const state = GA4_STATE_PREFIX + randomString(40);
+            const redirectUri = getAdsRedirectUri();
+            sessionStorage.setItem(
+              GA4_PENDING_KEY,
+              JSON.stringify({ state, codeVerifier, redirectUri, clientId, clientSecret, tokenEndpoint: authMeta.token_endpoint, resource: resourceMeta.resource || GA4_MCP_URL }),
+            );
+            const authUrl = new URL(authMeta.authorization_endpoint);
+            authUrl.searchParams.set("response_type", "code");
+            authUrl.searchParams.set("client_id", clientId);
+            authUrl.searchParams.set("redirect_uri", redirectUri);
+            authUrl.searchParams.set("scope", scope);
+            authUrl.searchParams.set("state", state);
+            authUrl.searchParams.set("code_challenge", codeChallenge);
+            authUrl.searchParams.set("code_challenge_method", "S256");
+            authUrl.searchParams.set("resource", resourceMeta.resource || GA4_MCP_URL);
+            window.location.assign(authUrl.toString());
+          } catch (err) {
+            console.error(err);
+            toast(err.message || "Unable to connect GA4", true);
+          }
+        }
+
+        function disconnectGa4() {
+          ga4Auth = null;
+          ga4SessionId = null;
+          ga4ToolName = null;
+          ga4LeadsCache.clear();
+          ga4TrafficCache.clear();
+          persistGa4AuthState();
+          updateGa4Ui();
+          toast("GA4 disconnected");
+        }
+
+        async function maybeHandleGa4OAuthCallback() {
+          if (IS_FILE_ORIGIN) return false;
+          const url = new URL(window.location.href);
+          const state = url.searchParams.get("state") || "";
+          if (!state.startsWith(GA4_STATE_PREFIX)) return false;
+          try {
+            const pendingRaw = sessionStorage.getItem(GA4_PENDING_KEY);
+            sessionStorage.removeItem(GA4_PENDING_KEY);
+            const error = url.searchParams.get("error");
+            if (error) throw new Error(`GA4 login failed: ${url.searchParams.get("error_description") || error}`);
+            const pending = pendingRaw ? JSON.parse(pendingRaw) : null;
+            if (!pending || pending.state !== state) throw new Error("GA4 login state mismatch — click Connect GA4 again.");
+            const form = {
+              grant_type: "authorization_code",
+              code: url.searchParams.get("code"),
+              redirect_uri: pending.redirectUri,
+              client_id: pending.clientId,
+              code_verifier: pending.codeVerifier,
+            };
+            if (pending.clientSecret) form.client_secret = pending.clientSecret;
+            const token = await ga4Json(pending.tokenEndpoint, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: new URLSearchParams(form) }, "GA4 token exchange");
+            ga4Auth = {
+              clientId: pending.clientId,
+              clientSecret: pending.clientSecret || null,
+              tokenEndpoint: pending.tokenEndpoint,
+              accessToken: token.access_token,
+              refreshToken: token.refresh_token || null,
+              expiresAt: Date.now() + Number(token.expires_in || 3600) * 1000,
+            };
+            persistGa4AuthState();
+            toast("GA4 connected");
+          } catch (err) {
+            console.error(err);
+            toast(err.message || "GA4 login failed", true);
+          } finally {
+            ["code", "state", "scope", "error", "error_description", "iss", "authuser", "prompt", "hd"].forEach((p) => url.searchParams.delete(p));
+            const q = url.searchParams.toString();
+            window.history.replaceState({}, "", `${url.pathname}${q ? `?${q}` : ""}${url.hash || ""}`);
+            updateGa4Ui();
+          }
+          return true;
+        }
+
+        async function ensureGa4AccessToken() {
+          if (!ga4Auth) return null;
+          if (ga4Auth.accessToken && Date.now() < Number(ga4Auth.expiresAt || 0) - 60000) return ga4Auth.accessToken;
+          if (!ga4Auth.refreshToken) return null;
+          const form = { grant_type: "refresh_token", refresh_token: ga4Auth.refreshToken, client_id: ga4Auth.clientId };
+          if (ga4Auth.clientSecret) form.client_secret = ga4Auth.clientSecret;
+          const t = await ga4Json(ga4Auth.tokenEndpoint, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: new URLSearchParams(form) }, "GA4 token refresh");
+          ga4Auth.accessToken = t.access_token;
+          ga4Auth.expiresAt = Date.now() + Number(t.expires_in || 3600) * 1000;
+          if (t.refresh_token) ga4Auth.refreshToken = t.refresh_token;
+          persistGa4AuthState();
+          return ga4Auth.accessToken;
+        }
+
+        async function ga4Rpc(method, params, notification) {
+          const token = await ensureGa4AccessToken();
+          if (!token) throw new Error("GA4 session expired — click Connect GA4.");
+          const id = notification ? undefined : `g${Date.now()}${Math.random().toString(16).slice(2, 8)}`;
+          const payload = { jsonrpc: "2.0", method };
+          if (id) payload.id = id;
+          if (params !== undefined) payload.params = params;
+          const headers = { "Content-Type": "application/json", Accept: "application/json, text/event-stream", Authorization: `Bearer ${token}` };
+          if (ga4SessionId) headers["mcp-session-id"] = ga4SessionId;
+          const res = await ga4Fetch(GA4_MCP_URL, { method: "POST", headers, body: JSON.stringify(payload) });
+          const sid = res.headers.get("mcp-session-id");
+          if (sid) ga4SessionId = sid;
+          const text = await res.text();
+          if (res.status === 401) {
+            ga4Auth.accessToken = null;
+            persistGa4AuthState();
+            throw new Error("GA4 login expired — click Connect GA4.");
+          }
+          if (!res.ok) throw new Error(`GA4 request failed (${res.status}): ${text.slice(0, 200)}`);
+          if (notification) return null;
+          let rpc = null;
+          try {
+            rpc = JSON.parse(text);
+          } catch (e) {
+            rpc = parseRpcFromSse(text, id);
+          }
+          if (!rpc) throw new Error("Unable to parse GA4 response");
+          if (rpc.error) throw new Error(rpc.error.message || JSON.stringify(rpc.error));
+          return rpc.result;
+        }
+
+        async function ga4RunReport(dimensions, metrics, range, limit) {
+          if (!ga4ToolName) {
+            try {
+              await ga4Rpc("initialize", { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "gametruck-ads-dashboard", version: "1.0.0" } });
+              await ga4Rpc("notifications/initialized", undefined, true);
+            } catch (e) {
+              if (/expired|login/i.test(e.message || "")) throw e;
+            }
+            const listed = await ga4Rpc("tools/list", {});
+            ga4ToolName = resolveToolName((listed && listed.tools) || [], "run_report");
+            if (!ga4ToolName) throw new Error("GA4 connection has no run_report tool");
+          }
+          const res = await ga4Rpc("tools/call", {
+            name: ga4ToolName,
+            arguments: {
+              property_id: GA4_PROPERTY_ID,
+              dimensions_csv: dimensions.join(","),
+              metrics_csv: metrics.join(","),
+              start_date: range.startDate,
+              end_date: range.endDate,
+              limit: limit || 10000,
+            },
+          });
+          const parsed = parseToolResult(res);
+          const out = typeof parsed === "string" ? JSON.parse(parsed) : parsed;
+          return (out && out.rows) || [];
+        }
+
+        function ga4SlugFromPath(path) {
+          const m = String(path || "").match(/^\/([a-z0-9-]+)\//i);
+          return m ? m[1].toLowerCase() : null;
+        }
+
+        // Leads by market from GA4 (lead_submitted, split paid vs all).
+        async function fetchGa4Leads(range) {
+          const key = `${range.startDate}|${range.endDate}`;
+          if (ga4LeadsCache.has(key)) return ga4LeadsCache.get(key);
+          const rows = await ga4RunReport(["pagePath", "sessionDefaultChannelGroup"], ["keyEvents:lead_submitted"], range, 10000);
+          const byMetro = new Map();
+          const unmapped = new Map();
+          let nonCustomer = 0;
+          const nonCustomerPages = new Map();
+          rows.forEach((r) => {
+            const n = Number(r["keyEvents:lead_submitted"]) || 0;
+            if (!n) return;
+            const slug = ga4SlugFromPath(r.pagePath);
+            if (slug && GA4_NON_CUSTOMER_SLUGS.has(slug)) {
+              nonCustomer += n;
+              nonCustomerPages.set(r.pagePath, (nonCustomerPages.get(r.pagePath) || 0) + n);
+              return;
+            }
+            const metro = slug ? GA4_SLUG_METRO[slug] : null;
+            if (!metro) {
+              const k = slug || r.pagePath;
+              unmapped.set(k, (unmapped.get(k) || 0) + n);
+              return;
+            }
+            const e = byMetro.get(metro) || { all: 0, paid: 0 };
+            e.all += n;
+            if (GA4_PAID_CHANNELS.has(r.sessionDefaultChannelGroup)) e.paid += n;
+            byMetro.set(metro, e);
+          });
+          const result = { byMetro, unmapped, nonCustomer, nonCustomerPages, fetchedAt: new Date() };
+          ga4LeadsCache.set(key, result);
+          return result;
+        }
+
+        // Google Ads traffic quality from GA4: account × campaign × device.
+        async function fetchGa4Traffic(range) {
+          const key = `${range.startDate}|${range.endDate}`;
+          if (ga4TrafficCache.has(key)) return ga4TrafficCache.get(key);
+          const rows = await ga4RunReport(
+            ["sessionGoogleAdsCustomerId", "sessionGoogleAdsCampaignName", "deviceCategory"],
+            ["sessions", "engagedSessions", "keyEvents:lead_submitted", "keyEvents:GA4_Phone_Call_Click", "keyEvents:olb_sale"],
+            range,
+            10000,
+          );
+          const out = rows
+            .filter((r) => r.sessionGoogleAdsCustomerId && r.sessionGoogleAdsCustomerId !== "(not set)")
+            .map((r) => ({
+              customerId: String(r.sessionGoogleAdsCustomerId).replace(/\D+/g, ""),
+              campaign: r.sessionGoogleAdsCampaignName || "(not set)",
+              device: r.deviceCategory || "unknown",
+              sessions: Number(r.sessions) || 0,
+              engaged: Number(r.engagedSessions) || 0,
+              leads: Number(r["keyEvents:lead_submitted"]) || 0,
+              calls: Number(r["keyEvents:GA4_Phone_Call_Click"]) || 0,
+              sales: Number(r["keyEvents:olb_sale"]) || 0,
+            }));
+          const result = { rows: out, fetchedAt: new Date() };
+          ga4TrafficCache.set(key, result);
+          return result;
+        }
+
+        // ---------- Traffic quality page ----------
+        let trafficScope = "mtd";
+        let trafficLast = null;
+
+        function rateOf(x, y) {
+          return y > 0 ? x / y : null;
+        }
+
+        function suggestedBidAdj(rate, best) {
+          if (rate == null || !best) return null;
+          const pct = Math.round((rate / best - 1) * 100 / 5) * 5;
+          return Math.max(-90, Math.min(0, pct));
+        }
+
+        async function loadTrafficPage(force) {
+          const el = document.getElementById("page-traffic");
+          if (!el) return;
+          document.querySelectorAll("[data-traffic-scope]").forEach((b) => b.classList.toggle("active", b.dataset.trafficScope === trafficScope));
+          const status = el.querySelector(".report-status");
+          const range = resolveClientDateRange(trafficScope);
+          if (!isGa4Connected()) {
+            status.textContent = "Connect GA4 (button at the top) to see traffic quality by campaign and device.";
+            el.querySelector(".report-kpis").innerHTML = "";
+            el.querySelector("#trafficCampaignTable").innerHTML = "";
+            el.querySelector("#trafficDeviceTable").innerHTML = "";
+            return;
+          }
+          try {
+            status.textContent = `Loading ${rangeLabel(range)} from GA4${force ? "" : " (and spend from Google Ads)"}…`;
+            if (force) ga4TrafficCache.delete(`${range.startDate}|${range.endDate}`);
+            const [traffic, adsReport] = await Promise.all([
+              fetchGa4Traffic(range),
+              getReport(trafficScope, false).catch(() => null),
+            ]);
+            trafficLast = { range, traffic, adsReport };
+            status.textContent = "";
+            renderTrafficPage();
+          } catch (err) {
+            status.textContent = `Couldn't load: ${err.message || err}`;
+          }
+        }
+
+        function renderTrafficPage() {
+          const el = document.getElementById("page-traffic");
+          if (!el || !trafficLast) return;
+          const { range, traffic, adsReport } = trafficLast;
+          const nameById = new Map(accounts.filter((a) => a.customerId).map((a) => [a.customerId, a.name]));
+          const costByCampaign = new Map();
+          if (adsReport) {
+            adsReport.accounts.forEach((a) => (a.campaigns || []).forEach((c) => costByCampaign.set(`${a.customerId}||${c.name}`, c.cost)));
+          }
+          // Campaign rollup
+          const camp = new Map();
+          traffic.rows.forEach((r) => {
+            const k = `${r.customerId}||${r.campaign}`;
+            const e = camp.get(k) || { customerId: r.customerId, campaign: r.campaign, sessions: 0, engaged: 0, leads: 0, calls: 0, sales: 0 };
+            e.sessions += r.sessions;
+            e.engaged += r.engaged;
+            e.leads += r.leads;
+            e.calls += r.calls;
+            e.sales += r.sales;
+            camp.set(k, e);
+          });
+          const camps = Array.from(camp.values());
+          const tot = camps.reduce((t, c) => ({ s: t.s + c.sessions, e: t.e + c.engaged, l: t.l + c.leads, c: t.c + c.calls, o: t.o + c.sales }), { s: 0, e: 0, l: 0, c: 0, o: 0 });
+          const avgLeadRate = rateOf(tot.l, tot.s) || 0;
+          camps.forEach((c) => {
+            c.account = nameById.get(c.customerId) || c.customerId;
+            c.engRate = rateOf(c.engaged, c.sessions);
+            c.leadRate = rateOf(c.leads, c.sessions);
+            c.cost = costByCampaign.has(`${c.customerId}||${c.campaign}`) ? costByCampaign.get(`${c.customerId}||${c.campaign}`) : null;
+            c.costPerLead = c.cost != null && c.leads > 0 ? c.cost / c.leads : null;
+            c.flags = [];
+            if (c.sessions >= 100 && c.engRate != null && c.engRate < 0.45) c.flags.push(`Low engagement (${Math.round(c.engRate * 100)}%)`);
+            if (c.sessions >= 150 && c.leadRate != null && c.leadRate < avgLeadRate * 0.5) c.flags.push(`Lead rate ${(c.leadRate * 100).toFixed(1)}% vs ${(avgLeadRate * 100).toFixed(1)}% avg`);
+            if (c.sessions >= 30 && c.leads === 0 && (c.cost || 0) >= 100) c.flags.push("Spend but no GA4 leads");
+          });
+          camps.sort((x, y) => y.flags.length - x.flags.length || y.sessions - x.sessions);
+
+          el.querySelector(".report-kpis").innerHTML = [
+            kpiCard("Google Ads visits (GA4)", fmtN(tot.s), `${Math.round((rateOf(tot.e, tot.s) || 0) * 100)}% engaged`),
+            kpiCard("GA4 leads from ads", fmtN(tot.l), `${(avgLeadRate * 100).toFixed(1)}% of visits`),
+            kpiCard("Call clicks · online sales", `${fmtN(tot.c)} · ${fmtN(tot.o)}`, "from ad visits"),
+            kpiCard("Flagged campaigns", camps.filter((c) => c.flags.length).length, `of ${camps.length}`),
+          ].join("");
+          el.querySelector(".report-meta").textContent = `${rangeLabel(range)} · GA4 visits from Google Ads (linked accounts), by campaign and device`;
+
+          el.querySelector("#trafficCampaignTable").innerHTML = `<thead><tr><th>Account</th><th>Campaign</th><th>Visits</th><th>Engaged</th><th>Lead rate</th><th>GA4 leads</th><th>Call clicks</th><th>Online sales</th><th>Ad spend</th><th>Cost / GA4 lead</th><th>Flag</th></tr></thead><tbody>${
+            camps
+              .map(
+                (c) => `<tr class="${c.flags.length ? "status-warn" : ""}">
+                <td>${escapeHtml(c.account)}</td><td>${escapeHtml(c.campaign)}</td><td>${fmtN(c.sessions)}</td>
+                <td>${fmtPctCell(c.engRate)}</td><td>${fmtPctCell(c.leadRate)}</td><td>${fmtN(c.leads)}</td><td>${fmtN(c.calls)}</td><td>${fmtN(c.sales)}</td>
+                <td>${c.cost != null ? fmt$(c.cost) : "—"}</td><td>${c.costPerLead != null ? fmt$(c.costPerLead) : "—"}</td>
+                <td class="why-cell">${c.flags.length ? `⚠️ ${escapeHtml(c.flags.join(" · "))}` : ""}</td></tr>`,
+              )
+              .join("") || `<tr><td colspan="11" style="text-align:center;padding:24px;color:var(--ink-muted)">No Google Ads visits found in GA4 for this period.</td></tr>`
+          }</tbody>`;
+
+          // Device per account, with a bid-adjustment hint vs the account's best device.
+          const dev = new Map();
+          traffic.rows.forEach((r) => {
+            const k = `${r.customerId}||${r.device}`;
+            const e = dev.get(k) || { customerId: r.customerId, device: r.device, sessions: 0, engaged: 0, leads: 0 };
+            e.sessions += r.sessions;
+            e.engaged += r.engaged;
+            e.leads += r.leads;
+            dev.set(k, e);
+          });
+          const byAcct = new Map();
+          dev.forEach((d) => {
+            if (!byAcct.has(d.customerId)) byAcct.set(d.customerId, []);
+            byAcct.get(d.customerId).push(d);
+          });
+          const devRows = [];
+          byAcct.forEach((list, id) => {
+            const eligible = list.filter((d) => d.sessions >= 40);
+            const best = eligible.reduce((m, d) => Math.max(m, rateOf(d.leads, d.sessions) || 0), 0);
+            list
+              .sort((a, b) => b.sessions - a.sessions)
+              .forEach((d) => {
+                const rate = rateOf(d.leads, d.sessions);
+                const adj = d.sessions >= 40 && best > 0 && rate != null && rate < best * 0.5 ? suggestedBidAdj(rate, best) : null;
+                devRows.push({ account: nameById.get(id) || id, device: d.device, sessions: d.sessions, eng: rateOf(d.engaged, d.sessions), rate, best, adj });
+              });
+          });
+          devRows.sort((a, b) => (a.adj == null) - (b.adj == null) || a.account.localeCompare(b.account) || b.sessions - a.sessions);
+          el.querySelector("#trafficDeviceTable").innerHTML = `<thead><tr><th>Account</th><th>Device</th><th>Visits</th><th>Engaged</th><th>Lead rate</th><th>Best device in account</th><th>Suggestion</th></tr></thead><tbody>${
+            devRows
+              .map(
+                (d) => `<tr class="${d.adj != null ? "status-warn" : ""}"><td>${escapeHtml(d.account)}</td><td>${escapeHtml(d.device)}</td><td>${fmtN(d.sessions)}</td>
+                <td>${fmtPctCell(d.eng)}</td><td>${fmtPctCell(d.rate)}</td><td>${d.best ? fmtPctCell(d.best) : "—"}</td>
+                <td class="why-cell">${d.adj != null ? `Converts at ${(d.rate * 100).toFixed(1)}% vs ${(d.best * 100).toFixed(1)}% — try a ${d.adj}% ${escapeHtml(d.device)} bid adjustment` : d.sessions < 40 ? "Too few visits to judge" : ""}</td></tr>`,
+              )
+              .join("") || `<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--ink-muted)">No data.</td></tr>`
+          }</tbody>`;
+          el._copyRows = [
+            ["Account", "Campaign", "Visits", "Engaged %", "Lead rate %", "GA4 leads", "Call clicks", "Online sales", "Ad spend", "Cost/GA4 lead", "Flag"],
+            ...camps.map((c) => [c.account, c.campaign, c.sessions, c.engRate != null ? (c.engRate * 100).toFixed(1) : "", c.leadRate != null ? (c.leadRate * 100).toFixed(2) : "", c.leads, c.calls, c.sales, c.cost != null ? c.cost.toFixed(2) : "", c.costPerLead != null ? c.costPerLead.toFixed(2) : "", c.flags.join("; ")]),
+          ];
+          el._summaryText = `Traffic quality (${rangeLabel(range)}): ${fmtN(tot.s)} Google Ads visits, ${Math.round((rateOf(tot.e, tot.s) || 0) * 100)}% engaged, ${fmtN(tot.l)} GA4 leads (${(avgLeadRate * 100).toFixed(1)}%). ${camps.filter((c) => c.flags.length).length} campaigns flagged.`;
+        }
+
+        // 3-way lead cell for the Markets table.
+        function leadCheckCell(m, portal, ga4) {
+          const g = m.cost >= 20 ? m.conv : null;
+          const a = ga4 ? m.ga4PaidLeads : null;
+          const p = portal ? m.ppcLeads : null;
+          const vals = [g, a, p].filter((x) => x != null && x > 0);
+          if (vals.length < 2) return "—";
+          const hi = Math.max(...vals);
+          const lo = Math.min(...vals);
+          const off = hi >= 10 && lo > 0 && hi / lo > 1.6;
+          const parts = [g != null ? `G ${Math.round(g)}` : null, a != null ? `GA4 ${a}` : null, p != null ? `P ${p}` : null].filter(Boolean).join(" · ");
+          return off
+            ? `<span class="track-bad" title="Google Ads conversions (G), GA4 paid leads (GA4) and Portal PPC leads (P) differ by ${(hi / lo).toFixed(1)}× — one of them is mis-tracking">${parts} ⚠️</span>`
+            : `<span title="Google Ads conversions (G) · GA4 paid leads (GA4) · Portal PPC leads (P) — roughly agree">${parts}</span>`;
+        }
+
+        function leadCheckMismatch(m) {
+          const vals = [m.cost >= 20 ? m.conv : null, m.ga4PaidLeads, m.ppcLeads].filter((x) => x != null && x > 0);
+          if (vals.length < 2) return null;
+          const hi = Math.max(...vals);
+          const lo = Math.min(...vals);
+          return hi >= 10 && hi / lo > 1.6 ? hi / lo : null;
+        }
+
+        // ============ REPORT PAGES (Weekly · Month to Date · Markets) ============
+        // Each page pulls its own date range from Google Ads (and the Portal
+        // for Markets) and keeps it in memory, so switching pages is instant
+        // after the first load. "Refresh" re-pulls.
+        const reportCache = new Map(); // key → { range, scope, accounts, pacingWindow, prevRange, fetchedAt }
+        const reportLoading = new Map(); // key → Promise
+        let weeklyMode = "lastWeek"; // "lastWeek" | "weekly" (this week so far)
+        let marketsScope = "mtd";
+        const marketsExpanded = new Set();
+
+        function reportKey(scope, range) {
+          return `${scope}|${range.startDate}|${range.endDate}`;
+        }
+
+        function goalFor(row) {
+          const main = accounts.find((x) => x.customerId && x.customerId === row.customerId);
+          const g = Number((main && main.goalTargetCpa) || row.goalTargetCpa);
+          return g > 0 ? g : settings.goodMax || 15;
+        }
+
+        async function setAccountGoal(customerId) {
+          const main = accounts.find((x) => x.customerId === customerId);
+          if (!main) return;
+          const current = goalFor(main);
+          const raw = window.prompt(`Cost/conv goal for ${main.name} (blank = default $${settings.goodMax || 15}):`, String(current));
+          if (raw === null) return;
+          const v = parseFloat(String(raw).replace(/[^0-9.]/g, ""));
+          if (raw.trim() === "") delete main.goalTargetCpa;
+          else if (Number.isFinite(v) && v > 0) main.goalTargetCpa = v;
+          else return toast("Enter a dollar amount, e.g. 18", true);
+          await saveData();
+          renderCurrentPage();
+          render();
+        }
+
+        // Live accounts for a scope's range, reusing the main refresh when it
+        // already covers exactly that range.
+        async function getReport(scope, force) {
+          const range = resolveClientDateRange(scope);
+          const key = reportKey(scope, range);
+          if (!force && reportCache.has(key)) return reportCache.get(key);
+          if (
+            !force &&
+            liveRange &&
+            liveRange.scope === scope &&
+            liveRange.startDate === range.startDate &&
+            liveRange.endDate === range.endDate
+          ) {
+            const entry = {
+              range,
+              scope,
+              accounts: accounts.filter((a) => a._liveFetchId === liveRange.fetchId),
+              pacingWindow,
+              prevRange: liveRange.prevRange,
+              fetchedAt: lastLiveFetch || new Date(),
+            };
+            reportCache.set(key, entry);
+            return entry;
+          }
+          if (reportLoading.has(key)) return reportLoading.get(key);
+          const p = (async () => {
+            const token = await ensureAdsMcpAccessToken();
+            if (!token) throw new Error("Connect Ads MCP first (button at the top).");
+            const live = await fetchGoogleAdsFromMcp(range.startDate, range.endDate, { scope });
+            const entry = {
+              range,
+              scope,
+              accounts: live.accounts,
+              pacingWindow: live.pacingWindow,
+              prevRange: live.prevRange,
+              fetchedAt: new Date(),
+            };
+            reportCache.set(key, entry);
+            return entry;
+          })();
+          reportLoading.set(key, p);
+          try {
+            return await p;
+          } finally {
+            reportLoading.delete(key);
+          }
+        }
+
+        function statusFor(row) {
+          const goal = goalFor(row);
+          if (!(row.cost > 0)) return { key: "none", icon: "—", label: "No spend", rank: 4 };
+          if (!(row.conv > 0)) return { key: "bad", icon: "❌", label: "No conversions", rank: 0 };
+          if (row.cpa <= goal) return { key: "good", icon: "✅", label: "Within goal", rank: 3 };
+          if (row.cpa <= goal * 1.25) return { key: "warn", icon: "⚠️", label: "Close (≤25% over)", rank: 2 };
+          return { key: "bad", icon: "❌", label: "Over goal", rank: 1 };
+        }
+
+        function sumRows(rows, pick) {
+          return rows.reduce((s, r) => s + (Number(pick(r)) || 0), 0);
+        }
+
+        function kpiCard(label, value, sub) {
+          return `<div class="stat"><div class="label">${label}</div><div class="value">${value}</div><div class="sub">${sub || ""}</div></div>`;
+        }
+
+        function rangeLabel(r) {
+          return r ? `${formatDateShort(r.startDate)} – ${formatDateShort(r.endDate)}` : "";
+        }
+
+        // Shared builder for the Weekly and MTD pages.
+        function renderPerformanceReport(el, entry, opts) {
+          const rows = entry.accounts
+            .filter((a) => (a.cost || 0) > 0 || (a.prev && a.prev.cost > 0))
+            .map((a) => ({ ...a, _goal: goalFor(a), _status: statusFor(a) }))
+            .sort((x, y) => x._status.rank - y._status.rank || (y.cost || 0) - (x.cost || 0));
+          const spent = rows.filter((r) => r.cost > 0);
+          const cost = sumRows(spent, (r) => r.cost);
+          const conv = sumRows(spent, (r) => r.conv);
+          const pCost = sumRows(rows, (r) => r.prev && r.prev.cost);
+          const pConv = sumRows(rows, (r) => r.prev && r.prev.conv);
+          const cpa = conv > 0 ? cost / conv : 0;
+          const pCpa = pConv > 0 ? pCost / pConv : 0;
+          const within = spent.filter((r) => r._status.key === "good").length;
+          const close = spent.filter((r) => r._status.key === "warn").length;
+          const pw = entry.pacingWindow || {};
+          const showProjection = opts.projection && pw.daysInProjection > pw.daysElapsed;
+
+          const deltaTxt = (c, p, lower, neutral) => {
+            const d = pctDelta(c, p);
+            if (d == null) return "";
+            return deltaHtml(c, p, lower, neutral);
+          };
+
+          el.querySelector(".report-kpis").innerHTML = [
+            kpiCard("Spend", fmt$(cost), `${deltaTxt(cost, pCost, false, true)}<span class="muted-sub">prev ${fmt$(pCost)}</span>`),
+            kpiCard("Conversions", fmtN(conv), `${deltaTxt(conv, pConv, false)}<span class="muted-sub">prev ${fmtN(pConv)}</span>`),
+            kpiCard("Cost / Conv", fmt$(cpa), `${deltaTxt(cpa, pCpa, true)}<span class="muted-sub">prev ${fmt$(pCpa)}</span>`),
+            kpiCard("Within goal", `${within} / ${spent.length}`, `${close} close · ${spent.length - within - close} over or no conv`),
+          ].join("");
+
+          el.querySelector(".report-meta").textContent = `${rangeLabel(entry.range)} vs ${rangeLabel(entry.prevRange)} · updated ${new Date(entry.fetchedAt).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}${showProjection ? ` · day ${pw.daysElapsed} of ${pw.daysInProjection}` : ""}`;
+
+          const tableId = opts.tableId;
+          rows.forEach((r) => {
+            enrichRow(r, entry.range, entry.pacingWindow);
+            r._statusRank = r._status.rank;
+          });
+          const head = `<tr><th>Account</th>${columnHeaderHtml(tableId)}</tr>`;
+          const body = rows
+            .map((r) => `<tr class="status-${r._status.key}"><td>${escapeHtml(r.name)}</td>${columnCellsHtml(tableId, r)}</tr>`)
+            .join("");
+          const ncols = activeColumns(tableId).length + 1;
+          el.querySelector(".report-table").innerHTML = `<thead>${head}</thead><tbody>${body || `<tr><td colspan="${ncols}" style="text-align:center;padding:24px;color:var(--ink-muted)">No spend in this period.</td></tr>`}</tbody>`;
+
+          // Plain-text version (same columns) for email / Slack / Sheets.
+          const cols = activeColumns(tableId);
+          el._copyRows = [
+            ["Account", ...cols.map((k) => COLUMN_CATALOG[k].label)],
+            ...rows.map((r) => [r.name, ...cols.map((k) => {
+              try {
+                return String(COLUMN_CATALOG[k].csv(r) ?? "");
+              } catch (e) {
+                return "";
+              }
+            })]),
+          ];
+          el._summaryText = `${opts.title} (${rangeLabel(entry.range)}): spend ${fmt$(cost)} (prev ${fmt$(pCost)}), ${fmtN(conv)} conversions (prev ${fmtN(pConv)}), cost/conv ${fmt$(cpa)} (prev ${fmt$(pCpa)}). ${within} of ${spent.length} accounts within goal, ${close} close.`;
+        }
+
+        function copyReport(pageId) {
+          const el = document.getElementById(pageId);
+          if (!el || !el._copyRows) return toast("Nothing loaded yet", true);
+          const text = `${el._summaryText}\n\n${el._copyRows.map((r) => r.join("\t")).join("\n")}`;
+          const done = () => toast("Copied — paste into email, Slack or Google Sheets");
+          try {
+            navigator.clipboard.writeText(text).then(done, () => window.prompt("Copy:", text));
+          } catch (e) {
+            window.prompt("Copy:", text);
+          }
+        }
+
+        function exportReportCsv(pageId, name) {
+          const el = document.getElementById(pageId);
+          if (!el || !el._copyRows) return toast("Nothing loaded yet", true);
+          const csv = el._copyRows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
+          const a = document.createElement("a");
+          a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
+          a.download = `${name}-${__localYMD(new Date())}.csv`;
+          a.click();
+          setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+        }
+
+        async function loadPerformancePage(pageId, scope, opts, force) {
+          const el = document.getElementById(pageId);
+          if (!el) return;
+          const status = el.querySelector(".report-status");
+          const range = resolveClientDateRange(scope);
+          const cached = reportCache.get(reportKey(scope, range));
+          if (cached && !force) {
+            status.textContent = "";
+            renderPerformanceReport(el, cached, opts);
+            return;
+          }
+          status.textContent = `Loading ${rangeLabel(range)} from Google Ads… (about a minute for all accounts)`;
+          try {
+            const entry = await getReport(scope, force);
+            status.textContent = "";
+            renderPerformanceReport(el, entry, opts);
+          } catch (err) {
+            status.textContent = `Couldn't load: ${err.message || err}`;
+          }
+        }
+
+        function loadWeeklyPage(force) {
+          const title = weeklyMode === "weekly" ? "This week so far" : "Last week";
+          document.querySelectorAll("[data-weekly-mode]").forEach((b) => b.classList.toggle("active", b.dataset.weeklyMode === weeklyMode));
+          return loadPerformancePage("page-weekly", weeklyMode, { title: `Weekly Google Ads report — ${title}`, projection: false, tableId: "weekly" }, force);
+        }
+
+        function loadMtdPage(force) {
+          return loadPerformancePage("page-mtd", "mtd", { title: "Month-to-date Google Ads report", projection: true, tableId: "mtd" }, force);
+        }
+
+        // ---------- Markets ----------
+        // Franchise → Nielsen metro (Google "DMA Region" id). Shown on the
+        // Markets page so a wrong one is easy to spot.
+        const FRANCHISE_METRO = {
+          1: 200753, 2: 200803, 3: 200825, 5: 200515, 6: 200807, 7: 200803, 8: 200753, 9: 200825, 10: 200641,
+          11: 200566, 12: 200524, 15: 200511, 16: 200751, 17: 200679, 18: 200790, 19: 200623, 20: 200820,
+          21: 200820, 22: 200501, 23: 200524, 24: 200623, 25: 200541, 26: 200504, 27: 200803, 28: 200602,
+          29: 200881, 30: 200534, 31: 200819, 32: 200504, 33: 200825, 34: 200618, 35: 200556, 36: 200570,
+          37: 200501, 38: 200544, 39: 200862, 40: 200501, 41: 200803, 42: 200630, 43: 200640, 44: 200560,
+          45: 200839, 46: 200517, 47: 200623, 48: 200634, 49: 200753, 50: 200524, 51: 200567, 52: 200524,
+          53: 200691, 54: 200807, 55: 200501, 56: 200510, 57: 200803, 58: 200803, 59: 200623, 60: 200527,
+          61: 200635, 62: 200501, 63: 200625, 64: 200504, 65: 200765, 66: 200613, 67: 200511, 68: 200528,
+          70: 200527, 71: 200749, 72: 200652, 73: 200602, 74: 200561, 75: 200528, 76: 200618, 77: 200803,
+          78: 200542, 79: 200507, 80: 200505, 81: 200504, 82: 200557, 83: 200505, 84: 200618, 85: 200555,
+          86: 200512, 87: 200546, 88: 200501, 89: 200602, 90: 200506, 91: 200623, 92: 200819, 93: 200751,
+          94: 200501, 95: 200507, 96: 200752, 97: 200511, 98: 200501, 99: 200753, 100: 200524, 101: 200527,
+          102: 200635,
+        };
+        const METRO_NAMES = {
+          200501: "New York, NY", 200504: "Philadelphia, PA", 200505: "Detroit, MI", 200506: "Boston, MA",
+          200507: "Savannah, GA", 200510: "Cleveland-Akron, OH", 200511: "Washington, DC", 200512: "Baltimore, MD",
+          200515: "Cincinnati, OH", 200517: "Charlotte, NC", 200524: "Atlanta, GA", 200527: "Indianapolis, IN",
+          200528: "Miami-Ft. Lauderdale, FL", 200534: "Orlando, FL", 200541: "Lexington, KY", 200542: "Dayton, OH",
+          200544: "Norfolk / Hampton Roads, VA", 200546: "Columbia, SC", 200555: "Syracuse, NY", 200556: "Richmond, VA",
+          200557: "Knoxville, TN", 200560: "Raleigh-Durham, NC", 200561: "Jacksonville, FL", 200566: "Harrisburg-Lancaster, PA",
+          200567: "Greenville-Spartanburg, SC", 200570: "Myrtle Beach, SC", 200602: "Chicago, IL", 200613: "Minneapolis-St. Paul, MN",
+          200618: "Houston, TX", 200623: "Dallas-Ft. Worth, TX", 200625: "Waco-Temple, TX", 200630: "Birmingham, AL",
+          200634: "Amarillo, TX", 200635: "Austin, TX", 200640: "Memphis, TN", 200641: "San Antonio, TX",
+          200652: "Omaha, NE", 200679: "Des Moines, IA", 200691: "Huntsville, AL", 200749: "Laredo, TX",
+          200751: "Denver, CO", 200752: "Colorado Springs, CO", 200753: "Phoenix, AZ", 200765: "El Paso, TX",
+          200790: "Albuquerque, NM", 200803: "Los Angeles, CA", 200807: "San Francisco Bay Area, CA", 200819: "Seattle-Tacoma, WA",
+          200820: "Portland, OR", 200825: "San Diego, CA", 200839: "Las Vegas, NV", 200862: "Sacramento, CA", 200881: "Spokane, WA",
+        };
+        const marketGeoCache = new Map(); // range key → { rows, failed, fetchedAt }
+        const portalRangeCache = new Map(); // range key → portalData-like
+
+        function metroIdFromResource(v) {
+          const m = String(v || "").match(/(\d{6})/);
+          return m ? Number(m[1]) : null;
+        }
+
+        // Spend/conversions per account × campaign × metro (Google location report).
+        async function fetchMarketGeo(range, targets) {
+          const key = `${range.startDate}|${range.endDate}`;
+          const tools = await ensureAdsMcpTools();
+          const results = await runWithConcurrencyLimit(targets, 3, async (a) => {
+            const res = await mcpSearchRows(
+              tools,
+              a.customerId,
+              {
+                fields: ["campaign.name", "segments.geo_target_metro", "metrics.cost_micros", "metrics.conversions", "metrics.clicks"],
+                resource: "geographic_view",
+                conditions: [`segments.date BETWEEN '${range.startDate}' AND '${range.endDate}'`, "metrics.impressions > 0"],
+                limit: 5000,
+              },
+              { loginCustomerId: ADS_MCP_ANCHOR_MCC_ID },
+            );
+            return { a, res };
+          });
+          const rows = [];
+          let failed = 0;
+          results.forEach((r) => {
+            if (r.status !== "fulfilled" || !r.value || r.value.res.mode === "empty") {
+              failed += 1;
+              return;
+            }
+            r.value.res.rows.forEach((row) => {
+              rows.push({
+                account: r.value.a.name,
+                customerId: r.value.a.customerId,
+                campaign: String(rowValue(row, ["campaign.name"]) || ""),
+                metro: metroIdFromResource(rowValue(row, ["segments.geo_target_metro", "segments.geoTargetMetro"])),
+                cost: asNumber(rowValue(row, ["metrics.cost_micros", "metrics.costMicros"]), 0) / 1e6,
+                conv: asNumber(rowValue(row, ["metrics.conversions"]), 0),
+                clicks: asNumber(rowValue(row, ["metrics.clicks"]), 0),
               });
             });
           });
+          const entry = { rows, failed, fetchedAt: new Date() };
+          marketGeoCache.set(key, entry);
+          return entry;
+        }
 
-          termRows.sort((a, b) => b.cost - a.cost);
-          return termRows;
+        function buildMarkets(geo, portal, ga4) {
+          const markets = new Map();
+          const ensure = (metro) => {
+            if (!markets.has(metro)) {
+              markets.set(metro, {
+                metro,
+                name: metro == null ? "Outside franchise metros / unknown" : METRO_NAMES[metro] || `Metro ${metro}`,
+                cost: 0, conv: 0, clicks: 0, sources: new Map(), franchises: [],
+                ppcLeads: 0, totalLeads: 0, booked: 0, bookedValue: 0,
+                ga4PaidLeads: ga4 ? 0 : null, ga4AllLeads: ga4 ? 0 : null,
+              });
+            }
+            return markets.get(metro);
+          };
+          const franchiseMetros = new Set(Object.values(FRANCHISE_METRO));
+          geo.rows.forEach((r) => {
+            const metro = r.metro != null && franchiseMetros.has(r.metro) ? r.metro : null;
+            const m = ensure(metro);
+            m.cost += r.cost;
+            m.conv += r.conv;
+            m.clicks += r.clicks;
+            const sk = `${r.account}||${r.campaign}`;
+            const s = m.sources.get(sk) || { account: r.account, campaign: r.campaign, cost: 0, conv: 0, hq: r.customerId === "8261103563" };
+            s.cost += r.cost;
+            s.conv += r.conv;
+            m.sources.set(sk, s);
+          });
+          if (portal) {
+            portal.franchises.forEach((f) => {
+              const metro = FRANCHISE_METRO[f.id];
+              if (metro == null || !(f.totalLeads > 0)) return;
+              const m = ensure(metro);
+              m.franchises.push(f);
+              m.ppcLeads += f.ppcLeads;
+              m.totalLeads += f.totalLeads;
+              m.booked += f.booked;
+              m.bookedValue += f.bookedValueCents / 100;
+            });
+          }
+          if (ga4) {
+            ga4.byMetro.forEach((e, metro) => {
+              const m = ensure(metro);
+              m.ga4PaidLeads = (m.ga4PaidLeads || 0) + e.paid;
+              m.ga4AllLeads = (m.ga4AllLeads || 0) + e.all;
+            });
+          }
+          const list = Array.from(markets.values()).filter((m) => m.cost >= 1 || m.ppcLeads > 0 || (m.ga4PaidLeads || 0) > 0);
+          list.forEach((m) => {
+            m.cpa = m.conv > 0 ? m.cost / m.conv : null;
+            m.costPerLead = m.ppcLeads > 0 && m.cost > 0 ? m.cost / m.ppcLeads : null;
+            m.bookRate = m.totalLeads > 0 ? m.booked / m.totalLeads : 0;
+            m.estBookings = m.ppcLeads * m.bookRate;
+            m.costPerBooking = m.estBookings > 0 && m.cost > 0 ? m.cost / m.estBookings : null;
+            m.avgBooking = m.booked > 0 ? m.bookedValue / m.booked : 0;
+            m.estRoas = m.cost > 0 && m.estBookings > 0 && m.avgBooking > 0 ? (m.estBookings * m.avgBooking) / m.cost : null;
+            m.trackingRatio = m.ppcLeads > 0 ? m.conv / m.ppcLeads : null;
+            m.hqCost = Array.from(m.sources.values()).filter((s) => s.hq).reduce((t, s) => t + s.cost, 0);
+          });
+          list.sort((a, b) => (a.metro == null) - (b.metro == null) || b.cost - a.cost);
+          return list;
+        }
+
+        function toggleMarket(metro) {
+          const k = String(metro);
+          if (marketsExpanded.has(k)) marketsExpanded.delete(k);
+          else marketsExpanded.add(k);
+          renderMarketsTable();
+        }
+
+        let marketsLast = null; // { list, range, geo, portal }
+
+        function renderMarketsTable() {
+          const el = document.getElementById("page-markets");
+          if (!el || !marketsLast) return;
+          const { list, range, geo, portal, ga4 } = marketsLast;
+          const totals = list.reduce((t, m) => ({ cost: t.cost + m.cost, conv: t.conv + m.conv, leads: t.leads + m.ppcLeads, bk: t.bk + m.estBookings }), { cost: 0, conv: 0, leads: 0, bk: 0 });
+          el.querySelector(".report-kpis").innerHTML = [
+            kpiCard("Ad spend (all accounts)", fmt$(totals.cost), `${fmt$(list.reduce((t, m) => t + m.hqCost, 0))} from GTHQ`),
+            kpiCard("Google conversions", fmtN(totals.conv), `${totals.conv > 0 ? `${fmt$(totals.cost / totals.conv)} / conv` : ""}${ga4 ? ` · GA4 paid leads ${fmtN(list.reduce((t, m) => t + (m.ga4PaidLeads || 0), 0))}` : ""}`),
+            kpiCard("Portal PPC leads", portal ? fmtN(totals.leads) : "—", portal ? (totals.leads > 0 ? `${fmt$(totals.cost / totals.leads)} / lead` : "") : "Connect Portal to see leads"),
+            kpiCard("Est. bookings from ads", portal ? totals.bk.toFixed(0) : "—", portal && totals.bk > 0 ? `${fmt$(totals.cost / totals.bk)} / booking` : ""),
+          ].join("");
+          const unloc = marketsLast.unlocated;
+          const ga4Note = ga4
+            ? `${ga4.nonCustomer ? ` · GA4 also counted ${ga4.nonCustomer} "leads" from careers/partnership/reminder forms (excluded here)` : ""}${ga4.unmapped.size ? ` · GA4 lead pages not mapped to a metro: ${Array.from(ga4.unmapped.entries()).sort((x, y) => y[1] - x[1]).slice(0, 5).map(([k, v]) => `${k} (${v})`).join(", ")}` : ""}`
+            : " · Connect GA4 for the 3-way lead check";
+          el.querySelector(".report-meta").textContent = `${rangeLabel(range)} · spend split by metro using Google's location report (every account, incl. GTHQ)${unloc >= 1 ? ` · ${fmt$(unloc)} of ${fmt$(marketsLast.acctTotal)} couldn't be placed in a metro by Google` : ""}${geo.failed ? ` · ${geo.failed} account(s) failed to load` : ""}${ga4Note}`;
+          const rows = list
+            .map((m) => {
+              const open = marketsExpanded.has(String(m.metro));
+              const trackCell = leadCheckCell(m, portal, ga4);
+              const sources = Array.from(m.sources.values()).filter((s) => s.cost >= 0.5).sort((a, b) => b.cost - a.cost);
+              const drill = open
+                ? `<tr class="drill-row"><td colspan="11">
+                    <div class="drill-notes"><strong>Franchises:</strong> ${m.franchises.length ? m.franchises.map((f) => `${escapeHtml(f.label)} — ${f.ppcLeads} PPC / ${f.totalLeads} leads, ${f.booked} booked`).join(" · ") : "none with leads in this period"}</div>
+                    <table class="drill-table"><thead><tr><th>Account</th><th>Campaign</th><th>Spend in this metro</th><th>Conv</th><th>Cost/Conv</th></tr></thead><tbody>
+                    ${sources.map((s) => `<tr><td>${s.hq ? "🏢 " : ""}${escapeHtml(s.account)}</td><td>${escapeHtml(s.campaign)}</td><td>${fmt$(s.cost)}</td><td>${fmtN(s.conv)}</td><td>${s.conv > 0 ? fmt$(s.cost / s.conv) : "—"}</td></tr>`).join("") || `<tr><td colspan="5" style="color:var(--ink-muted)">No ad spend located in this metro.</td></tr>`}
+                    </tbody></table></td></tr>`
+                : "";
+              return `<tr class="${open ? "drill-open" : ""}">
+                <td><button class="drill-btn" onclick="toggleMarket('${m.metro}')">${open ? "▾" : "▸"}</button> ${escapeHtml(m.name)}</td>
+                <td>${fmt$(m.cost)}${m.hqCost >= 1 ? `<div class="delta" style="color:var(--ink-muted)">${fmt$(m.hqCost)} GTHQ</div>` : ""}</td>
+                <td>${fmtN(m.conv)}</td>
+                <td>${m.cpa != null ? fmt$(m.cpa) : "—"}</td>
+                <td>${portal ? fmtN(m.ppcLeads) : "—"}</td>
+                <td>${m.costPerLead != null ? fmt$(m.costPerLead) : "—"}</td>
+                <td>${portal && m.totalLeads ? `${Math.round(m.bookRate * 100)}%` : "—"}</td>
+                <td>${portal && m.ppcLeads ? m.estBookings.toFixed(1) : "—"}</td>
+                <td>${m.costPerBooking != null ? fmt$(m.costPerBooking) : "—"}</td>
+                <td>${m.estRoas != null ? `${m.estRoas.toFixed(1)}×` : "—"}</td>
+                <td>${trackCell}</td>
+              </tr>${drill}`;
+            })
+            .join("");
+          el.querySelector(".report-table").innerHTML = `<thead><tr>
+              <th>Metro</th><th>Ad spend</th><th>Google conv</th><th>Cost/Conv</th><th>Portal PPC leads</th><th>Cost/Lead</th>
+              <th title="Share of ALL Portal leads in the metro that booked">Book rate</th><th title="PPC leads × book rate">Est. bookings</th><th>Cost/Booking</th>
+              <th title="Est. bookings × average booking value ÷ spend">Est. ROAS</th><th title="Google Ads conversions (G) · GA4 paid leads (GA4) · Portal PPC leads (P) — ⚠️ when they differ by more than 1.6×">Lead check</th>
+            </tr></thead><tbody>${rows || `<tr><td colspan="11" style="text-align:center;padding:24px;color:var(--ink-muted)">No data.</td></tr>`}</tbody>`;
+          el._copyRows = [
+            ["Metro", "Ad spend", "GTHQ spend", "Google conv", "GA4 paid leads", "Cost/Conv", "Portal PPC leads", "Cost/Lead", "Book rate", "Est. bookings", "Cost/Booking", "Est. ROAS"],
+            ...list.map((m) => [
+              m.name, m.cost.toFixed(2), m.hqCost.toFixed(2), m.conv.toFixed(1), m.ga4PaidLeads ?? "", m.cpa != null ? m.cpa.toFixed(2) : "",
+              portal ? m.ppcLeads : "", m.costPerLead != null ? m.costPerLead.toFixed(2) : "", portal ? `${Math.round(m.bookRate * 100)}%` : "",
+              portal ? m.estBookings.toFixed(1) : "", m.costPerBooking != null ? m.costPerBooking.toFixed(2) : "", m.estRoas != null ? m.estRoas.toFixed(1) : "",
+            ]),
+          ];
+          el._summaryText = `Markets (${rangeLabel(range)}): ${fmt$(totals.cost)} ad spend, ${fmtN(totals.conv)} Google conversions${portal ? `, ${fmtN(totals.leads)} Portal PPC leads (${totals.leads ? fmt$(totals.cost / totals.leads) : "—"}/lead), ~${totals.bk.toFixed(0)} bookings` : ""}.`;
+          const mapEl = el.querySelector(".metro-map");
+          if (mapEl && portal) {
+            const groups = new Map();
+            portal.franchises.forEach((f) => {
+              const metro = FRANCHISE_METRO[f.id];
+              const name = metro ? METRO_NAMES[metro] || metro : "❓ not mapped";
+              if (!groups.has(name)) groups.set(name, []);
+              groups.get(name).push(f.label);
+            });
+            mapEl.innerHTML = Array.from(groups.entries())
+              .sort((a, b) => String(a[0]).localeCompare(String(b[0])))
+              .map(([k, v]) => `<div><strong>${escapeHtml(String(k))}:</strong> ${v.map(escapeHtml).join(", ")}</div>`)
+              .join("");
+          }
+        }
+
+        async function loadMarketsPage(force) {
+          const el = document.getElementById("page-markets");
+          if (!el) return;
+          document.querySelectorAll("[data-markets-scope]").forEach((b) => b.classList.toggle("active", b.dataset.marketsScope === marketsScope));
+          const status = el.querySelector(".report-status");
+          const range = resolveClientDateRange(marketsScope);
+          const key = `${range.startDate}|${range.endDate}`;
+          try {
+            const token = await ensureAdsMcpAccessToken();
+            if (!token) throw new Error("Connect Ads MCP first (button at the top).");
+            const targets = (liveRange ? accounts.filter((a) => a._liveFetchId === liveRange.fetchId) : accounts).filter((a) => a.customerId);
+            if (!targets.length) throw new Error("Accounts haven't loaded yet — wait for the live refresh to finish, then click Refresh.");
+            status.textContent = `Loading ${rangeLabel(range)}: location split for ${targets.length} accounts${isPortalConnected() ? " + Portal leads" : ""}…`;
+            const geoP = !force && marketGeoCache.has(key) ? Promise.resolve(marketGeoCache.get(key)) : fetchMarketGeo(range, targets);
+            const portalP = !isPortalConnected()
+              ? Promise.resolve(null)
+              : !force && portalRangeCache.has(key)
+                ? Promise.resolve(portalRangeCache.get(key))
+                : fetchPortalData(range.startDate, range.endDate)
+                    .then((d) => (portalRangeCache.set(key, d), d))
+                    .catch((e) => {
+                      toast(`Portal: ${e.message || e}`, true);
+                      return null;
+                    });
+            const ga4P = !isGa4Connected()
+              ? Promise.resolve(null)
+              : (force ? (ga4LeadsCache.delete(key), fetchGa4Leads(range)) : fetchGa4Leads(range)).catch((e) => {
+                  toast(`GA4: ${e.message || e}`, true);
+                  return null;
+                });
+            const [geo, portal, ga4] = await Promise.all([geoP, portalP, ga4P]);
+            marketsLast = { list: buildMarkets(geo, portal, ga4), range, geo, portal, ga4 };
+            // How much account spend Google could not place in any metro.
+            const rep = reportCache.get(reportKey(marketsScope, range));
+            if (rep) {
+              const acctTotal = rep.accounts.reduce((t, a) => t + (a.cost || 0), 0);
+              const geoTotal = geo.rows.reduce((t, r) => t + r.cost, 0);
+              marketsLast.unlocated = Math.max(0, acctTotal - geoTotal);
+              marketsLast.acctTotal = acctTotal;
+            }
+            status.textContent = portal ? "" : "Connect Portal (button at the top) to add real leads, bookings and cost per booking.";
+            renderMarketsTable();
+          } catch (err) {
+            status.textContent = `Couldn't load: ${err.message || err}`;
+          }
+        }
+
+        // ---------- Page router ----------
+        const PAGES = ["today", "weekly", "mtd", "markets", "traffic", "accounts", "search", "changes", "health"];
+        let activePage = "today";
+
+        function renderCurrentPage(force) {
+          if (activePage === "weekly") return loadWeeklyPage(force);
+          if (activePage === "mtd") return loadMtdPage(force);
+          if (activePage === "markets") return loadMarketsPage(force);
+          if (activePage === "health") return renderHealthPage();
+          if (activePage === "traffic") return loadTrafficPage(force);
+        }
+
+        function showPage(name, opts) {
+          if (!PAGES.includes(name)) name = "today";
+          activePage = name;
+          document.querySelectorAll("[data-page]").forEach((el) => {
+            el.style.display = el.dataset.page === name ? "" : "none";
+          });
+          document.querySelectorAll("[data-nav]").forEach((b) => b.classList.toggle("active", b.dataset.nav === name));
+          // The View (date range) buttons only drive Today and Accounts.
+          const scopeBar = document.getElementById("dateScope");
+          const scopeGroup = scopeBar && scopeBar.closest(".control-group");
+          if (scopeGroup) scopeGroup.style.display = name === "today" || name === "accounts" ? "" : "none";
+          if (!opts || !opts.fromHash) {
+            try {
+              window.history.replaceState(null, "", `${location.pathname}${location.search}#${name}`);
+            } catch (e) {}
+          }
+          renderCurrentPage(false);
+        }
+
+        function initPageRouter() {
+          document.querySelectorAll("[data-nav]").forEach((b) => {
+            if (b.dataset.boundClick) return;
+            b.addEventListener("click", () => showPage(b.dataset.nav));
+            b.dataset.boundClick = "true";
+          });
+          document.querySelectorAll("[data-weekly-mode]").forEach((b) => {
+            if (b.dataset.boundClick) return;
+            b.addEventListener("click", () => {
+              weeklyMode = b.dataset.weeklyMode;
+              loadWeeklyPage(false);
+            });
+            b.dataset.boundClick = "true";
+          });
+          document.querySelectorAll("[data-traffic-scope]").forEach((b) => {
+            if (b.dataset.boundClick) return;
+            b.addEventListener("click", () => {
+              trafficScope = b.dataset.trafficScope;
+              loadTrafficPage(false);
+            });
+            b.dataset.boundClick = "true";
+          });
+          document.querySelectorAll("[data-markets-scope]").forEach((b) => {
+            if (b.dataset.boundClick) return;
+            b.addEventListener("click", () => {
+              marketsScope = b.dataset.marketsScope;
+              loadMarketsPage(false);
+            });
+            b.dataset.boundClick = "true";
+          });
+          window.addEventListener("hashchange", () => showPage(location.hash.replace("#", ""), { fromHash: true }));
+          showPage(location.hash.replace("#", "") || "today", { fromHash: true });
+        }
+
+        // ============ PORTAL REPORTS (leads & bookings) ============
+        // Connects to the GameTruck Portal Reports MCP with the user's own
+        // Portal login (OAuth + PKCE, same pattern as Ads MCP). All calls go
+        // through /api/portal-mcp-proxy because the Portal doesn't allow
+        // browser (CORS) requests.
+        const PORTAL_MCP_URL = "https://api.gametruck.com/mcp/reporting";
+        const PORTAL_AUTH_KEY = "gt_portal_mcp_auth_v1";
+        const PORTAL_PENDING_KEY = "gt_portal_mcp_pending_v1";
+        const PORTAL_STATE_PREFIX = "portal.";
+        // Ad accounts whose campaigns serve more than one franchise.
+        // NY-Long-Island's account also runs the Westchester (098) campaigns.
+        const PORTAL_EXTRA_FRANCHISES = { "4738714801": [98] };
+        // Accounts that aren't a single franchise (national/brand) — no match.
+        const PORTAL_NO_MATCH = new Set(["8261103563"]);
+
+        let portalAuth = null;
+        let portalSessionId = null;
+        let portalToolNames = null;
+        let portalData = null; // { range, franchises: Map<id, {...}>, fetchedAt }
+
+        async function portalFetch(url, init) {
+          const i = init || {};
+          return await fetch("/api/portal-mcp-proxy", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              forwardUrl: url,
+              method: i.method || "GET",
+              headers: headersToObject(i.headers),
+              body: i.body != null ? bodyToProxyString(i.body) : undefined,
+            }),
+          });
+        }
+
+        async function portalJson(url, init, label) {
+          const res = await portalFetch(url, init);
+          const text = await res.text();
+          if (!res.ok) throw new Error(`${label} failed (${res.status}): ${text.slice(0, 300)}`);
+          try {
+            return JSON.parse(text);
+          } catch (e) {
+            throw new Error(`${label} returned non-JSON`);
+          }
+        }
+
+        function loadPortalAuthState() {
+          try {
+            const raw = localStorage.getItem(PORTAL_AUTH_KEY);
+            portalAuth = raw ? JSON.parse(raw) : null;
+          } catch (e) {
+            portalAuth = null;
+          }
+        }
+
+        function persistPortalAuthState() {
+          try {
+            if (portalAuth) localStorage.setItem(PORTAL_AUTH_KEY, JSON.stringify(portalAuth));
+            else localStorage.removeItem(PORTAL_AUTH_KEY);
+          } catch (e) {}
+        }
+
+        function isPortalConnected() {
+          return !!(portalAuth && (portalAuth.accessToken || portalAuth.refreshToken));
+        }
+
+        function updatePortalUi() {
+          const c = document.getElementById("portalConnectBtn");
+          const d = document.getElementById("portalDisconnectBtn");
+          const connected = isPortalConnected();
+          if (IS_FILE_ORIGIN) {
+            if (c) c.disabled = true;
+            return;
+          }
+          if (c) {
+            c.style.display = connected ? "none" : "inline-flex";
+            c.disabled = false;
+          }
+          if (d) d.style.display = connected ? "inline-flex" : "none";
+        }
+
+        async function discoverPortalOAuth() {
+          const base = new URL(PORTAL_MCP_URL);
+          const resourceMeta = await portalJson(
+            `${base.origin}/.well-known/oauth-protected-resource${base.pathname}`,
+            {},
+            "Portal resource discovery",
+          );
+          const authServer = String((resourceMeta.authorization_servers || [])[0] || base.origin).replace(/\/+$/, "");
+          const authMeta = await portalJson(
+            `${authServer}/.well-known/oauth-authorization-server`,
+            {},
+            "Portal authorization-server discovery",
+          );
+          return {
+            resource: resourceMeta.resource || PORTAL_MCP_URL,
+            authorizationEndpoint: authMeta.authorization_endpoint,
+            tokenEndpoint: authMeta.token_endpoint,
+            registrationEndpoint: authMeta.registration_endpoint,
+            scope: (resourceMeta.scopes_supported || authMeta.scopes_supported || ["mcp:use"]).join(" "),
+          };
+        }
+
+        async function connectPortal() {
+          if (IS_FILE_ORIGIN) return toast(FILE_MODE_HINT, true);
+          try {
+            toast("Connecting to Portal…");
+            const discovery = await discoverPortalOAuth();
+            let clientId = portalAuth && portalAuth.clientId;
+            let clientSecret = portalAuth && portalAuth.clientSecret;
+            if (!clientId) {
+              const reg = await portalJson(
+                discovery.registrationEndpoint,
+                {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    client_name: "GameTruck Ads Dashboard",
+                    redirect_uris: [getAdsRedirectUri()],
+                    grant_types: ["authorization_code", "refresh_token"],
+                    response_types: ["code"],
+                    token_endpoint_auth_method: "client_secret_post",
+                    scope: discovery.scope,
+                  }),
+                },
+                "Portal app registration",
+              );
+              clientId = reg.client_id;
+              clientSecret = reg.client_secret || null; // public clients get none
+              if (!clientId) throw new Error("Portal registration returned no client_id");
+            }
+            const codeVerifier = randomString(96);
+            const codeChallenge = await pkceChallenge(codeVerifier);
+            const state = PORTAL_STATE_PREFIX + randomString(40);
+            const redirectUri = getAdsRedirectUri();
+            sessionStorage.setItem(
+              PORTAL_PENDING_KEY,
+              JSON.stringify({ state, codeVerifier, redirectUri, clientId, clientSecret, ...discovery }),
+            );
+            const authUrl = new URL(discovery.authorizationEndpoint);
+            authUrl.searchParams.set("response_type", "code");
+            authUrl.searchParams.set("client_id", clientId);
+            authUrl.searchParams.set("redirect_uri", redirectUri);
+            authUrl.searchParams.set("scope", discovery.scope);
+            authUrl.searchParams.set("state", state);
+            authUrl.searchParams.set("code_challenge", codeChallenge);
+            authUrl.searchParams.set("code_challenge_method", "S256");
+            authUrl.searchParams.set("resource", discovery.resource);
+            window.location.assign(authUrl.toString());
+          } catch (err) {
+            console.error(err);
+            toast(err.message || "Unable to connect Portal", true);
+          }
+        }
+
+        function disconnectPortal() {
+          portalAuth = null;
+          portalSessionId = null;
+          portalToolNames = null;
+          portalData = null;
+          persistPortalAuthState();
+          updatePortalUi();
+          render();
+          toast("Portal disconnected");
+        }
+
+        // Handles the OAuth redirect when it belongs to the Portal login.
+        // Returns true if it consumed the callback.
+        async function maybeHandlePortalOAuthCallback() {
+          if (IS_FILE_ORIGIN) return false;
+          const url = new URL(window.location.href);
+          const state = url.searchParams.get("state") || "";
+          if (!state.startsWith(PORTAL_STATE_PREFIX)) return false;
+          const code = url.searchParams.get("code");
+          const error = url.searchParams.get("error");
+          try {
+            const pendingRaw = sessionStorage.getItem(PORTAL_PENDING_KEY);
+            sessionStorage.removeItem(PORTAL_PENDING_KEY);
+            if (error) throw new Error(`Portal login failed: ${url.searchParams.get("error_description") || error}`);
+            const pending = pendingRaw ? JSON.parse(pendingRaw) : null;
+            if (!pending || pending.state !== state) throw new Error("Portal login state mismatch — click Connect Portal again.");
+            const form = {
+              grant_type: "authorization_code",
+              code,
+              redirect_uri: pending.redirectUri,
+              client_id: pending.clientId,
+              code_verifier: pending.codeVerifier,
+            };
+            if (pending.clientSecret) form.client_secret = pending.clientSecret;
+            const token = await portalJson(
+              pending.tokenEndpoint,
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: new URLSearchParams(form),
+              },
+              "Portal token exchange",
+            );
+            portalAuth = {
+              clientId: pending.clientId,
+              clientSecret: pending.clientSecret || null,
+              tokenEndpoint: pending.tokenEndpoint,
+              resource: pending.resource,
+              accessToken: token.access_token,
+              refreshToken: token.refresh_token || null,
+              expiresAt: Date.now() + Number(token.expires_in || 3600) * 1000,
+            };
+            persistPortalAuthState();
+            toast("Portal connected");
+          } catch (err) {
+            console.error(err);
+            toast(err.message || "Portal login failed", true);
+          } finally {
+            ["code", "state", "scope", "error", "error_description", "iss"].forEach((p) => url.searchParams.delete(p));
+            const q = url.searchParams.toString();
+            window.history.replaceState({}, "", `${url.pathname}${q ? `?${q}` : ""}${url.hash || ""}`);
+            updatePortalUi();
+          }
+          return true;
+        }
+
+        async function ensurePortalAccessToken() {
+          if (!portalAuth) return null;
+          if (portalAuth.accessToken && Date.now() < Number(portalAuth.expiresAt || 0) - 60000) return portalAuth.accessToken;
+          if (!portalAuth.refreshToken) return null;
+          const form = {
+            grant_type: "refresh_token",
+            refresh_token: portalAuth.refreshToken,
+            client_id: portalAuth.clientId,
+          };
+          if (portalAuth.clientSecret) form.client_secret = portalAuth.clientSecret;
+          const t = await portalJson(
+            portalAuth.tokenEndpoint,
+            { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: new URLSearchParams(form) },
+            "Portal token refresh",
+          );
+          portalAuth.accessToken = t.access_token;
+          portalAuth.expiresAt = Date.now() + Number(t.expires_in || 3600) * 1000;
+          if (t.refresh_token) portalAuth.refreshToken = t.refresh_token;
+          persistPortalAuthState();
+          return portalAuth.accessToken;
+        }
+
+        async function portalRpc(method, params, notification) {
+          const token = await ensurePortalAccessToken();
+          if (!token) throw new Error("Portal session expired — click Connect Portal.");
+          const id = notification ? undefined : `p${Date.now()}${Math.random().toString(16).slice(2, 8)}`;
+          const payload = { jsonrpc: "2.0", method };
+          if (id) payload.id = id;
+          if (params !== undefined) payload.params = params;
+          const headers = {
+            "Content-Type": "application/json",
+            Accept: "application/json, text/event-stream",
+            Authorization: `Bearer ${token}`,
+          };
+          if (portalSessionId) headers["mcp-session-id"] = portalSessionId;
+          const res = await portalFetch(PORTAL_MCP_URL, { method: "POST", headers, body: JSON.stringify(payload) });
+          const sid = res.headers.get("mcp-session-id");
+          if (sid) portalSessionId = sid;
+          const text = await res.text();
+          if (res.status === 401) {
+            portalAuth.accessToken = null;
+            persistPortalAuthState();
+            throw new Error("Portal login expired — click Connect Portal.");
+          }
+          if (!res.ok) throw new Error(`Portal request failed (${res.status}): ${text.slice(0, 200)}`);
+          if (notification) return null;
+          let rpc = null;
+          try {
+            rpc = JSON.parse(text);
+          } catch (e) {
+            rpc = parseRpcFromSse(text, id);
+          }
+          if (!rpc) throw new Error("Unable to parse Portal response");
+          if (rpc.error) throw new Error(rpc.error.message || JSON.stringify(rpc.error));
+          return rpc.result;
+        }
+
+        async function ensurePortalTools() {
+          if (portalToolNames) return portalToolNames;
+          try {
+            await portalRpc("initialize", {
+              protocolVersion: "2025-06-18",
+              capabilities: {},
+              clientInfo: { name: "gametruck-ads-dashboard", version: "1.0.0" },
+            });
+            await portalRpc("notifications/initialized", undefined, true);
+          } catch (e) {
+            if (/expired|login/i.test(e.message || "")) throw e;
+          }
+          const listed = await portalRpc("tools/list", {});
+          const tools = (listed && listed.tools) || [];
+          portalToolNames = {
+            leadChannel: resolveToolName(tools, "lead_channel_report"),
+            leadStatus: resolveToolName(tools, "lead_status_report"),
+          };
+          if (!portalToolNames.leadChannel || !portalToolNames.leadStatus) {
+            throw new Error("Portal is missing the lead_channel / lead_status reports");
+          }
+          return portalToolNames;
+        }
+
+        // Reads summary_by_franchise → Map<franchiseId, {label, counts}>.
+        function readPortalFranchiseSummary(report, column) {
+          const out = new Map();
+          const rows = (report && report.summary_by_franchise) || [];
+          rows.forEach((r) => {
+            const id = Number(r && r.meta && r.meta.key);
+            if (!Number.isFinite(id)) return;
+            const base = (r.data && r.data[column] && r.data[column].base) || {};
+            out.set(id, { label: String((r.meta && r.meta.label) || id), base });
+          });
+          return out;
+        }
+
+        async function fetchPortalData(startDate, endDate) {
+          const names = await ensurePortalTools();
+          const args = { start_date: startDate, end_date: endDate, group_by: "year" };
+          const [channelRes, statusRes] = await Promise.all([
+            portalRpc("tools/call", { name: names.leadChannel, arguments: args }),
+            portalRpc("tools/call", { name: names.leadStatus, arguments: args }),
+          ]);
+          const channel = readPortalFranchiseSummary(parseToolResult(channelRes), "channel");
+          const status = readPortalFranchiseSummary(parseToolResult(statusRes), "status");
+          const franchises = new Map();
+          const ids = new Set([...channel.keys(), ...status.keys()]);
+          ids.forEach((id) => {
+            const ch = (channel.get(id) || {}).base || {};
+            const st = (status.get(id) || {}).base || {};
+            const sumCounts = (o) => Object.values(o).reduce((s, v) => s + (Number(v && v.count) || 0), 0);
+            franchises.set(id, {
+              id,
+              label: (channel.get(id) || status.get(id)).label,
+              ppcLeads: Number(ch.PPC && ch.PPC.count) || 0,
+              ppcValueCents: Number(ch.PPC && ch.PPC.sum) || 0,
+              totalLeads: sumCounts(ch) || sumCounts(st),
+              booked: Number(st.Booked && st.Booked.count) || 0,
+              bookedValueCents: Number(st.Booked && st.Booked.sum) || 0,
+            });
+          });
+          return { range: { startDate, endDate }, franchises, fetchedAt: new Date() };
+        }
+
+        const portalNameTokens = (s) =>
+          String(s || "")
+            .toLowerCase()
+            .replace(/\(\s*\d+\s*\)/g, " ")
+            .replace(/[^a-z0-9]+/g, " ")
+            .split(" ")
+            .filter((w) => w && w.length > 1 && !["v2", "the"].includes(w));
+
+        // Franchise IDs an ad account maps to: the number in its name
+        // ("(062)"), else the best name match, plus any known extras.
+        function franchiseIdsForAccount(a, franchises) {
+          if (!a || PORTAL_NO_MATCH.has(String(a.customerId))) return [];
+          const ids = [];
+          const m = String(a.name || "").match(/\((\d{1,4})\)/);
+          if (m && franchises.has(Number(m[1]))) ids.push(Number(m[1]));
+          if (!ids.length) {
+            const mine = new Set(portalNameTokens(a.name));
+            let best = null;
+            let bestScore = 0;
+            franchises.forEach((f) => {
+              const theirs = portalNameTokens(f.label);
+              if (!theirs.length) return;
+              const shared = theirs.filter((w) => mine.has(w)).length;
+              const score = shared / Math.max(mine.size, theirs.length);
+              if (score > bestScore) {
+                bestScore = score;
+                best = f.id;
+              }
+            });
+            if (best != null && bestScore >= 0.6) ids.push(best);
+          }
+          (PORTAL_EXTRA_FRANCHISES[String(a.customerId)] || []).forEach((id) => {
+            if (franchises.has(id) && !ids.includes(id)) ids.push(id);
+          });
+          return ids;
+        }
+
+        // Combines Portal leads/bookings with ad spend for one account.
+        function portalMetricsForAccount(a) {
+          if (!portalData || !liveRange) return null;
+          if (portalData.range.startDate !== liveRange.startDate || portalData.range.endDate !== liveRange.endDate) return null;
+          const ids = franchiseIdsForAccount(a, portalData.franchises);
+          if (!ids.length) return null;
+          const fs = ids.map((id) => portalData.franchises.get(id));
+          const t = fs.reduce(
+            (s, f) => ({
+              ppcLeads: s.ppcLeads + f.ppcLeads,
+              totalLeads: s.totalLeads + f.totalLeads,
+              booked: s.booked + f.booked,
+              bookedValue: s.bookedValue + f.bookedValueCents / 100,
+            }),
+            { ppcLeads: 0, totalLeads: 0, booked: 0, bookedValue: 0 },
+          );
+          const bookRate = t.totalLeads > 0 ? t.booked / t.totalLeads : 0;
+          const estBookings = t.ppcLeads * bookRate;
+          const avgBooking = t.booked > 0 ? t.bookedValue / t.booked : 0;
+          const estRevenue = estBookings * avgBooking;
+          const hasSpend = (a.cost || 0) > 0;
+          if (!hasSpend) {
+            // Leads but no spend in this account: they came from other
+            // campaigns (e.g. national GTHQ), so no cost or tracking maths.
+            return {
+              labels: fs.map((f) => f.label),
+              ppcLeads: t.ppcLeads,
+              totalLeads: t.totalLeads,
+              booked: t.booked,
+              bookRate,
+              estBookings,
+              avgBooking,
+              noSpend: true,
+              costPerLead: null,
+              costPerBooking: null,
+              estRoas: null,
+              trackingRatio: null,
+            };
+          }
+          return {
+            labels: fs.map((f) => f.label),
+            ppcLeads: t.ppcLeads,
+            totalLeads: t.totalLeads,
+            booked: t.booked,
+            bookRate,
+            estBookings,
+            avgBooking,
+            costPerLead: t.ppcLeads > 0 ? a.cost / t.ppcLeads : null,
+            costPerBooking: estBookings > 0 ? a.cost / estBookings : null,
+            estRoas: a.cost > 0 && estRevenue > 0 ? estRevenue / a.cost : null,
+            // Share of Portal PPC leads that Google Ads counted as conversions.
+            trackingRatio: t.ppcLeads > 0 ? (a.conv || 0) / t.ppcLeads : null,
+          };
+        }
+
+        function portalCellHtml(a) {
+          if (!isPortalConnected()) return `<span style="color:var(--ink-muted)" title="Connect Portal to see real leads and bookings">—</span>`;
+          const p = portalMetricsForAccount(a);
+          if (!p) return `<span style="color:var(--ink-muted)" title="${portalData ? "No matching franchise in the Portal" : "Loading Portal data…"}">—</span>`;
+          const tip = `${p.labels.join(" + ")}: ${p.ppcLeads} PPC leads of ${p.totalLeads} total · ${p.booked} booked (${Math.round(p.bookRate * 100)}% of all leads). Portal 'PPC' can include leads from the national GTHQ campaigns; bookings are estimated from the franchise's overall booking rate.`;
+          if (p.noSpend) return `<div title="${escapeHtml(tip)}" style="color:var(--ink-muted)">${fmtN(p.ppcLeads)} leads</div><div class="delta" style="color:var(--ink-muted)">no spend in this account</div>`;
+          return `<div title="${escapeHtml(tip)}">${fmtN(p.ppcLeads)} leads${p.costPerLead != null ? ` · ${fmt$(p.costPerLead)}` : ""}</div>
+            <div class="delta" style="color:var(--ink-muted)">~${p.estBookings.toFixed(1)} bookings${p.costPerBooking != null ? ` · ${fmt$(p.costPerBooking)}/bkg` : ""}${p.estRoas != null ? ` · ${p.estRoas.toFixed(1)}× ROAS` : ""}</div>`;
+        }
+
+        function portalDrillNoteHtml(a) {
+          const p = isPortalConnected() ? portalMetricsForAccount(a) : null;
+          if (!p) return "";
+          const lines = [
+            `Portal (${p.labels.join(" + ")}): ${fmtN(p.ppcLeads)} PPC leads${p.costPerLead != null ? ` (${fmt$(p.costPerLead)}/lead)` : ""} · ${Math.round(p.bookRate * 100)}% of all leads book · est. ${p.estBookings.toFixed(1)} bookings from ads${p.costPerBooking != null ? ` at ${fmt$(p.costPerBooking)} each` : ""}${p.avgBooking ? ` · avg booking ${fmt$(p.avgBooking)}` : ""}`,
+          ];
+          if (p.trackingRatio != null && p.ppcLeads >= 10) {
+            if (p.trackingRatio < 0.5) {
+              lines.push(`Google Ads counted ${fmtN(a.conv)} conversions vs ${fmtN(p.ppcLeads)} Portal PPC leads (${Math.round(p.trackingRatio * 100)}%) — conversion tracking is likely missing leads, so Google's cost/conv overstates the real cost`);
+            } else if (p.trackingRatio > 1.5) {
+              lines.push(`Google Ads counted ${fmtN(a.conv)} conversions vs ${fmtN(p.ppcLeads)} Portal PPC leads — conversions may be double-counted (e.g. calls + forms for the same lead)`);
+            }
+          }
+          return `<div class="drill-notes">${lines.map((l) => `<div>• ${escapeHtml(l)}</div>`).join("")}</div>`;
+        }
+
+        async function refreshPortalData(startDate, endDate) {
+          if (!isPortalConnected() || IS_FILE_ORIGIN) return;
+          try {
+            portalData = await fetchPortalData(startDate, endDate);
+          } catch (err) {
+            console.warn("Portal fetch failed", err);
+            const statusEl = document.getElementById("liveDataStatus");
+            if (statusEl) statusEl.textContent += ` · Portal: ${err.message || "failed"}`;
+            if (/expired|login/i.test(err.message || "")) updatePortalUi();
+          }
+        }
+
+        // ============ CHANGE HISTORY ============
+        // Google Ads keeps 30 days of change events. Pulled on demand (one
+        // query per account) and grouped so "9 keywords removed by
+        // Recommendations Auto-Apply" reads as one line, not nine.
+        let changeHistoryRows = [];
+        let changeHistoryLoading = false;
+        let changeHistoryAutoOnly = false;
+
+        const CHANGE_RESOURCE_LABELS = {
+          AD_GROUP_CRITERION: "keyword / ad group targeting",
+          CAMPAIGN_CRITERION: "campaign targeting / negatives",
+          CAMPAIGN_BUDGET: "budget",
+          CAMPAIGN: "campaign settings",
+          AD_GROUP: "ad group",
+          AD_GROUP_AD: "ad",
+          AD: "ad",
+          ASSET: "asset",
+          AD_GROUP_ASSET: "ad group asset",
+          CAMPAIGN_ASSET: "campaign asset",
+          CUSTOMER_ASSET: "account asset",
+          AD_GROUP_BID_MODIFIER: "bid adjustment",
+          ASSET_GROUP: "PMax asset group",
+          ASSET_GROUP_ASSET: "PMax asset",
+          ASSET_SET: "asset set",
+          CAMPAIGN_ASSET_SET: "campaign asset set",
+          FEED: "feed",
+          FEED_ITEM: "feed item",
+        };
+        const CHANGE_OP_LABELS = { CREATE: "Added", UPDATE: "Changed", REMOVE: "Removed" };
+
+        function isAutoApplyUser(u) {
+          return /auto-?apply|recommendation/i.test(String(u || ""));
+        }
+
+        async function loadChangeHistory() {
+          if (changeHistoryLoading) return;
+          const btn = document.getElementById("loadChangeHistoryBtn");
+          const label = document.getElementById("changeHistoryLabel");
+          changeHistoryLoading = true;
+          if (btn) {
+            btn.disabled = true;
+            btn.textContent = "⏳ Loading…";
+          }
+          try {
+            const tools = await ensureAdsMcpTools();
+            const source = liveRange
+              ? accounts.filter((a) => a._liveFetchId === liveRange.fetchId)
+              : accounts;
+            const targets = source.filter((a) => a.customerId && ((a.cost || 0) > 0 || !liveRange));
+            const today = __localYMD(new Date());
+            const since = ymdAddDays(today, -29);
+            if (label) label.textContent = `Loading changes since ${formatDateShort(since)} for ${targets.length} accounts…`;
+            const results = await runWithConcurrencyLimit(targets, 3, async (a) => {
+              const res = await mcpSearchRows(
+                tools,
+                a.customerId,
+                {
+                  fields: [
+                    "change_event.change_date_time",
+                    "change_event.change_resource_type",
+                    "change_event.resource_change_operation",
+                    "change_event.user_email",
+                    "campaign.name",
+                  ],
+                  resource: "change_event",
+                  conditions: [
+                    `change_event.change_date_time >= '${since}'`,
+                    `change_event.change_date_time <= '${today} 23:59:59'`,
+                  ],
+                  orderings: ["change_event.change_date_time DESC"],
+                  limit: 1000,
+                },
+                { loginCustomerId: ADS_MCP_ANCHOR_MCC_ID },
+              );
+              return { account: a.name, customerId: a.customerId, rows: res.rows, mode: res.mode };
+            });
+
+            const groups = new Map();
+            let failed = 0;
+            results.forEach((r) => {
+              if (r.status !== "fulfilled" || !r.value || r.value.mode === "empty") {
+                failed += 1;
+                return;
+              }
+              r.value.rows.forEach((row) => {
+                const when = String(rowValue(row, ["change_event.change_date_time", "changeEvent.changeDateTime"]) || "");
+                const day = when.slice(0, 10);
+                const type = String(rowValue(row, ["change_event.change_resource_type", "changeEvent.changeResourceType"]) || "");
+                const op = String(rowValue(row, ["change_event.resource_change_operation", "changeEvent.resourceChangeOperation"]) || "");
+                const user = String(rowValue(row, ["change_event.user_email", "changeEvent.userEmail"]) || "unknown");
+                const campaign = String(rowValue(row, ["campaign.name"]) || "");
+                const key = [r.value.customerId, day, user, type, op, campaign].join("||");
+                const g = groups.get(key) || {
+                  account: r.value.account,
+                  customerId: r.value.customerId,
+                  day,
+                  latest: when,
+                  user,
+                  type,
+                  op,
+                  campaign,
+                  count: 0,
+                  auto: isAutoApplyUser(user),
+                };
+                g.count += 1;
+                if (when > g.latest) g.latest = when;
+                groups.set(key, g);
+              });
+            });
+            changeHistoryRows = Array.from(groups.values()).sort((a, b) => (a.latest < b.latest ? 1 : -1));
+            renderChangeHistory();
+            if (failed && label) label.textContent += ` · ${failed} account${failed === 1 ? "" : "s"} failed to load`;
+            render(); // refresh drill-downs and alerts with change data
+          } catch (err) {
+            if (label) label.textContent = `Failed to load: ${err.message || "unknown error"}`;
+            console.error("Change history fetch failed", err);
+          } finally {
+            changeHistoryLoading = false;
+            if (btn) {
+              btn.disabled = false;
+              btn.textContent = "📜 Load Change History";
+            }
+          }
+        }
+
+        function describeChange(g) {
+          const what = CHANGE_RESOURCE_LABELS[g.type] || g.type.toLowerCase().replace(/_/g, " ");
+          const op = CHANGE_OP_LABELS[g.op] || g.op.toLowerCase();
+          return `${op} ${g.count > 1 ? `${g.count} × ` : ""}${what}`;
+        }
+
+        function changeWhoLabel(g) {
+          if (g.auto) return "🤖 Google auto-apply";
+          return g.user;
+        }
+
+        function renderChangeHistory() {
+          const body = document.getElementById("changeHistoryBody");
+          const label = document.getElementById("changeHistoryLabel");
+          if (!body) return;
+          const rows = changeHistoryAutoOnly ? changeHistoryRows.filter((g) => g.auto) : changeHistoryRows;
+          if (label) {
+            const autoAccounts = new Set(changeHistoryRows.filter((g) => g.auto).map((g) => g.account));
+            const total = changeHistoryRows.reduce((s, g) => s + g.count, 0);
+            const autoTotal = changeHistoryRows.filter((g) => g.auto).reduce((s, g) => s + g.count, 0);
+            label.textContent = `${total} changes in the last 30 days · ${autoTotal} by Google auto-apply across ${autoAccounts.size} account${autoAccounts.size === 1 ? "" : "s"}`;
+          }
+          if (!rows.length) {
+            body.innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 32px; color: var(--ink-muted); font-family: 'Jost';">${changeHistoryRows.length ? "No auto-applied changes." : "No changes found."}</td></tr>`;
+            return;
+          }
+          body.innerHTML = rows
+            .slice(0, 400)
+            .map(
+              (g) => `<tr class="${g.auto ? "change-auto" : ""}">
+                <td>${escapeHtml(formatDateShort(g.day))}</td>
+                <td>${escapeHtml(g.account)}</td>
+                <td>${escapeHtml(changeWhoLabel(g))}</td>
+                <td>${escapeHtml(describeChange(g))}</td>
+                <td>${escapeHtml(g.campaign || "—")}</td>
+              </tr>`,
+            )
+            .join("");
+        }
+
+        function accountChangeSummaryHtml(a) {
+          if (!changeHistoryRows.length) return "";
+          const mine = changeHistoryRows.filter((g) => g.customerId === a.customerId);
+          if (!mine.length) return `<div class="drill-notes" style="color:var(--ink-muted)">No changes in the last 30 days.</div>`;
+          return `<div class="drill-notes"><strong>Recent changes:</strong>${mine
+            .slice(0, 6)
+            .map((g) => `<div>• ${escapeHtml(formatDateShort(g.day))} — ${escapeHtml(changeWhoLabel(g))}: ${escapeHtml(describeChange(g))}${g.campaign ? ` (${escapeHtml(g.campaign)})` : ""}</div>`)
+            .join("")}${mine.length > 6 ? `<div style="color:var(--ink-muted)">+${mine.length - 6} more in Change History below</div>` : ""}</div>`;
+        }
+
+        // ============ NEGATIVE KEYWORD FINDER ============
+        // Words/phrases that describe what GameTruck actually sells. A
+        // non-converting term containing one of these is a bid/ad/landing-page
+        // question, NOT a negative keyword — negating it would block customers.
+        const CORE_SERVICE_PHRASES = [
+          "game truck", "gametruck", "game-truck", "gaming truck", "gamer truck",
+          "video game truck", "game bus", "gaming bus", "game trailer", "gaming trailer",
+          "game theater", "video game party", "gaming party", "laser tag", "lasertag",
+          "game rental", "gaming rental", "mobile gaming", "mobile game", "video game rental",
+        ];
+        const NEG_STOPWORDS = new Set(
+          "a an and for in of on the to with near me my at by from is are how what where who best cheap top vs or your our".split(" "),
+        );
+
+        // Intent words that mean "not a party customer", even when the term
+        // also contains a core phrase ("game truck jobs", "game truck for sale").
+        const NON_BUYER_PATTERNS = [
+          /\bjobs?\b/, /\bhiring\b/, /\bcareers?\b/, /\bsalary\b/, /\bemploy(ment|er)?\b/,
+          /\bfor sale\b/, /\bused\b/, /\bdiy\b/, /\bhow to (build|make|start)\b/,
+          /\bfranchise\b/, /\bbusiness for sale\b/, /\bwholesale\b/, /\bmanufacturer\b/,
+        ];
+
+        function isNonBuyerTerm(term) {
+          const t = String(term || "").toLowerCase();
+          return NON_BUYER_PATTERNS.some((re) => re.test(t));
+        }
+
+        function isCoreServiceTerm(term) {
+          if (isNonBuyerTerm(term)) return false;
+          const t = ` ${String(term || "").toLowerCase()} `;
+          return CORE_SERVICE_PHRASES.some((p) => t.includes(p));
+        }
+
+        // Builds the negative-keyword view from loaded search terms.
+        function buildNegativeSuggestions(terms) {
+          const minCost = Math.max(10, settings.goodMax || 15);
+          const byAccount = new Map();
+          const ensure = (name, id) => {
+            if (!byAccount.has(name)) {
+              byAccount.set(name, { account: name, customerId: id, negatives: [], review: [], elsewhere: [], words: [] });
+            }
+            return byAccount.get(name);
+          };
+
+          // Aggregate each term across the account's campaigns.
+          const agg = new Map();
+          terms.forEach((t) => {
+            const k = `${t.account}||${t.term.toLowerCase()}`;
+            const e = agg.get(k) || { account: t.account, customerId: t.customerId, term: t.term, cost: 0, clicks: 0, conv: 0, campaigns: [], excluded: false };
+            e.cost += t.cost;
+            e.clicks += t.clicks;
+            e.conv += t.conv;
+            e.excluded = e.excluded || !!t.excluded;
+            (t.campaigns || []).forEach((c) => { if (!e.campaigns.includes(c)) e.campaigns.push(c); });
+            agg.set(k, e);
+          });
+
+          agg.forEach((t) => {
+            if (t.conv > 0 || t.excluded) return;
+            if (!(t.cost >= minCost || t.clicks >= 8)) return;
+            const g = ensure(t.account, t.customerId);
+            if (isCoreServiceTerm(t.term)) g.review.push(t);
+            else g.negatives.push(t);
+          });
+
+          // Per campaign: zero conversions here, but the same term converts in
+          // another campaign of the account → a campaign-overlap question.
+          terms.forEach((t) => {
+            if (t.conv > 0 || t.excluded || !(t.cost >= minCost || t.clicks >= 8)) return;
+            const a = agg.get(`${t.account}||${t.term.toLowerCase()}`);
+            if (a && a.conv > 0) {
+              ensure(t.account, t.customerId).elsewhere.push(Object.assign({}, t, { term: `${t.term} (${(t.campaigns || [])[0] || "campaign"})` }));
+            }
+          });
+
+          // Word-level: words in ≥3 zero-conv terms (≥$20 combined) and in
+          // no converting term of the same account.
+          const wordsByAccount = new Map();
+          terms.forEach((t) => {
+            const words = new Set(
+              t.term.toLowerCase().split(/[^a-z0-9']+/).filter((w) => w.length > 2 && !NEG_STOPWORDS.has(w)),
+            );
+            if (!wordsByAccount.has(t.account)) wordsByAccount.set(t.account, new Map());
+            const m = wordsByAccount.get(t.account);
+            words.forEach((w) => {
+              const e = m.get(w) || { word: w, wasteTerms: 0, wasteCost: 0, converts: false, customerId: t.customerId };
+              if (t.conv > 0) e.converts = true;
+              else {
+                e.wasteTerms += 1;
+                e.wasteCost += t.cost;
+              }
+              m.set(w, e);
+            });
+          });
+          wordsByAccount.forEach((m, account) => {
+            m.forEach((e) => {
+              if (e.converts || e.wasteTerms < 3 || e.wasteCost < 20) return;
+              if (isCoreServiceTerm(e.word) || CORE_SERVICE_PHRASES.some((p) => p.split(" ").includes(e.word))) return;
+              ensure(account, e.customerId).words.push(e);
+            });
+          });
+
+          const groups = Array.from(byAccount.values()).filter(
+            (g) => g.negatives.length || g.review.length || g.elsewhere.length || g.words.length,
+          );
+          groups.forEach((g) => {
+            g.negatives.sort((a, b) => b.cost - a.cost);
+            g.review.sort((a, b) => b.cost - a.cost);
+            g.elsewhere.sort((a, b) => b.cost - a.cost);
+            g.words.sort((a, b) => b.wasteCost - a.wasteCost);
+            g.negWaste = g.negatives.reduce((s, t) => s + t.cost, 0);
+            g.reviewWaste = g.review.reduce((s, t) => s + t.cost, 0);
+          });
+          groups.sort((a, b) => b.negWaste + b.reviewWaste - (a.negWaste + a.reviewWaste));
+          return { groups, minCost };
+        }
+
+        let negativeSuggestionCache = null;
+
+        function copyNegatives(accountIdx, kind) {
+          const g = negativeSuggestionCache && negativeSuggestionCache.groups[accountIdx];
+          if (!g) return;
+          const lines =
+            kind === "words"
+              ? g.words.map((w) => `"${w.word}"`)
+              : g.negatives.map((t) => `[${t.term}]`);
+          const text = lines.join("\n");
+          const done = () => {
+            const el = document.getElementById(`negCopy-${accountIdx}-${kind}`);
+            if (el) {
+              const old = el.textContent;
+              el.textContent = `✓ Copied ${lines.length}`;
+              setTimeout(() => (el.textContent = old), 1800);
+            }
+          };
+          try {
+            navigator.clipboard.writeText(text).then(done, () => window.prompt("Copy these negatives:", text));
+          } catch (e) {
+            window.prompt("Copy these negatives:", text);
+          }
+        }
+
+        function renderNegativeFinder() {
+          const box = document.getElementById("negativeFinder");
+          if (!box) return;
+          if (searchTermFilter !== "negatives" || !searchTermRawResults.length) {
+            box.style.display = "none";
+            return;
+          }
+          negativeSuggestionCache = buildNegativeSuggestions(searchTermRawResults);
+          const { groups, minCost } = negativeSuggestionCache;
+          box.style.display = "block";
+          if (!groups.length) {
+            box.innerHTML = `<div class="neg-empty">No negative-keyword candidates: every term with ${fmt$(minCost)}+ spend or 8+ clicks either converted or is already excluded.</div>`;
+            return;
+          }
+          const termList = (list, max) =>
+            list
+              .slice(0, max)
+              .map((t) => `<span class="neg-chip" title="${escapeHtml(t.campaigns.join(", "))} · ${fmtN(t.clicks)} clicks">${escapeHtml(t.term)} <b>${fmt$(t.cost)}</b></span>`)
+              .join("") + (list.length > max ? `<span class="neg-more">+${list.length - max} more</span>` : "");
+          box.innerHTML = `
+            <div class="neg-intro">Rules: no conversions in the account, ${fmt$(minCost)}+ spend or 8+ clicks, not already excluded. Copy buttons give Google Ads format — exact <code>[term]</code> or phrase <code>"word"</code> — ready to paste into a negative keyword list. For Performance Max terms, add them to an account-level negative list.</div>
+            ${groups
+              .map(
+                (g, i) => `
+              <div class="neg-group">
+                <div class="neg-head">
+                  <strong>${escapeHtml(g.account)}</strong>
+                  <span>${fmt$(g.negWaste)} on negative candidates${g.reviewWaste ? ` · ${fmt$(g.reviewWaste)} on core terms to review` : ""}</span>
+                  ${g.customerId ? `<button class="icon-btn ga-btn" onclick="openGoogleAds('${escapeHtml(g.customerId)}')" title="Open in Google Ads">↗</button>` : ""}
+                </div>
+                ${g.negatives.length ? `<div class="neg-row"><div class="neg-label">🚫 Add as negatives (${g.negatives.length}) <button class="icon-btn" id="negCopy-${i}-terms" onclick="copyNegatives(${i}, 'terms')">Copy [exact]</button></div><div>${termList(g.negatives, 12)}</div></div>` : ""}
+                ${g.words.length ? `<div class="neg-row"><div class="neg-label">🔤 Word-level negatives (${g.words.length}) <button class="icon-btn" id="negCopy-${i}-words" onclick="copyNegatives(${i}, 'words')">Copy "phrase"</button></div><div>${g.words
+                  .slice(0, 12)
+                  .map((w) => `<span class="neg-chip" title="In ${w.wasteTerms} non-converting terms, never in a converting one">${escapeHtml(w.word)} <b>${fmt$(w.wasteCost)}</b></span>`)
+                  .join("")}</div></div>` : ""}
+                ${g.review.length ? `<div class="neg-row"><div class="neg-label">⚠️ Core service terms not converting — review bids, ads or landing page; don't negate (${g.review.length})</div><div>${termList(g.review, 8)}</div></div>` : ""}
+                ${g.elsewhere.length ? `<div class="neg-row"><div class="neg-label">↔ 0 conv here but converts in another campaign — check which campaign should own it (${g.elsewhere.length})</div><div>${termList(g.elsewhere, 8)}</div></div>` : ""}
+              </div>`,
+              )
+              .join("")}`;
         }
 
         function populateSearchTermWasteAccountSelect() {
@@ -7073,8 +10174,11 @@
           const label = document.getElementById("searchTermWasteLabel");
           if (!body) return;
 
+          renderNegativeFinder();
           let rows = searchTermRawResults;
-          if (searchTermFilter === "converting") {
+          if (searchTermFilter === "negatives") {
+            rows = rows.filter((r) => r.conv === 0 && r.cost > 0 && !r.excluded);
+          } else if (searchTermFilter === "converting") {
             rows = rows.filter((r) => r.conv > 0);
           } else if (searchTermFilter === "wasted") {
             rows = rows.filter((r) => r.conv === 0 && r.cost > 0);
@@ -7117,7 +10221,7 @@
               (w) => `
                 <tr>
                   <td>${escapeHtml(w.account)}</td>
-                  <td>${escapeHtml(w.term)}</td>
+                  <td title="${escapeHtml((w.campaigns || []).join(", "))}">${escapeHtml(w.term)}${w.excluded ? ' <span class="camp-status">excluded</span>' : ""}${isCoreServiceTerm(w.term) && w.conv === 0 ? ' <span class="camp-status warn">core term</span>' : ""}<div class="delta" style="color:var(--ink-muted)">${escapeHtml((w.campaigns || []).join(", "))}</div></td>
                   <td>${fmt$(w.cost)}</td>
                   <td>${fmtN(w.clicks)}</td>
                   <td>${fmtN(w.conv)}</td>
@@ -7241,6 +10345,7 @@
               return;
             }
 
+            const portalPromise = Promise.resolve(); // Portal data now loads on the Markets page
             const live = await fetchGoogleAdsFromMcp(startDate, endDate);
             // A newer click started while this one was loading: drop this result.
             if (isStale()) return;
@@ -7279,6 +10384,11 @@
                 searchIS: account.searchIS ?? null,
                 lostIsBudget: account.lostIsBudget ?? null,
                 lostIsRank: account.lostIsRank ?? null,
+                topIS: account.topIS ?? null,
+                absTopIS: account.absTopIS ?? null,
+                allConv: account.allConv ?? null,
+                convValue: account.convValue ?? 0,
+                phoneCalls: account.phoneCalls ?? null,
                 campaigns: account.campaigns || [],
                 idleCampaigns: account.idleCampaigns || [],
                 enabledCampaignCount: account.enabledCampaignCount ?? null,
@@ -7438,7 +10548,19 @@
                   ? "var(--warn, #9a6700)"
                   : "var(--good, #1a7f37)";
             }
+            await portalPromise;
+            if (isStale()) return;
+            reportCache.set(reportKey(dateScope, { startDate, endDate }), {
+              range: { startDate, endDate },
+              scope: dateScope,
+              accounts: accounts.filter((a) => a._liveFetchId === mySeq),
+              pacingWindow,
+              prevRange: live.prevRange || null,
+              fetchedAt: lastLiveFetch,
+            });
             render();
+            // Daily tracking/ad health check runs in the background (max once per ~20h).
+            if (dateScope === "mtd") setTimeout(maybeAutoRunHealth, 1500);
           } catch (err) {
             if (isStale()) return;
             console.error("Live data fetch failed", err);
@@ -7471,6 +10593,41 @@
             liveBtn.addEventListener("click", fetchLiveDashboardData);
             liveBtn.dataset.boundClick = "true";
           }
+          const portalC = document.getElementById("portalConnectBtn");
+          if (portalC && !portalC.dataset.boundClick) {
+            portalC.addEventListener("click", connectPortal);
+            portalC.dataset.boundClick = "true";
+          }
+          const portalD = document.getElementById("portalDisconnectBtn");
+          if (portalD && !portalD.dataset.boundClick) {
+            portalD.addEventListener("click", disconnectPortal);
+            portalD.dataset.boundClick = "true";
+          }
+          const ga4C = document.getElementById("ga4ConnectBtn");
+          if (ga4C && !ga4C.dataset.boundClick) {
+            ga4C.addEventListener("click", connectGa4);
+            ga4C.dataset.boundClick = "true";
+          }
+          const ga4D = document.getElementById("ga4DisconnectBtn");
+          if (ga4D && !ga4D.dataset.boundClick) {
+            ga4D.addEventListener("click", disconnectGa4);
+            ga4D.dataset.boundClick = "true";
+          }
+          const changeBtn = document.getElementById("loadChangeHistoryBtn");
+          if (changeBtn && !changeBtn.dataset.boundClick) {
+            changeBtn.addEventListener("click", loadChangeHistory);
+            changeBtn.dataset.boundClick = "true";
+          }
+          document.querySelectorAll("[data-change-filter]").forEach((b) => {
+            if (b.dataset.boundClick) return;
+            b.addEventListener("click", () => {
+              document.querySelectorAll("[data-change-filter]").forEach((x) => x.classList.remove("active"));
+              b.classList.add("active");
+              changeHistoryAutoOnly = b.dataset.changeFilter === "auto";
+              renderChangeHistory();
+            });
+            b.dataset.boundClick = "true";
+          });
           const wasteBtn = document.getElementById("loadSearchTermWasteBtn");
           if (wasteBtn && !wasteBtn.dataset.boundClick) {
             wasteBtn.addEventListener("click", loadSearchTermWaste);
@@ -7533,15 +10690,34 @@
           await runInitStep("loadColumnPrefs", loadColumnPrefs);
           await runInitStep("loadHistory", loadHistory);
           await runInitStep("loadAdsMcpAuthState", loadAdsMcpAuthState);
-          await runInitStep(
-            "maybeHandleAdsMcpOAuthCallback",
-            maybeHandleAdsMcpOAuthCallback,
-          );
+          await runInitStep("loadPortalAuthState", loadPortalAuthState);
+          await runInitStep("loadHealthState", loadHealthState);
+          await runInitStep("loadGa4AuthState", loadGa4AuthState);
+          let portalCallbackHandled = false;
+          await runInitStep("maybeHandlePortalOAuthCallback", async () => {
+            portalCallbackHandled = await maybeHandlePortalOAuthCallback();
+          });
+          if (!portalCallbackHandled) {
+            await runInitStep("maybeHandleGa4OAuthCallback", async () => {
+              portalCallbackHandled = await maybeHandleGa4OAuthCallback();
+            });
+          }
+          if (!portalCallbackHandled) {
+            await runInitStep(
+              "maybeHandleAdsMcpOAuthCallback",
+              maybeHandleAdsMcpOAuthCallback,
+            );
+          }
 
           seedIfEmpty();
           bindEvents();
           render();
           updateAdsMcpUi();
+          updatePortalUi();
+          updateGa4Ui();
+          bindHealthControls();
+          initPageRouter();
+          refreshViewSelects();
 
           if (initError) {
             const statusEl = document.getElementById("liveDataStatus");
@@ -8756,8 +11932,11 @@
             });
           }
 
-          document.querySelectorAll("thead th[data-sort]").forEach((th) => {
-            th.addEventListener("click", () => {
+          const leaderTableEl = document.getElementById("leaderTable");
+          if (leaderTableEl) leaderTableEl.addEventListener("click", (ev) => {
+            const th = ev.target.closest("thead th[data-sort]");
+            if (!th) return;
+            {
               const key = th.dataset.sort;
               if (sortKey === key) sortDir = sortDir === "asc" ? "desc" : "asc";
               else {
@@ -8766,7 +11945,7 @@
               }
               currentPage = 1;
               render();
-            });
+            }
           });
 
           document
@@ -11888,12 +15067,14 @@ levis@gametruck`;
             const label = `${formatDateShort(liveRange.startDate)} – ${formatDateShort(liveRange.endDate)}`;
             return accounts
               .filter((a) => a && a._liveFetchId === liveRange.fetchId)
-              .map((a) => ({
-                ...a,
-                _scope: scope,
-                _scopeLabel: label,
-                _isFallback: false,
-              }));
+              .map((a) => {
+                return enrichRow({
+                  ...a,
+                  _scope: scope,
+                  _scopeLabel: label,
+                  _isFallback: false,
+                }, liveRange, pacingWindow);
+              });
           }
           // 'mtd', 'monthly', 'weekly', 'daily', 'custom'
           // We use history granularity for filtering: daily → most recent day, etc.
@@ -13828,6 +17009,23 @@ levis@gametruck`;
             }
           }
 
+          // Google auto-applied recommendations that removed things (last 14 days).
+          if (changeHistoryRows.length) {
+            const cutoff = ymdAddDays(__localYMD(new Date()), -14);
+            const byAcc = new Map();
+            changeHistoryRows
+              .filter((g) => g.auto && g.op === "REMOVE" && g.day >= cutoff)
+              .forEach((g) => byAcc.set(g.account, (byAcc.get(g.account) || 0) + g.count));
+            byAcc.forEach((n, acc) => {
+              alerts.push({
+                accountName: acc,
+                severity: "warning",
+                type: "auto-apply",
+                msg: `Google auto-apply <strong>removed ${n} item${n === 1 ? "" : "s"}</strong> (keywords/targeting) in the last 14 days — review in Change History, and consider turning auto-apply off`,
+              });
+            });
+          }
+
           // Live-data alerts (only when the numbers are live for this range).
           if (isLiveForCurrentScope()) {
             const goodMax = settings.goodMax || 15;
@@ -13866,6 +17064,8 @@ levis@gametruck`;
             }
           }
 
+          alerts.push(...healthAlerts());
+
           // Sort: critical first, then by account name
           alerts.sort((a, b) => {
             if (a.severity !== b.severity)
@@ -13894,7 +17094,7 @@ levis@gametruck`;
           <div class="focus-item-detail">${detail}</div>
         </div>`;
           const prevNote = (cur, prev, lowerIsBetter, fmtFn) => {
-            const d = pctChange(cur, prev);
+            const d = pctDelta(cur, prev);
             if (d == null || Math.abs(d) < 5) return "";
             return ` · ${d > 0 ? "▲" : "▼"}${Math.abs(d).toFixed(0)}% vs prev (${fmtFn(prev)})`;
           };
@@ -14392,17 +17592,17 @@ levis@gametruck`;
         }
 
         // ---- Leaderboard helpers ----
-        const LEADER_COLS = 10;
+        let LEADER_COLS = 10;
         const expandedAccounts = new Set();
 
-        function pctChange(cur, prev) {
+        function pctDelta(cur, prev) {
           if (!(prev > 0) || !Number.isFinite(cur)) return null;
           return ((cur - prev) / prev) * 100;
         }
 
         // Small "▲ 12%" under a number. lowerIsBetter flips the colour (cost/conv).
         function deltaHtml(cur, prev, lowerIsBetter, neutral) {
-          const d = pctChange(cur, prev);
+          const d = pctDelta(cur, prev);
           if (d == null || Math.abs(d) < 0.5) return "";
           const up = d > 0;
           const good = lowerIsBetter ? !up : up;
@@ -14475,6 +17675,7 @@ levis@gametruck`;
             : `<tr><td colspan="9" style="color:var(--ink-muted)">No campaign data for this period — click Refresh Live Data.</td></tr>`;
           return `<tr class="drill-row"><td colspan="${LEADER_COLS}">
             ${notes.length ? `<div class="drill-notes">${notes.map((n) => `<div>• ${escapeHtml(n)}</div>`).join("")}</div>` : ""}
+            ${accountChangeSummaryHtml(a)}
             <table class="drill-table">
               <thead><tr><th>Campaign</th><th>Type</th><th>Budget</th><th>Cost</th><th>Clicks</th><th>Conv</th><th>Cost/Conv</th><th>Imp. Share</th><th>Lost: budget / rank</th></tr></thead>
               <tbody>${rows}</tbody>
@@ -14492,23 +17693,14 @@ levis@gametruck`;
           const idx = accounts.findIndex(
             (x) => x.name.toLowerCase() === a.name.toLowerCase(),
           );
-          const h = getHealth(a.cpa, a);
           const key = a.customerId || a.name;
           const open = expandedAccounts.has(key);
-          const p = a.prev || null;
           const canDrill = Array.isArray(a.campaigns);
           const safeKey = escapeHtml(String(key)).replace(/'/g, "&#39;");
           return `
       <tr class="${open ? "drill-open" : ""}">
         <td>${canDrill ? `<button class="drill-btn" onclick="toggleAccountDrill('${safeKey}')" title="Show campaigns">${open ? "▾" : "▸"}</button> ` : ""}${escapeHtml(a.name)}</td>
-        <td>${healthBadge(a.cpa, a)}</td>
-        <td>${fmt$(a.cost)}${p ? deltaHtml(a.cost, p.cost, false, true) : ""}</td>
-        <td>${fmtN(a.clicks)}</td>
-        <td>${fmt$(a.cpc)}</td>
-        <td>${fmtN(a.conv)}${p ? deltaHtml(a.conv, p.conv, false) : ""}</td>
-        <td class="cpa-cell ${h}">${a.conv > 0 ? fmt$(a.cpa) : a.cost > 0 ? "0 conv" : fmt$(0)}${p && a.cpa > 0 ? deltaHtml(a.cpa, p.cpa, true) : ""}</td>
-        <td>${isCellHtml(a)}</td>
-        <td>${paceBadge(a.paceRatio)}</td>
+        ${columnCellsHtml("accounts", a)}
         <td>
           <div class="row-actions">
             ${a.customerId ? `<button class="icon-btn ga-btn" onclick="openGoogleAds('${escapeHtml(a.customerId)}')" title="Open in Google Ads">↗</button>` : ""}
@@ -14520,7 +17712,15 @@ levis@gametruck`;
       </tr>${open ? campaignDrilldownHtml(a) : ""}`;
         }
 
+        function renderLeaderHead() {
+          const thead = document.querySelector("#leaderTable thead");
+          if (!thead) return;
+          thead.innerHTML = `<tr><th data-sort="name">Account <span class="sort-indicator">↕</span></th>${columnHeaderHtml("accounts", { sortable: true })}<th></th></tr>`;
+          LEADER_COLS = activeColumns("accounts").length + 2;
+        }
+
         function renderTable(list) {
+          renderLeaderHead();
           const body = document.getElementById("tableBody");
           if (list.length === 0) {
             body.innerHTML = `<tr><td colspan="${LEADER_COLS}" style="text-align:center; padding: 40px; color: var(--ink-muted); font-family: 'Jost';">No accounts match your filters.</td></tr>`;
