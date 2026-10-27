@@ -9001,7 +9001,7 @@
               limit: 1000,
             }, { loginCustomerId: ADS_MCP_ANCHOR_MCC_ID }).catch(() => ({ rows: [], mode: "empty" }));
             done += 1;
-            if (status) status.textContent = `Loading ${days} days for ${targets.length} account${targets.length === 1 ? "" : "s"}… ${done}/${targets.length}`;
+            if (status && trendState.account === accountId && trendState.days === days) status.textContent = `Loading ${days} days for ${targets.length} account${targets.length === 1 ? "" : "s"}… ${done}/${targets.length}`;
             if (camp.mode === "empty") throw new Error(`Couldn't load ${a.name}`);
             return { a, camp: camp.rows, ly: ly.rows, ch: ch.rows };
           });
@@ -9311,21 +9311,27 @@
           trendState.account = sel.value;
         }
 
+        let trendLoadSeq = 0;
         async function loadTrendsPage(force) {
           const status = document.getElementById("trendStatus");
           if (!status) return;
           populateTrendAccountSelect();
+          const seq = ++trendLoadSeq; // a newer load (other account/period) wins
+          const stale = () => seq !== trendLoadSeq;
           try {
             const token = await ensureAdsMcpAccessToken();
             if (!token) throw new Error("Connect Ads MCP first (button at the top).");
             status.textContent = "Loading…";
             const data = await fetchTrendData(trendState.account, trendState.days, force);
+            if (stale()) return;
             status.textContent = isPortalConnected() || isGa4Connected() ? "Loading leads overlay…" : "";
             const leads = trendState.showLeads ? await fetchTrendLeads(trendState.account, data.start, data.end) : null;
+            if (stale()) return;
             trendLast = { data, leads };
             status.textContent = `${formatDateShort(data.start)} – ${formatDateShort(data.end)}${data.failed ? ` · ${data.failed} account(s) failed` : ""}${leads && leads.notes.length ? ` · ${leads.notes.join(" · ")}` : ""}`;
             renderTrends();
           } catch (err) {
+            if (stale()) return;
             status.textContent = `Couldn't load: ${err.message || err}`;
           }
         }
