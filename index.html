@@ -1105,6 +1105,17 @@
         padding: 10px;
         margin-bottom: 12px;
       }
+      .trend-legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12px; color: var(--ink-muted); margin: -4px 0 14px 4px; }
+      .trend-legend span { display: inline-flex; align-items: center; gap: 6px; }
+      .trend-legend .mk { display: inline-block; }
+      .trend-legend .mk.tri { width: 0; height: 0; border-left: 6px solid transparent; border-right: 6px solid transparent; border-top: 9px solid; }
+      .trend-legend .mk.sq { width: 9px; height: 9px; background: #8a8c80; border-radius: 2px; }
+      .trend-legend .mk.band { width: 16px; height: 10px; border-radius: 2px; }
+      .trend-legend .mk.band.spike { background: rgba(227, 73, 72, 0.18); }
+      .trend-legend .mk.band.good { background: rgba(0, 131, 0, 0.14); }
+      .trend-leads-wrap { height: 250px; padding-bottom: 34px; }
+      .trend-leads-canvas { position: relative; height: 100%; }
+      .trend-sub { font-size: 12px; font-weight: 600; margin: 0 0 6px 4px; }
       #trendStories {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
@@ -3810,7 +3821,7 @@
         </div>
         <div class="charts-row">
           <div class="chart-card">
-            <h3>Spend vs Conversions</h3>
+            <h3>Top 10 by Spend · Cost/Conv vs Goal</h3>
             <div class="chart-wrap"><canvas id="spendChart"></canvas></div>
           </div>
           <div class="chart-card">
@@ -4061,6 +4072,18 @@
             <span class="report-status" id="trendStatus"></span>
           </div>
           <div class="trend-chart-wrap"><canvas id="trendChart"></canvas></div>
+          <div class="trend-legend" id="trendMarkerLegend">
+            <span><i class="mk tri" style="border-top-color:#6250d6"></i>Your change</span>
+            <span><i class="mk tri" style="border-top-color:#eb6834"></i>Google auto-apply</span>
+            <span><i class="mk tri" style="border-top-color:#1baf7a"></i>Your note</span>
+            <span><i class="mk sq"></i>Holiday</span>
+            <span><i class="mk band spike"></i>Spike</span>
+            <span><i class="mk band good"></i>Good run</span>
+          </div>
+          <div class="trend-chart-wrap trend-leads-wrap" id="trendLeadsWrap" style="display: none">
+            <div class="trend-sub">Leads per day (7-day average) — did real leads move with Google's conversions?</div>
+            <div class="trend-leads-canvas"><canvas id="trendLeadsChart"></canvas></div>
+          </div>
           <div id="trendNotesList"></div>
           <div class="section-head" style="margin-top: 28px">
             <h2>What happened</h2>
@@ -8863,6 +8886,7 @@
         const TREND_NOTES_KEY = "gt_trend_notes_v1";
         const trendCache = new Map(); // key → { days, campaigns, ly, ... }
         let trendChart = null;
+        let trendLeadsChart = null;
         let trendState = { account: "all", metric: "cpa", days: 90, showLY: true, showLeads: true, showHolidays: true, showChanges: true, showNotes: true };
         let trendLast = null;
 
@@ -9363,21 +9387,24 @@
           const vals = [...daily, ...avg7].filter((x) => x != null && Number.isFinite(x));
           const sorted = vals.slice().sort((a, b) => a - b);
           const top = sorted.length ? sorted[Math.floor(sorted.length * 0.97)] * 1.15 : 1;
-          const kindColor = { change: "#2f6fdf", auto: "#e76829", note: "#7aa52b", holiday: "#8a5cc2" };
+          const kindColor = { change: "#6250d6", auto: "#eb6834", note: "#1baf7a", holiday: "#8a8c80" };
           const markerPoints = dates.map((d) => (markers.has(d) ? top : null));
-          const markerColors = dates.map((d) => {
+          const markerKind = (d) => {
             const ks = (markers.get(d) || []).map((m) => m.kind);
-            return kindColor[ks.includes("auto") ? "auto" : ks.includes("change") ? "change" : ks.includes("note") ? "note" : "holiday"];
-          });
+            return ks.includes("auto") ? "auto" : ks.includes("change") ? "change" : ks.includes("note") ? "note" : "holiday";
+          };
+          const markerColors = dates.map((d) => kindColor[markerKind(d)]);
+          const markerStyles = dates.map((d) => (markerKind(d) === "holiday" ? "rectRounded" : "triangle"));
+          const acctObj = trendState.account === "all" ? null : accounts.find((a) => a.customerId === trendState.account);
+          const goalVal = metric === "cpa" && acctObj && typeof goalFor === "function" ? goalFor(acctObj) : null;
 
           const datasets = [
-            { label: `${M.label} (daily)`, data: daily.map((x) => (x != null && x <= top ? x : x != null ? top : null)), borderColor: "rgba(11,12,8,0.25)", backgroundColor: "rgba(11,12,8,0.25)", borderWidth: 1, pointRadius: 0, spanGaps: true, yAxisID: "y" },
-            { label: `${M.label} (7-day)`, data: avg7, borderColor: "#0b0c08", borderWidth: 2.5, pointRadius: 0, spanGaps: true, yAxisID: "y" },
+            { label: `${M.label} (7-day avg)`, data: avg7, borderColor: "#2a78d6", backgroundColor: "#2a78d6", borderWidth: 2.5, pointRadius: 0, pointHoverRadius: 5, tension: 0.25, spanGaps: true, yAxisID: "y" },
+            { label: `${M.label} (each day)`, data: daily.map((x) => (x != null && x <= top ? x : x != null ? top : null)), borderColor: "rgba(42,120,214,0.30)", backgroundColor: "rgba(42,120,214,0.30)", borderWidth: 1, pointRadius: 0, pointHoverRadius: 3, spanGaps: true, yAxisID: "y" },
           ];
-          if (trendState.showLY && ly7.some((x) => x != null)) datasets.push({ label: "Same weeks last year (7-day)", data: ly7, borderColor: "#9a9c90", borderDash: [6, 4], borderWidth: 1.5, pointRadius: 0, spanGaps: true, yAxisID: "y" });
-          if (leads && leads.portal) datasets.push({ type: "bar", label: "Portal PPC leads / day", data: dates.map((d) => leads.portal.get(d) || 0), backgroundColor: "rgba(231,104,41,0.16)", barPercentage: 0.6, order: 10, yAxisID: "y2" });
-          if (leads && leads.ga4) datasets.push({ label: "GA4 paid leads / day (7-day avg)", data: dates.map((d, i) => { if (i < 6) return null; let t = 0; for (let k = i - 6; k <= i; k++) t += leads.ga4.get(dates[k]) || 0; return t / 7; }), borderColor: "#2f6fdf", borderWidth: 1.5, pointRadius: 0, yAxisID: "y2" });
-          datasets.push({ label: "Markers", data: markerPoints, showLine: false, pointStyle: "triangle", pointRotation: 180, pointRadius: dates.map((d) => (markers.has(d) ? 7 : 0)), pointHoverRadius: 9, pointBackgroundColor: markerColors, pointBorderColor: "#0b0c08", yAxisID: "y" });
+          if (trendState.showLY && ly7.some((x) => x != null)) datasets.push({ label: "Same weeks last year", data: ly7, borderColor: "#7a7d70", backgroundColor: "#7a7d70", borderDash: [6, 4], borderWidth: 1.5, pointRadius: 0, pointHoverRadius: 4, tension: 0.25, spanGaps: true, yAxisID: "y" });
+          if (goalVal) datasets.push({ label: `Goal ${fmt$(goalVal)}`, data: dates.map(() => goalVal), borderColor: "#0b0c08", backgroundColor: "#0b0c08", borderDash: [2, 4], borderWidth: 1.5, pointRadius: 0, pointHoverRadius: 0, yAxisID: "y" });
+          datasets.push({ label: "Markers", data: markerPoints, showLine: false, pointStyle: markerStyles, pointRotation: dates.map((d) => (markerKind(d) === "holiday" ? 0 : 180)), pointRadius: dates.map((d) => (markers.has(d) ? 7 : 0)), pointHoverRadius: 9, pointBackgroundColor: markerColors, pointBorderColor: "#ffffff", pointBorderWidth: 2, yAxisID: "y" });
 
           const shade = {
             id: "trendShade",
@@ -9386,7 +9413,7 @@
               episodes.forEach((ep) => {
                 const x0 = scales.x.getPixelForValue(ep.startIdx), x1 = scales.x.getPixelForValue(ep.endIdx);
                 ctx.save();
-                ctx.fillStyle = ep.kind === "spike" ? "rgba(199,58,23,0.10)" : "rgba(122,165,43,0.12)";
+                ctx.fillStyle = ep.kind === "spike" ? "rgba(227,73,72,0.12)" : "rgba(0,131,0,0.09)";
                 ctx.fillRect(x0, chartArea.top, Math.max(2, x1 - x0), chartArea.bottom - chartArea.top);
                 ctx.restore();
               });
@@ -9395,7 +9422,7 @@
                 if (i < 0) return;
                 const x = scales.x.getPixelForValue(i);
                 ctx.save();
-                ctx.strokeStyle = "rgba(11,12,8,0.15)";
+                ctx.strokeStyle = "rgba(11,12,8,0.12)";
                 ctx.setLineDash([2, 3]);
                 ctx.beginPath();
                 ctx.moveTo(x, chartArea.top);
@@ -9417,28 +9444,55 @@
               maintainAspectRatio: false,
               interaction: { mode: "index", intersect: false },
               plugins: {
-                legend: { labels: { color: "#0b0c08", font: { family: "Jost", size: 11, weight: "600" }, filter: (item) => item.text !== "Markers" } },
+                legend: { position: "top", align: "start", labels: { color: "#3a3d33", boxWidth: 18, boxHeight: 2, padding: 14, font: { family: "Jost", size: 12, weight: "600" }, filter: (item) => item.text !== "Markers" } },
                 tooltip: {
-                  backgroundColor: "#0b0c08", titleColor: "#ffe92e", bodyColor: "#fff", borderColor: "#e76829", borderWidth: 2, padding: 10,
-                  filter: (item) => item.dataset.label !== "Markers" || markers.has(dates[item.dataIndex]),
+                  backgroundColor: "#0b0c08", titleColor: "#ffe92e", bodyColor: "#fff", borderColor: "#e76829", borderWidth: 2, padding: 10, boxPadding: 4,
+                  filter: (item) => (item.dataset.label !== "Markers" || markers.has(dates[item.dataIndex])) && !String(item.dataset.label).startsWith("Goal "),
                   callbacks: {
                     label: (item) => {
                       if (item.dataset.label === "Markers") return (markers.get(dates[item.dataIndex]) || []).map((m) => m.text);
                       const v = item.raw;
                       if (v == null) return null;
-                      if (item.dataset.yAxisID === "y2") return `${item.dataset.label}: ${Number(v).toFixed(1)}`;
                       return `${item.dataset.label}: ${M.fmt(v)}`;
                     },
                   },
                 },
               },
               scales: {
-                x: { ticks: { maxTicksLimit: 12, color: "#0b0c08", font: { family: "JetBrains Mono", size: 10 } }, grid: { display: false } },
-                y: { suggestedMax: top, beginAtZero: true, ticks: { callback: (v) => M.fmt(v), color: "#0b0c08", font: { family: "JetBrains Mono", size: 10 } } },
-                y2: { display: !!(leads && (leads.portal || leads.ga4)), position: "right", beginAtZero: true, grid: { display: false }, title: { display: true, text: "Leads / day" } },
+                x: { ticks: { maxTicksLimit: 12, color: "#5a5d50", font: { family: "JetBrains Mono", size: 10 } }, grid: { display: false }, border: { color: "#d8d6c4" } },
+                y: { suggestedMax: top, beginAtZero: true, ticks: { callback: (v) => M.fmt(v), color: "#5a5d50", font: { family: "JetBrains Mono", size: 10 }, maxTicksLimit: 6 }, grid: { color: "#efeddf" }, border: { display: false } },
               },
             },
           });
+
+          // leads per day (own chart, one scale): Google conversions vs Portal vs GA4
+          const avg7Of = (get) => dates.map((d, i) => { if (i < 6) return null; let t = 0; for (let k = i - 6; k <= i; k++) t += get(dates[k]) || 0; return t / 7; });
+          const leadsWrap = document.getElementById("trendLeadsWrap");
+          if (trendLeadsChart) { trendLeadsChart.destroy(); trendLeadsChart = null; }
+          if (leads && (leads.portal || leads.ga4) && leadsWrap) {
+            leadsWrap.style.display = "";
+            const lds = [{ label: "Google Ads conversions", data: avg7Of((d) => (byDay.get(d) || {}).conv), borderColor: "#2a78d6", backgroundColor: "#2a78d6" }];
+            if (leads.portal) lds.push({ label: "Portal PPC leads", data: avg7Of((d) => leads.portal.get(d)), borderColor: "#eb6834", backgroundColor: "#eb6834" });
+            if (leads.ga4) lds.push({ label: "GA4 paid leads", data: avg7Of((d) => leads.ga4.get(d)), borderColor: "#1baf7a", backgroundColor: "#1baf7a" });
+            lds.forEach((x) => Object.assign(x, { borderWidth: 2, pointRadius: 0, pointHoverRadius: 5, tension: 0.25, spanGaps: true }));
+            trendLeadsChart = new Chart(document.getElementById("trendLeadsChart"), {
+              type: "line",
+              data: { labels: dates.map((d) => formatDateShort(d)), datasets: lds },
+              options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: "index", intersect: false },
+                plugins: {
+                  legend: { position: "top", align: "start", labels: { color: "#3a3d33", boxWidth: 18, boxHeight: 2, padding: 14, font: { family: "Jost", size: 12, weight: "600" } } },
+                  tooltip: { backgroundColor: "#0b0c08", titleColor: "#ffe92e", bodyColor: "#fff", borderColor: "#e76829", borderWidth: 2, padding: 10, boxPadding: 4, callbacks: { label: (item) => (item.raw == null ? null : `${item.dataset.label}: ${Number(item.raw).toFixed(1)}/day`) } },
+                },
+                scales: {
+                  x: { ticks: { maxTicksLimit: 12, color: "#5a5d50", font: { family: "JetBrains Mono", size: 10 } }, grid: { display: false }, border: { color: "#d8d6c4" } },
+                  y: { beginAtZero: true, ticks: { color: "#5a5d50", font: { family: "JetBrains Mono", size: 10 }, maxTicksLimit: 5 }, grid: { color: "#efeddf" }, border: { display: false } },
+                },
+              },
+            });
+          } else if (leadsWrap) leadsWrap.style.display = "none";
 
           // story cards
           const ctx = { changes: loadChangeLog().filter((c) => trendState.account === "all" || c.customerId === trendState.account), notes, holidays };
@@ -18818,52 +18872,67 @@ levis@gametruck`;
             a.name.length > 22 ? a.name.substring(0, 22) + "…" : a.name,
           );
           const costs = top.map((a) => a.cost);
-          const convs = top.map((a) => a.conv);
-          const costColors = top.map((a) => {
-            const h = getHealth(a.cpa, a);
-            return {
-              good: "#7aa52b",
-              warn: "#d4a017",
-              bad: "#c73a17",
-              none: "#7a7d70",
-            }[h];
-          });
-
           if (spendChart) spendChart.destroy();
+          const STATUS = {
+            good: { color: "#7aa52b", label: "On target" },
+            warn: { color: "#d4a017", label: "Attention" },
+            bad: { color: "#c73a17", label: "Critical" },
+            none: { color: "#a3a597", label: "No data" },
+          };
+          const health = top.map((a) => getHealth(a.cpa, a));
+          const endLabels = {
+            id: "spendEndLabels",
+            afterDatasetsDraw(chart) {
+              const { ctx } = chart;
+              const meta = chart.getDatasetMeta(0);
+              ctx.save();
+              ctx.font = "600 11px 'JetBrains Mono', monospace";
+              ctx.fillStyle = "#3a3d33";
+              ctx.textBaseline = "middle";
+              meta.data.forEach((bar, i) => {
+                const a = top[i];
+                const cpa = a.conv > 0 ? fmt$(a.cost / a.conv) + "/conv" : "no conv";
+                ctx.fillText(`${fmt$(a.cost)} · ${cpa}`, bar.x + 6, bar.y);
+              });
+              ctx.restore();
+            },
+          };
           spendChart = new Chart(document.getElementById("spendChart"), {
             type: "bar",
             data: {
               labels,
               datasets: [
                 {
-                  label: "Cost ($)",
+                  label: "Spend",
                   data: costs,
-                  backgroundColor: costColors,
-                  borderRadius: 3,
-                  borderColor: "#0b0c08",
-                  borderWidth: 1.5,
-                  yAxisID: "y",
-                },
-                {
-                  label: "Conversions",
-                  data: convs,
-                  backgroundColor: "#0b0c08",
-                  borderRadius: 3,
-                  yAxisID: "y1",
+                  backgroundColor: health.map((h) => STATUS[h].color),
+                  borderRadius: 4,
+                  borderSkipped: "start",
+                  barPercentage: 0.72,
+                  categoryPercentage: 0.9,
                 },
               ],
             },
+            plugins: [endLabels],
             options: {
+              indexAxis: "y",
               responsive: true,
               maintainAspectRatio: false,
+              layout: { padding: { right: 150 } },
               plugins: {
                 legend: {
+                  position: "bottom",
                   labels: {
-                    color: "#0b0c08",
-                    font: { family: "Jost", size: 11, weight: "700" },
+                    color: "#3a3d33",
+                    font: { family: "Jost", size: 11, weight: "600" },
                     usePointStyle: true,
                     pointStyle: "rectRounded",
+                    generateLabels: () =>
+                      ["good", "warn", "bad", "none"]
+                        .filter((h) => health.includes(h))
+                        .map((h) => ({ text: STATUS[h].label, fillStyle: STATUS[h].color, strokeStyle: STATUS[h].color, pointStyle: "rectRounded", fontColor: "#3a3d33" })),
                   },
+                  onClick: () => {},
                 },
                 tooltip: {
                   backgroundColor: "#0b0c08",
@@ -18874,32 +18943,31 @@ levis@gametruck`;
                   padding: 10,
                   titleFont: { family: "Jost", weight: "800" },
                   bodyFont: { family: "JetBrains Mono" },
+                  callbacks: {
+                    title: (items) => top[items[0].dataIndex].name,
+                    label: (item) => {
+                      const a = top[item.dataIndex];
+                      return [
+                        `Spend: ${fmt$(a.cost)}`,
+                        `Conversions: ${fmtN(Math.round(a.conv * 10) / 10)}`,
+                        `Cost/conv: ${a.conv > 0 ? fmt$(a.cost / a.conv) : "—"} (goal ${fmt$(goalFor(a))})`,
+                        `Status: ${STATUS[health[item.dataIndex]].label}`,
+                      ];
+                    },
+                  },
                 },
               },
               scales: {
                 x: {
-                  ticks: {
-                    color: "#3a3d33",
-                    font: { family: "JetBrains Mono", size: 9 },
-                    maxRotation: 45,
-                  },
-                  grid: { color: "#e4e8d6" },
+                  beginAtZero: true,
+                  ticks: { color: "#5a5d50", font: { family: "JetBrains Mono", size: 10 }, maxTicksLimit: 5, callback: (v) => "$" + Number(v).toLocaleString() },
+                  grid: { color: "#efeddf" },
+                  border: { display: false },
                 },
                 y: {
-                  position: "left",
-                  ticks: {
-                    color: "#3a3d33",
-                    font: { family: "JetBrains Mono", size: 10 },
-                  },
-                  grid: { color: "#e4e8d6" },
-                },
-                y1: {
-                  position: "right",
-                  ticks: {
-                    color: "#3a3d33",
-                    font: { family: "JetBrains Mono", size: 10 },
-                  },
-                  grid: { drawOnChartArea: false },
+                  ticks: { color: "#0b0c08", font: { family: "Jost", size: 11, weight: "600" } },
+                  grid: { display: false },
+                  border: { color: "#d8d6c4" },
                 },
               },
             },
@@ -18920,11 +18988,11 @@ levis@gametruck`;
           healthChart = new Chart(document.getElementById("healthChart"), {
             type: "doughnut",
             data: {
-              labels: ["On Target", "Attention", "Critical", "No Data"],
+              labels: [`On Target (${good})`, `Attention (${warn})`, `Critical (${bad})`, `No Data (${none})`],
               datasets: [
                 {
                   data: [good, warn, bad, none],
-                  backgroundColor: ["#7aa52b", "#d4a017", "#c73a17", "#7a7d70"],
+                  backgroundColor: ["#7aa52b", "#d4a017", "#c73a17", "#a3a597"],
                   borderColor: "#ffffff",
                   borderWidth: 4,
                 },
