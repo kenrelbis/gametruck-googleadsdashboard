@@ -1105,6 +1105,31 @@
         padding: 10px;
         margin-bottom: 12px;
       }
+      .heatmap { border-collapse: separate; border-spacing: 2px; width: 100%; font-size: 10.5px; }
+      table.heatmap thead { background: transparent; }
+      table.heatmap th, table.heatmap thead th { font-weight: 600; color: var(--ink-muted) !important; padding: 2px; text-align: center; background: transparent !important; border: 0 !important; letter-spacing: 0; font-size: 10px; }
+      .heatmap tbody th { text-align: right; padding-right: 6px; color: #0b0c08; }
+      .heatmap td.hm-cell { height: 30px; min-width: 30px; text-align: center; border-radius: 4px; font-family: "JetBrains Mono", monospace; font-size: 9.5px; color: #0b0c08; padding: 0; }
+      .heatmap td.hm-sum { text-align: left; padding-left: 10px; font-family: "JetBrains Mono", monospace; font-size: 11px; white-space: nowrap; }
+      .heatmap th.hm-sum { text-align: left; padding-left: 10px; }
+      .hm-wrap { overflow-x: auto; padding: 10px; background: #fff; border: 2.5px solid var(--black); border-radius: 10px; }
+      .hm-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12px; color: var(--ink-muted); align-items: center; }
+      .hm-legend span { display: inline-flex; align-items: center; gap: 6px; }
+      .hm-sw { display: inline-block; width: 16px; height: 12px; border-radius: 3px; }
+      #insTips ul { margin: 0 0 8px 18px; }
+      #forecastTable tr.fc-bad td:first-child, #forecastTable tr.fc-warn td:first-child, #forecastTable tr.fc-info td:first-child, #forecastTable tr.fc-ok td:first-child { font-size: 15px; }
+      .btn-primary-ghost { border-color: #e76829 !important; color: #c4521a !important; font-weight: 700 !important; }
+      .trend-legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12px; color: var(--ink-muted); margin: -4px 0 14px 4px; }
+      .trend-legend span { display: inline-flex; align-items: center; gap: 6px; }
+      .trend-legend .mk { display: inline-block; }
+      .trend-legend .mk.tri { width: 0; height: 0; border-left: 6px solid transparent; border-right: 6px solid transparent; border-top: 9px solid; }
+      .trend-legend .mk.sq { width: 9px; height: 9px; background: #8a8c80; border-radius: 2px; }
+      .trend-legend .mk.band { width: 16px; height: 10px; border-radius: 2px; }
+      .trend-legend .mk.band.spike { background: rgba(227, 73, 72, 0.18); }
+      .trend-legend .mk.band.good { background: rgba(0, 131, 0, 0.14); }
+      .trend-leads-wrap { height: 250px; padding-bottom: 34px; }
+      .trend-leads-canvas { position: relative; height: 100%; }
+      .trend-sub { font-size: 12px; font-weight: 600; margin: 0 0 6px 4px; }
       #trendStories {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
@@ -3561,6 +3586,7 @@
           <button data-nav="accounts">📊 Accounts</button>
           <button data-nav="search">🔍 Search Terms</button>
           <button data-nav="trends">📉 Trends</button>
+          <button data-nav="insights">⏱️ Timing &amp; Competition</button>
           <button data-nav="changes">📜 Changes</button>
           <button data-nav="health">🩺 Health</button>
         </nav>
@@ -3810,7 +3836,7 @@
         </div>
         <div class="charts-row">
           <div class="chart-card">
-            <h3>Spend vs Conversions</h3>
+            <h3>Top 10 by Spend · Cost/Conv vs Goal</h3>
             <div class="chart-wrap"><canvas id="spendChart"></canvas></div>
           </div>
           <div class="chart-card">
@@ -3830,6 +3856,7 @@
             <div class="date-scope" style="height: 34px"><button class="scope-btn active" data-weekly-mode="lastWeek">Last week</button><button class="scope-btn" data-weekly-mode="weekly">This week so far</button></div>
             <span class="view-ctl"><label class="control-label">View</label><select class="view-select" data-view-select="weekly" onchange="if (this.value) selectView('weekly', this.value)"></select><button class="pill" onclick="openMetricPicker('weekly')" title="Choose which metrics to show">⚙ Columns</button></span>
             <button class="btn btn-ghost" onclick="renderCurrentPage(true)">🔄 Refresh</button>
+            <button class="btn btn-primary-ghost" id="weeklyReportBtn" onclick="openWeeklyReport()" title="Opens a print-ready report (week + month to date + bookings) you can save as PDF">📄 Weekly report (PDF)</button>
             <button class="btn btn-ghost" onclick="copyReport('page-weekly')" title="Copies a summary line + table you can paste into email, Slack or Google Sheets">📋 Copy for report</button>
             <button class="btn btn-ghost" onclick="exportReportCsv('page-weekly', 'weekly-report')">↓ CSV</button>
             <span class="report-status"></span>
@@ -3853,6 +3880,25 @@
           </div>
           <div class="summary report-kpis"></div>
           <div class="table-wrap"><table class="report-table"></table></div>
+          <div id="forecastSection">
+            <div class="section-head" style="margin-top: 32px">
+              <h2>Month-end Forecast &amp; Budget Planner</h2>
+              <div class="meta" id="forecastStatus">Loading…</div>
+            </div>
+            <div class="report-controls">
+              <button class="btn btn-ghost" onclick="loadForecast(true)">🔄 Refresh forecast</button>
+              <button class="btn btn-ghost" onclick="copyReport('forecastSection')">📋 Copy</button>
+              <button class="btn btn-ghost" onclick="exportReportCsv('forecastSection', 'budget-forecast')">↓ CSV</button>
+              <span class="report-status">Click “Set” to enter an account's monthly budget — then it tells you the daily budget that lands on it.</span>
+            </div>
+            <div class="summary" id="forecastKpis"></div>
+            <div class="table-wrap">
+              <table class="report-table" id="forecastTable">
+                <thead><tr><th></th><th>Account</th><th>Spend so far</th><th>Projected month-end</th><th>Monthly budget</th><th title="Current daily budget → the daily budget that lands on your monthly budget">Daily budget</th><th>Projected cost/conv</th><th>What to do</th></tr></thead>
+                <tbody id="forecastBody"></tbody>
+              </table>
+            </div>
+          </div>
         </div>
 
         <div class="page" data-page="markets" id="page-markets" style="display: none">
@@ -4030,6 +4076,42 @@
         </div>
 
         </div>
+        <div class="page" data-page="insights" id="page-insights" style="display: none">
+          <div class="section-head">
+            <h2>Timing &amp; Competition</h2>
+            <div class="meta">Best days and hours to advertise, and whether competitors are pushing you out of the auction</div>
+          </div>
+          <div class="report-controls">
+            <select id="insAccount" class="btn btn-ghost" style="cursor: pointer" title="Account"></select>
+            <select id="insDays" class="btn btn-ghost" style="cursor: pointer" title="Period">
+              <option value="30">Last 30 days</option>
+              <option value="90" selected>Last 90 days</option>
+            </select>
+            <button class="btn btn-ghost" onclick="loadInsightsPage(true)">🔄 Refresh</button>
+            <button class="btn btn-ghost" onclick="copyReport('page-insights')">📋 Copy</button>
+            <span class="report-status" id="insStatus"></span>
+          </div>
+          <h3 class="sub-head">Competition pressure (vs the period before)</h3>
+          <div class="story-muted" style="margin-bottom: 8px">Google doesn't let this connection read competitor names (auction insights), so this uses the signals it does share: impression share, share lost to rank (outbid or lower ad quality), lost to budget, top-of-page share and CPC.</div>
+          <div class="table-wrap">
+            <table class="report-table">
+              <thead><tr><th></th><th>Campaign</th><th>Spend</th><th>Avg CPC</th><th>Imp. share</th><th>Top of page</th><th>Abs. top</th><th>Lost to rank</th><th>Lost to budget</th><th>Verdict</th></tr></thead>
+              <tbody id="insCompBody"></tbody>
+            </table>
+          </div>
+          <h3 class="sub-head" style="margin-top: 28px">Best days &amp; hours</h3>
+          <div class="report-controls">
+            <select id="insMetric" class="btn btn-ghost" style="cursor: pointer" title="What the grid shows">
+              <option value="cpa">Cost / conv</option>
+              <option value="conv">Conversions</option>
+              <option value="cost">Spend</option>
+            </select>
+            <div class="hm-legend" id="insHeatLegend"></div>
+          </div>
+          <div class="hm-wrap" id="insHeatmap"></div>
+          <h3 class="sub-head" style="margin-top: 20px">Schedule suggestions</h3>
+          <div class="story" id="insTips"></div>
+        </div>
         <div class="page" data-page="trends" id="page-trends" style="display: none">
           <div class="section-head">
             <h2>Trends &amp; What Changed</h2>
@@ -4061,6 +4143,18 @@
             <span class="report-status" id="trendStatus"></span>
           </div>
           <div class="trend-chart-wrap"><canvas id="trendChart"></canvas></div>
+          <div class="trend-legend" id="trendMarkerLegend">
+            <span><i class="mk tri" style="border-top-color:#6250d6"></i>Your change</span>
+            <span><i class="mk tri" style="border-top-color:#eb6834"></i>Google auto-apply</span>
+            <span><i class="mk tri" style="border-top-color:#1baf7a"></i>Your note</span>
+            <span><i class="mk sq"></i>Holiday</span>
+            <span><i class="mk band spike"></i>Spike</span>
+            <span><i class="mk band good"></i>Good run</span>
+          </div>
+          <div class="trend-chart-wrap trend-leads-wrap" id="trendLeadsWrap" style="display: none">
+            <div class="trend-sub">Leads per day (7-day average) — did real leads move with Google's conversions?</div>
+            <div class="trend-leads-canvas"><canvas id="trendLeadsChart"></canvas></div>
+          </div>
           <div id="trendNotesList"></div>
           <div class="section-head" style="margin-top: 28px">
             <h2>What happened</h2>
@@ -7693,6 +7787,9 @@
             marketCpl: mk && mk.costPerLead != null ? mk.costPerLead : null,
             marketLeads: mk ? mk.ppcLeads : null,
             marketName: mk ? mk.name : null,
+            marketBookings: mk && mk.ppcLeads ? mk.estBookings : null,
+            marketCpb: mk && mk.costPerBooking != null ? mk.costPerBooking : null,
+            marketRoas: mk && mk.estRoas != null ? mk.estRoas : null,
             periodBudget: pw && pw.daysInProjection && a.dailyBudget > 0 ? a.dailyBudget * pw.daysInProjection : null,
           });
         }
@@ -7733,6 +7830,9 @@
           activeCampaigns: { label: "Active campaigns", group: "Budget & pacing", sort: "activeCampaigns", render: (a) => fmtN(a.activeCampaigns || 0), csv: (a) => a.activeCampaigns || 0 },
           marketLeads: { label: "Market leads", group: "Leads (market)", sort: "marketLeads", render: (a) => (a.marketLeads != null ? `<span title="${escapeHtml(a.marketName || "")} — Portal PPC leads for the whole metro">${fmtN(a.marketLeads)}</span>` : `<span style="color:var(--ink-muted)" title="Open the Markets page for this date range to fill this in">—</span>`), csv: (a) => a.marketLeads ?? "" },
           marketCpl: { label: "Market cost/lead", group: "Leads (market)", sort: "marketCpl", render: (a) => (a.marketCpl != null ? `<span title="${escapeHtml(a.marketName || "")} — all ad spend in the metro (incl. GTHQ) ÷ Portal PPC leads">${fmt$(a.marketCpl)}</span>` : `<span style="color:var(--ink-muted)" title="Open the Markets page for this date range to fill this in">—</span>`), csv: (a) => (a.marketCpl != null ? a.marketCpl.toFixed(2) : "") },
+          marketBookings: { label: "Market est. bookings", group: "Leads (market)", sort: "marketBookings", render: (a) => (a.marketBookings != null ? `<span title="${escapeHtml(a.marketName || "")} — Portal PPC leads × the metro's booking rate">${a.marketBookings.toFixed(1)}</span>` : `<span style="color:var(--ink-muted)" title="Open the Markets page for this date range to fill this in">—</span>`), csv: (a) => (a.marketBookings != null ? a.marketBookings.toFixed(1) : "") },
+          marketCpb: { label: "Market cost/booking", group: "Leads (market)", sort: "marketCpb", render: (a) => (a.marketCpb != null ? `<span title="${escapeHtml(a.marketName || "")} — all ad spend in the metro ÷ estimated bookings">${fmt$(a.marketCpb)}</span>` : `<span style="color:var(--ink-muted)" title="Open the Markets page for this date range to fill this in">—</span>`), csv: (a) => (a.marketCpb != null ? a.marketCpb.toFixed(2) : "") },
+          marketRoas: { label: "Market est. ROAS", group: "Leads (market)", sort: "marketRoas", render: (a) => (a.marketRoas != null ? `<span title="${escapeHtml(a.marketName || "")} — estimated booked revenue ÷ ad spend">${a.marketRoas.toFixed(1)}×</span>` : `<span style="color:var(--ink-muted)" title="Open the Markets page for this date range to fill this in">—</span>`), csv: (a) => (a.marketRoas != null ? a.marketRoas.toFixed(2) : "") },
           why: { label: "Why", group: "Notes", sort: null, cellClass: () => "why-cell", render: (a) => escapeHtml(a.cost > 0 ? diagnoseAccount(a)[0] || "" : ""), csv: (a) => (a.cost > 0 ? diagnoseAccount(a)[0] || "" : "") },
         };
 
@@ -8863,6 +8963,7 @@
         const TREND_NOTES_KEY = "gt_trend_notes_v1";
         const trendCache = new Map(); // key → { days, campaigns, ly, ... }
         let trendChart = null;
+        let trendLeadsChart = null;
         let trendState = { account: "all", metric: "cpa", days: 90, showLY: true, showLeads: true, showHolidays: true, showChanges: true, showNotes: true };
         let trendLast = null;
 
@@ -9363,21 +9464,24 @@
           const vals = [...daily, ...avg7].filter((x) => x != null && Number.isFinite(x));
           const sorted = vals.slice().sort((a, b) => a - b);
           const top = sorted.length ? sorted[Math.floor(sorted.length * 0.97)] * 1.15 : 1;
-          const kindColor = { change: "#2f6fdf", auto: "#e76829", note: "#7aa52b", holiday: "#8a5cc2" };
+          const kindColor = { change: "#6250d6", auto: "#eb6834", note: "#1baf7a", holiday: "#8a8c80" };
           const markerPoints = dates.map((d) => (markers.has(d) ? top : null));
-          const markerColors = dates.map((d) => {
+          const markerKind = (d) => {
             const ks = (markers.get(d) || []).map((m) => m.kind);
-            return kindColor[ks.includes("auto") ? "auto" : ks.includes("change") ? "change" : ks.includes("note") ? "note" : "holiday"];
-          });
+            return ks.includes("auto") ? "auto" : ks.includes("change") ? "change" : ks.includes("note") ? "note" : "holiday";
+          };
+          const markerColors = dates.map((d) => kindColor[markerKind(d)]);
+          const markerStyles = dates.map((d) => (markerKind(d) === "holiday" ? "rectRounded" : "triangle"));
+          const acctObj = trendState.account === "all" ? null : accounts.find((a) => a.customerId === trendState.account);
+          const goalVal = metric === "cpa" && acctObj && typeof goalFor === "function" ? goalFor(acctObj) : null;
 
           const datasets = [
-            { label: `${M.label} (daily)`, data: daily.map((x) => (x != null && x <= top ? x : x != null ? top : null)), borderColor: "rgba(11,12,8,0.25)", backgroundColor: "rgba(11,12,8,0.25)", borderWidth: 1, pointRadius: 0, spanGaps: true, yAxisID: "y" },
-            { label: `${M.label} (7-day)`, data: avg7, borderColor: "#0b0c08", borderWidth: 2.5, pointRadius: 0, spanGaps: true, yAxisID: "y" },
+            { label: `${M.label} (7-day avg)`, data: avg7, borderColor: "#2a78d6", backgroundColor: "#2a78d6", borderWidth: 2.5, pointRadius: 0, pointHoverRadius: 5, tension: 0.25, spanGaps: true, yAxisID: "y" },
+            { label: `${M.label} (each day)`, data: daily.map((x) => (x != null && x <= top ? x : x != null ? top : null)), borderColor: "rgba(42,120,214,0.30)", backgroundColor: "rgba(42,120,214,0.30)", borderWidth: 1, pointRadius: 0, pointHoverRadius: 3, spanGaps: true, yAxisID: "y" },
           ];
-          if (trendState.showLY && ly7.some((x) => x != null)) datasets.push({ label: "Same weeks last year (7-day)", data: ly7, borderColor: "#9a9c90", borderDash: [6, 4], borderWidth: 1.5, pointRadius: 0, spanGaps: true, yAxisID: "y" });
-          if (leads && leads.portal) datasets.push({ type: "bar", label: "Portal PPC leads / day", data: dates.map((d) => leads.portal.get(d) || 0), backgroundColor: "rgba(231,104,41,0.16)", barPercentage: 0.6, order: 10, yAxisID: "y2" });
-          if (leads && leads.ga4) datasets.push({ label: "GA4 paid leads / day (7-day avg)", data: dates.map((d, i) => { if (i < 6) return null; let t = 0; for (let k = i - 6; k <= i; k++) t += leads.ga4.get(dates[k]) || 0; return t / 7; }), borderColor: "#2f6fdf", borderWidth: 1.5, pointRadius: 0, yAxisID: "y2" });
-          datasets.push({ label: "Markers", data: markerPoints, showLine: false, pointStyle: "triangle", pointRotation: 180, pointRadius: dates.map((d) => (markers.has(d) ? 7 : 0)), pointHoverRadius: 9, pointBackgroundColor: markerColors, pointBorderColor: "#0b0c08", yAxisID: "y" });
+          if (trendState.showLY && ly7.some((x) => x != null)) datasets.push({ label: "Same weeks last year", data: ly7, borderColor: "#7a7d70", backgroundColor: "#7a7d70", borderDash: [6, 4], borderWidth: 1.5, pointRadius: 0, pointHoverRadius: 4, tension: 0.25, spanGaps: true, yAxisID: "y" });
+          if (goalVal) datasets.push({ label: `Goal ${fmt$(goalVal)}`, data: dates.map(() => goalVal), borderColor: "#0b0c08", backgroundColor: "#0b0c08", borderDash: [2, 4], borderWidth: 1.5, pointRadius: 0, pointHoverRadius: 0, yAxisID: "y" });
+          datasets.push({ label: "Markers", data: markerPoints, showLine: false, pointStyle: markerStyles, pointRotation: dates.map((d) => (markerKind(d) === "holiday" ? 0 : 180)), pointRadius: dates.map((d) => (markers.has(d) ? 7 : 0)), pointHoverRadius: 9, pointBackgroundColor: markerColors, pointBorderColor: "#ffffff", pointBorderWidth: 2, yAxisID: "y" });
 
           const shade = {
             id: "trendShade",
@@ -9386,7 +9490,7 @@
               episodes.forEach((ep) => {
                 const x0 = scales.x.getPixelForValue(ep.startIdx), x1 = scales.x.getPixelForValue(ep.endIdx);
                 ctx.save();
-                ctx.fillStyle = ep.kind === "spike" ? "rgba(199,58,23,0.10)" : "rgba(122,165,43,0.12)";
+                ctx.fillStyle = ep.kind === "spike" ? "rgba(227,73,72,0.12)" : "rgba(0,131,0,0.09)";
                 ctx.fillRect(x0, chartArea.top, Math.max(2, x1 - x0), chartArea.bottom - chartArea.top);
                 ctx.restore();
               });
@@ -9395,7 +9499,7 @@
                 if (i < 0) return;
                 const x = scales.x.getPixelForValue(i);
                 ctx.save();
-                ctx.strokeStyle = "rgba(11,12,8,0.15)";
+                ctx.strokeStyle = "rgba(11,12,8,0.12)";
                 ctx.setLineDash([2, 3]);
                 ctx.beginPath();
                 ctx.moveTo(x, chartArea.top);
@@ -9417,28 +9521,55 @@
               maintainAspectRatio: false,
               interaction: { mode: "index", intersect: false },
               plugins: {
-                legend: { labels: { color: "#0b0c08", font: { family: "Jost", size: 11, weight: "600" }, filter: (item) => item.text !== "Markers" } },
+                legend: { position: "top", align: "start", labels: { color: "#3a3d33", boxWidth: 18, boxHeight: 2, padding: 14, font: { family: "Jost", size: 12, weight: "600" }, filter: (item) => item.text !== "Markers" } },
                 tooltip: {
-                  backgroundColor: "#0b0c08", titleColor: "#ffe92e", bodyColor: "#fff", borderColor: "#e76829", borderWidth: 2, padding: 10,
-                  filter: (item) => item.dataset.label !== "Markers" || markers.has(dates[item.dataIndex]),
+                  backgroundColor: "#0b0c08", titleColor: "#ffe92e", bodyColor: "#fff", borderColor: "#e76829", borderWidth: 2, padding: 10, boxPadding: 4,
+                  filter: (item) => (item.dataset.label !== "Markers" || markers.has(dates[item.dataIndex])) && !String(item.dataset.label).startsWith("Goal "),
                   callbacks: {
                     label: (item) => {
                       if (item.dataset.label === "Markers") return (markers.get(dates[item.dataIndex]) || []).map((m) => m.text);
                       const v = item.raw;
                       if (v == null) return null;
-                      if (item.dataset.yAxisID === "y2") return `${item.dataset.label}: ${Number(v).toFixed(1)}`;
                       return `${item.dataset.label}: ${M.fmt(v)}`;
                     },
                   },
                 },
               },
               scales: {
-                x: { ticks: { maxTicksLimit: 12, color: "#0b0c08", font: { family: "JetBrains Mono", size: 10 } }, grid: { display: false } },
-                y: { suggestedMax: top, beginAtZero: true, ticks: { callback: (v) => M.fmt(v), color: "#0b0c08", font: { family: "JetBrains Mono", size: 10 } } },
-                y2: { display: !!(leads && (leads.portal || leads.ga4)), position: "right", beginAtZero: true, grid: { display: false }, title: { display: true, text: "Leads / day" } },
+                x: { ticks: { maxTicksLimit: 12, color: "#5a5d50", font: { family: "JetBrains Mono", size: 10 } }, grid: { display: false }, border: { color: "#d8d6c4" } },
+                y: { suggestedMax: top, beginAtZero: true, ticks: { callback: (v) => M.fmt(v), color: "#5a5d50", font: { family: "JetBrains Mono", size: 10 }, maxTicksLimit: 6 }, grid: { color: "#efeddf" }, border: { display: false } },
               },
             },
           });
+
+          // leads per day (own chart, one scale): Google conversions vs Portal vs GA4
+          const avg7Of = (get) => dates.map((d, i) => { if (i < 6) return null; let t = 0; for (let k = i - 6; k <= i; k++) t += get(dates[k]) || 0; return t / 7; });
+          const leadsWrap = document.getElementById("trendLeadsWrap");
+          if (trendLeadsChart) { trendLeadsChart.destroy(); trendLeadsChart = null; }
+          if (leads && (leads.portal || leads.ga4) && leadsWrap) {
+            leadsWrap.style.display = "";
+            const lds = [{ label: "Google Ads conversions", data: avg7Of((d) => (byDay.get(d) || {}).conv), borderColor: "#2a78d6", backgroundColor: "#2a78d6" }];
+            if (leads.portal) lds.push({ label: "Portal PPC leads", data: avg7Of((d) => leads.portal.get(d)), borderColor: "#eb6834", backgroundColor: "#eb6834" });
+            if (leads.ga4) lds.push({ label: "GA4 paid leads", data: avg7Of((d) => leads.ga4.get(d)), borderColor: "#1baf7a", backgroundColor: "#1baf7a" });
+            lds.forEach((x) => Object.assign(x, { borderWidth: 2, pointRadius: 0, pointHoverRadius: 5, tension: 0.25, spanGaps: true }));
+            trendLeadsChart = new Chart(document.getElementById("trendLeadsChart"), {
+              type: "line",
+              data: { labels: dates.map((d) => formatDateShort(d)), datasets: lds },
+              options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: "index", intersect: false },
+                plugins: {
+                  legend: { position: "top", align: "start", labels: { color: "#3a3d33", boxWidth: 18, boxHeight: 2, padding: 14, font: { family: "Jost", size: 12, weight: "600" } } },
+                  tooltip: { backgroundColor: "#0b0c08", titleColor: "#ffe92e", bodyColor: "#fff", borderColor: "#e76829", borderWidth: 2, padding: 10, boxPadding: 4, callbacks: { label: (item) => (item.raw == null ? null : `${item.dataset.label}: ${Number(item.raw).toFixed(1)}/day`) } },
+                },
+                scales: {
+                  x: { ticks: { maxTicksLimit: 12, color: "#5a5d50", font: { family: "JetBrains Mono", size: 10 } }, grid: { display: false }, border: { color: "#d8d6c4" } },
+                  y: { beginAtZero: true, ticks: { color: "#5a5d50", font: { family: "JetBrains Mono", size: 10 }, maxTicksLimit: 5 }, grid: { color: "#efeddf" }, border: { display: false } },
+                },
+              },
+            });
+          } else if (leadsWrap) leadsWrap.style.display = "none";
 
           // story cards
           const ctx = { changes: loadChangeLog().filter((c) => trendState.account === "all" || c.customerId === trendState.account), notes, holidays };
@@ -9503,6 +9634,530 @@
           if (now.r >= 1.3 && (!before || before.r < 1.3)) return { kind: "spike", r: now.r, cpa: now.w.cost / now.w.conv, base: now.b.cost / now.b.conv, since: days[n - 4].date };
           if (now.r <= 0.75 && (!before || before.r > 0.75)) return { kind: "good", r: now.r, cpa: now.w.cost / now.w.conv, base: now.b.cost / now.b.conv, since: days[n - 4].date };
           return null;
+        }
+
+        // ============ FORECAST & BUDGET PLANNER (MTD page) ============
+        // Month-end projection from the last 7 days' run-rate, and the daily
+        // budget each account needs to land on its monthly budget target.
+        const forecastCache = new Map(); // month key → { rows, fetchedAt }
+        let forecastLast = null;
+
+        function monthInfo() {
+          const today = __localYMD(new Date());
+          const yesterday = ymdAddDays(today, -1);
+          const start = `${today.slice(0, 7)}-01`;
+          const y = Number(today.slice(0, 4)), m = Number(today.slice(5, 7));
+          const daysInMonth = new Date(Date.UTC(y, m, 0)).getUTCDate();
+          const end = `${today.slice(0, 7)}-${String(daysInMonth).padStart(2, "0")}`;
+          const daysDone = Math.max(0, Number(yesterday.slice(8, 10)) * (yesterday >= start ? 1 : 0));
+          return { today, yesterday, start, end, daysInMonth, daysDone, daysLeft: daysInMonth - daysDone };
+        }
+
+        function budgetTargetFor(a) {
+          const main = accounts.find((x) => x.customerId && x.customerId === a.customerId);
+          const t = Number(main && main.goalMonthlyBudget);
+          return t > 0 ? t : null;
+        }
+
+        async function setBudgetTarget(customerId) {
+          const main = accounts.find((x) => x.customerId === customerId);
+          if (!main) return;
+          const row = forecastLast && forecastLast.rows.find((r) => r.customerId === customerId);
+          const current = budgetTargetFor(main) || (row ? Math.round(row.defaultTarget) : "");
+          const raw = window.prompt(`Monthly budget target for ${main.name} (blank = daily budget × days in month):`, String(current));
+          if (raw === null) return;
+          const v = parseFloat(String(raw).replace(/[^0-9.]/g, ""));
+          if (raw.trim() === "") delete main.goalMonthlyBudget;
+          else if (Number.isFinite(v) && v > 0) main.goalMonthlyBudget = v;
+          else return toast("Enter a dollar amount, e.g. 1500", true);
+          await saveData();
+          renderForecast();
+        }
+
+        async function loadForecast(force) {
+          const box = document.getElementById("forecastSection");
+          if (!box) return;
+          const status = document.getElementById("forecastStatus");
+          const mi = monthInfo();
+          if (mi.daysDone < 1) {
+            status.textContent = "First day of the month — the forecast starts tomorrow.";
+            return;
+          }
+          const key = `${mi.start}|${mi.yesterday}`;
+          try {
+            if (force || !forecastCache.has(key)) {
+              const entry = await getReport("mtd");
+              const targets = entry.accounts.filter((a) => a.customerId && ((a.cost || 0) > 0 || (a.dailyBudget || 0) > 0));
+              const tools = await ensureAdsMcpTools();
+              let done = 0;
+              status.textContent = `Loading daily spend for ${targets.length} accounts…`;
+              const res = await runWithConcurrencyLimit(targets, 3, async (a) => {
+                const r = await mcpSearchRows(tools, a.customerId, {
+                  fields: ["segments.date", "metrics.cost_micros", "metrics.conversions"],
+                  resource: "customer",
+                  conditions: [`segments.date BETWEEN '${mi.start}' AND '${mi.yesterday}'`],
+                }, { loginCustomerId: ADS_MCP_ANCHOR_MCC_ID });
+                done += 1;
+                status.textContent = `Loading daily spend… ${done}/${targets.length}`;
+                if (r.mode === "empty") throw new Error("failed");
+                return { a, rows: r.rows };
+              });
+              const rows = [];
+              let failed = 0;
+              res.forEach((x) => {
+                if (x.status !== "fulfilled") return void (failed += 1);
+                const { a, rows: daily } = x.value;
+                const byDay = new Map();
+                daily.forEach((r) => {
+                  const d = String(rowValue(r, ["segments.date"]) || "");
+                  const e = byDay.get(d) || { cost: 0, conv: 0 };
+                  e.cost += asNumber(rowValue(r, ["metrics.cost_micros", "metrics.costMicros"]), 0) / 1e6;
+                  e.conv += asNumber(rowValue(r, ["metrics.conversions"]), 0);
+                  byDay.set(d, e);
+                });
+                let mtdCost = 0, mtdConv = 0, c7 = 0, v7 = 0, n7 = 0;
+                for (let d = mi.start; d <= mi.yesterday; d = ymdAddDays(d, 1)) {
+                  const e = byDay.get(d) || { cost: 0, conv: 0 };
+                  mtdCost += e.cost;
+                  mtdConv += e.conv;
+                  if (d > ymdAddDays(mi.yesterday, -7)) { c7 += e.cost; v7 += e.conv; n7 += 1; }
+                }
+                rows.push({ customerId: a.customerId, name: a.name, dailyBudget: a.dailyBudget || 0, lostIsBudget: a.lostIsBudget, mtdCost, mtdConv, run7: n7 ? c7 / n7 : 0, conv7: n7 ? v7 / n7 : 0 });
+              });
+              forecastCache.set(key, { rows, failed, fetchedAt: new Date() });
+            }
+            forecastLast = Object.assign({ mi }, forecastCache.get(key));
+            renderForecast();
+          } catch (err) {
+            status.textContent = `Couldn't load the forecast: ${err.message || err}`;
+          }
+        }
+
+        function forecastRow(r, mi) {
+          const projSpend = r.mtdCost + r.run7 * mi.daysLeft;
+          const projConv = r.mtdConv + r.conv7 * mi.daysLeft;
+          const projCpa = projConv > 0 ? projSpend / projConv : null;
+          const goal = goalFor(r);
+          r.defaultTarget = r.dailyBudget * mi.daysInMonth;
+          const target = budgetTargetFor(r);
+          const cpaBad = projCpa != null && projCpa > goal * 1.25;
+          const underBudgetNow = r.dailyBudget > 0 && r.run7 < r.dailyBudget * 0.6;
+          let needDaily = null, action, kind;
+          if (target != null) {
+            const remaining = target - r.mtdCost;
+            needDaily = mi.daysLeft > 0 ? Math.max(0, remaining / mi.daysLeft) : null;
+            const diff = projSpend - target;
+            if (remaining <= 0) { action = "Monthly budget already spent — pause or cut to the minimum"; kind = "bad"; needDaily = null; }
+            else if (diff > target * 0.05) { action = `On pace to overspend by ${fmt$(diff)} — lower to ${fmt$(needDaily)}/day`; kind = "warn"; }
+            else if (diff < -target * 0.05) {
+              if (cpaBad) { action = `Under budget by ${fmt$(-diff)}, but cost/conv is over goal — fix efficiency before adding budget`; kind = "warn"; }
+              else { action = `On pace to underspend by ${fmt$(-diff)} — raise to ${fmt$(needDaily)}/day${underBudgetNow ? " (it isn't spending today's budget either — bids or search volume are the limit)" : ""}`; kind = "info"; }
+            } else { action = cpaBad ? "On budget, but cost/conv projected over goal" : "On track"; kind = cpaBad ? "warn" : "ok"; }
+          } else if (cpaBad) { action = "Cost/conv projected over goal"; kind = "warn"; }
+          else if (underBudgetNow) { action = "Spending well under its daily budget — limited by bids or search volume, not budget"; kind = "info"; }
+          else { action = "Set a monthly budget to get a daily target"; kind = "ok"; }
+          return Object.assign(r, { projSpend, projConv, projCpa, goal, target, needDaily, action, kind });
+        }
+
+        function renderForecast() {
+          const box = document.getElementById("forecastSection");
+          if (!box || !forecastLast) return;
+          const { mi, rows, failed } = forecastLast;
+          rows.forEach((r) => forecastRow(r, mi));
+          const order = { bad: 0, warn: 1, info: 2, ok: 3 };
+          const list = rows.slice().sort((a, b) => order[a.kind] - order[b.kind] || b.projSpend - a.projSpend);
+          const T = list.reduce((t, r) => ({ mtd: t.mtd + r.mtdCost, proj: t.proj + r.projSpend, conv: t.conv + r.projConv, target: t.target + (r.target || 0), withTarget: t.withTarget + (r.target != null ? 1 : 0), dflt: t.dflt + r.defaultTarget }), { mtd: 0, proj: 0, conv: 0, target: 0, withTarget: 0, dflt: 0 });
+          document.getElementById("forecastStatus").textContent = `Day ${mi.daysDone} of ${mi.daysInMonth} · ${mi.daysLeft} days left · projected = spend so far + last 7 days' daily average × days left${failed ? ` · ${failed} account(s) failed` : ""}`;
+          document.getElementById("forecastKpis").innerHTML = [
+            kpiCard("Spend so far", fmt$(T.mtd), `through ${formatDateShort(mi.yesterday)}`),
+            kpiCard("Projected month-end", fmt$(T.proj), T.withTarget ? `vs ${fmt$(T.target)} budget set on ${T.withTarget} account${T.withTarget === 1 ? "" : "s"}` : `daily budgets × ${mi.daysInMonth} days = ${fmt$(T.dflt)}`),
+            kpiCard("Projected conversions", fmtN(Math.round(T.conv)), T.conv > 0 ? `${fmt$(T.proj / T.conv)} / conv` : ""),
+            kpiCard("Need attention", String(list.filter((r) => r.kind === "bad" || r.kind === "warn").length), `of ${list.length} accounts`),
+          ].join("");
+          const icon = { ok: "✅", info: "💡", warn: "⚠️", bad: "⛔" };
+          document.getElementById("forecastBody").innerHTML = list.length
+            ? list.map((r) => `<tr class="fc-${r.kind}">
+                <td>${icon[r.kind]}</td>
+                <td>${escapeHtml(r.name)}</td>
+                <td>${fmt$(r.mtdCost)}</td>
+                <td><strong>${fmt$(r.projSpend)}</strong><div class="delta" style="color:var(--ink-muted)">${fmt$(r.run7)}/day last 7 days</div></td>
+                <td><button class="goal-btn" onclick="setBudgetTarget('${escapeHtml(r.customerId)}')" title="Click to set this account's monthly budget">${r.target != null ? fmt$(r.target) : "Set"}</button>${r.target == null && r.defaultTarget > 0 ? `<div class="delta" style="color:var(--ink-muted)">daily budgets: ${fmt$(r.defaultTarget)}</div>` : ""}</td>
+                <td>${r.dailyBudget > 0 ? fmt$(r.dailyBudget) : "—"}${r.needDaily != null ? ` → <strong>${fmt$(r.needDaily)}</strong>` : ""}</td>
+                <td>${r.projCpa != null ? `<span class="cpa-cell ${r.projCpa <= r.goal ? "good" : r.projCpa <= r.goal * 1.25 ? "warn" : "bad"}">${fmt$(r.projCpa)}</span>` : "—"}<div class="delta" style="color:var(--ink-muted)">goal ${fmt$(r.goal)}</div></td>
+                <td class="why-cell">${escapeHtml(r.action)}</td>
+              </tr>`).join("")
+            : `<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--ink-muted)">No accounts with spend this month.</td></tr>`;
+          box._copyRows = [["Account", "Spend so far", "Last 7d avg/day", "Projected spend", "Monthly budget", "Current daily budget", "Daily budget needed", "Projected cost/conv", "Goal", "Action"],
+            ...list.map((r) => [r.name, r.mtdCost.toFixed(2), r.run7.toFixed(2), r.projSpend.toFixed(2), r.target != null ? r.target.toFixed(2) : "", r.dailyBudget.toFixed(2), r.needDaily != null ? r.needDaily.toFixed(2) : "", r.projCpa != null ? r.projCpa.toFixed(2) : "", r.goal.toFixed(2), r.action])];
+          box._summaryText = `Month-end forecast (day ${mi.daysDone} of ${mi.daysInMonth}): ${fmt$(T.mtd)} spent so far, projected ${fmt$(T.proj)}${T.withTarget ? ` vs ${fmt$(T.target)} budget` : ""}, ~${fmtN(Math.round(T.conv))} conversions.`;
+        }
+
+        // ============ TIMING & COMPETITION PAGE ============
+        const insightsState = { account: "", days: 90, metric: "cpa" };
+        const insightsCache = new Map();
+        let insightsLast = null;
+        let insightsSeq = 0;
+        const DOW = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"];
+        const DOW_SHORT = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+        function populateInsightsAccountSelect() {
+          const sel = document.getElementById("insAccount");
+          if (!sel) return;
+          const list = trendAccounts().filter((a) => (a.cost || 0) > 0).sort((a, b) => (b.cost || 0) - (a.cost || 0));
+          sel.innerHTML = list.map((a) => `<option value="${escapeHtml(a.customerId)}">${escapeHtml(a.name)}</option>`).join("") + `<option value="all">All accounts (slower)</option>`;
+          if (!insightsState.account || !(insightsState.account === "all" || list.some((a) => a.customerId === insightsState.account))) insightsState.account = list.length ? list[0].customerId : "all";
+          sel.value = insightsState.account;
+        }
+
+        async function loadInsightsPage(force) {
+          const status = document.getElementById("insStatus");
+          if (!status) return;
+          populateInsightsAccountSelect();
+          const seq = ++insightsSeq;
+          const acct = insightsState.account, days = insightsState.days;
+          const end = ymdAddDays(__localYMD(new Date()), -1);
+          const start = ymdAddDays(end, -(days - 1));
+          const pEnd = ymdAddDays(start, -1), pStart = ymdAddDays(pEnd, -(days - 1));
+          const key = `${acct}|${start}|${end}`;
+          try {
+            const token = await ensureAdsMcpAccessToken();
+            if (!token) throw new Error("Connect Ads MCP first (button at the top).");
+            if (force || !insightsCache.has(key)) {
+              const targets = acct === "all" ? trendAccounts().filter((a) => (a.cost || 0) > 0) : trendAccounts().filter((a) => a.customerId === acct);
+              if (!targets.length) throw new Error("Accounts haven't loaded yet — wait for the live refresh, then try again.");
+              const tools = await ensureAdsMcpTools();
+              let done = 0;
+              status.textContent = `Loading ${days} days for ${targets.length} account${targets.length === 1 ? "" : "s"}…`;
+              const compFields = ["campaign.name", "campaign.advertising_channel_type", "metrics.impressions", "metrics.clicks", "metrics.cost_micros", "metrics.conversions", "metrics.search_impression_share", "metrics.search_top_impression_share", "metrics.search_absolute_top_impression_share", "metrics.search_rank_lost_impression_share", "metrics.search_budget_lost_impression_share"];
+              const opt = { loginCustomerId: ADS_MCP_ANCHOR_MCC_ID };
+              const res = await runWithConcurrencyLimit(targets, 3, async (a) => {
+                const [grid, cur, prev] = await Promise.all([
+                  mcpSearchRows(tools, a.customerId, { fields: ["segments.day_of_week", "segments.hour", "metrics.cost_micros", "metrics.conversions", "metrics.clicks", "metrics.impressions"], resource: "customer", conditions: [`segments.date BETWEEN '${start}' AND '${end}'`] }, opt),
+                  mcpSearchRows(tools, a.customerId, { fields: compFields, resource: "campaign", conditions: [`segments.date BETWEEN '${start}' AND '${end}'`, "metrics.impressions > 0"] }, opt),
+                  mcpSearchRows(tools, a.customerId, { fields: compFields, resource: "campaign", conditions: [`segments.date BETWEEN '${pStart}' AND '${pEnd}'`, "metrics.impressions > 0"] }, opt),
+                ]);
+                done += 1;
+                if (seq === insightsSeq) status.textContent = `Loading… ${done}/${targets.length}`;
+                if (grid.mode === "empty" && cur.mode === "empty") throw new Error(`Couldn't load ${a.name}`);
+                return { a, grid: grid.rows, cur: cur.rows, prev: prev.rows };
+              });
+              const n = (r, k) => asNumber(rowValue(r, k), 0);
+              const cells = Array.from({ length: 7 }, () => Array.from({ length: 24 }, () => ({ cost: 0, conv: 0, clicks: 0, impr: 0 })));
+              const comp = new Map();
+              let failed = 0;
+              const addComp = (a, rows, which) => rows.forEach((r) => {
+                const name = acct === "all" ? a.name : String(rowValue(r, ["campaign.name"]) || "");
+                const type = String(rowValue(r, ["campaign.advertising_channel_type", "campaign.advertisingChannelType"]) || "");
+                const k = name;
+                if (!comp.has(k)) comp.set(k, { name, type: acct === "all" ? "" : type, cur: null, prev: null });
+                const e = comp.get(k);
+                const s = e[which] || { impr: 0, clicks: 0, cost: 0, conv: 0, elig: 0, isImpr: 0, top: 0, abs: 0, lr: 0, lb: 0 };
+                const impr = n(r, ["metrics.impressions"]);
+                const is = n(r, ["metrics.search_impression_share"]);
+                s.impr += impr;
+                s.clicks += n(r, ["metrics.clicks"]);
+                s.cost += n(r, ["metrics.cost_micros", "metrics.costMicros"]) / 1e6;
+                s.conv += n(r, ["metrics.conversions"]);
+                if (is > 0 && impr > 0) {
+                  const el = impr / is;
+                  s.elig += el; s.isImpr += impr;
+                  s.top += el * n(r, ["metrics.search_top_impression_share"]);
+                  s.abs += el * n(r, ["metrics.search_absolute_top_impression_share"]);
+                  s.lr += el * n(r, ["metrics.search_rank_lost_impression_share"]);
+                  s.lb += el * n(r, ["metrics.search_budget_lost_impression_share"]);
+                }
+                e[which] = s;
+              });
+              res.forEach((x) => {
+                if (x.status !== "fulfilled") return void (failed += 1);
+                const { a, grid, cur, prev } = x.value;
+                grid.forEach((r) => {
+                  const d = DOW.indexOf(String(rowValue(r, ["segments.day_of_week", "segments.dayOfWeek"]) || ""));
+                  const h = n(r, ["segments.hour"]);
+                  if (d < 0 || h < 0 || h > 23) return;
+                  const c = cells[d][h];
+                  c.cost += n(r, ["metrics.cost_micros", "metrics.costMicros"]) / 1e6;
+                  c.conv += n(r, ["metrics.conversions"]);
+                  c.clicks += n(r, ["metrics.clicks"]);
+                  c.impr += n(r, ["metrics.impressions"]);
+                });
+                addComp(a, cur, "cur");
+                addComp(a, prev, "prev");
+              });
+              insightsCache.set(key, { cells, comp, failed, start, end, pStart, pEnd, acct });
+            }
+            if (seq !== insightsSeq) return;
+            insightsLast = insightsCache.get(key);
+            status.textContent = `${formatDateShort(start)} – ${formatDateShort(end)} vs ${formatDateShort(pStart)} – ${formatDateShort(pEnd)}${insightsLast.failed ? ` · ${insightsLast.failed} account(s) failed` : ""} · hours are in each account's time zone`;
+            renderInsights();
+          } catch (err) {
+            if (seq === insightsSeq) status.textContent = `Couldn't load: ${err.message || err}`;
+          }
+        }
+
+        function compStats(s) {
+          if (!s) return null;
+          const el = s.elig || 0;
+          return {
+            cost: s.cost, conv: s.conv, impr: s.impr,
+            cpc: s.clicks > 0 ? s.cost / s.clicks : null,
+            cpa: s.conv > 0 ? s.cost / s.conv : null,
+            is: el > 0 ? Math.min(1, s.isImpr / el) : null,
+            top: el > 0 ? s.top / el : null,
+            abs: el > 0 ? s.abs / el : null,
+            lr: el > 0 ? s.lr / el : null,
+            lb: el > 0 ? s.lb / el : null,
+          };
+        }
+
+        function competitionVerdict(c, p) {
+          if (!c || c.is == null) return { icon: "—", text: "No search impression share data (e.g. Performance Max shows it only partly)", kind: "none" };
+          const msgs = [];
+          let kind = "ok";
+          const dLr = p && p.lr != null ? (c.lr - p.lr) * 100 : null;
+          const dCpc = p && p.cpc ? ((c.cpc - p.cpc) / p.cpc) * 100 : null;
+          const dTop = p && p.top != null && c.top != null ? (c.top - p.top) * 100 : null;
+          if (dLr != null && dLr >= 5 && dCpc != null && dCpc >= 10) { msgs.push(`More competition: losing ${Math.round(dLr)} pts more to rank while CPC rose ${Math.round(dCpc)}%`); kind = "bad"; }
+          else if (dLr != null && dLr >= 5) { msgs.push(`Losing ${Math.round(dLr)} pts more impression share to rank — competitors outbidding, or ad quality slipped`); kind = "warn"; }
+          else if (dCpc != null && dCpc >= 15) { msgs.push(`CPC up ${Math.round(dCpc)}% — auctions getting pricier`); kind = "warn"; }
+          if (dTop != null && dTop <= -8) { msgs.push(`Top-of-page share down ${Math.abs(Math.round(dTop))} pts`); if (kind === "ok") kind = "warn"; }
+          if (c.lb != null && c.lb >= 0.15) { msgs.push(`${Math.round(c.lb * 100)}% of impressions lost to budget`); if (kind === "ok") kind = "info"; }
+          if (c.lr != null && c.lr >= 0.5 && kind === "ok") { msgs.push(`${Math.round(c.lr * 100)}% lost to rank — raise bids or improve ads to compete`); kind = "info"; }
+          if (!msgs.length) msgs.push(dLr != null && dLr <= -5 ? `Competition eased: ${Math.abs(Math.round(dLr))} pts less lost to rank` : "Stable");
+          return { icon: { bad: "🔺", warn: "⚠️", info: "💡", ok: "✅" }[kind], text: msgs.join(" · "), kind };
+        }
+
+        function pctPts(c, p) {
+          if (c == null) return "—";
+          const v = `${Math.round(c * 100)}%`;
+          if (p == null) return v;
+          const d = Math.round((c - p) * 100);
+          return `${v}${d ? `<div class="delta" style="color:var(--ink-muted)">${d > 0 ? "▲" : "▼"} ${Math.abs(d)} pts</div>` : ""}`;
+        }
+
+        const NOCONV_BG = "repeating-linear-gradient(135deg, rgba(235,104,52,0.85) 0 4px, rgba(235,104,52,0.35) 4px 8px)";
+        // Diverging cell colour: blue = cheaper than average, orange = pricier; gray in the middle.
+        function heatColor(ratio) {
+          if (ratio == null) return "transparent";
+          const t = Math.max(-1, Math.min(1, Math.log2(ratio))); // −1 = half the avg, +1 = double
+          const mix = (a, b, k) => a.map((x, i) => Math.round(x + (b[i] - x) * k));
+          const mid = [236, 235, 228], cool = [42, 120, 214], warm = [235, 104, 52];
+          const rgb = t < 0 ? mix(mid, cool, -t) : mix(mid, warm, t);
+          return `rgb(${rgb.join(",")})`;
+        }
+
+        function renderInsights() {
+          if (!insightsLast) return;
+          const { cells, comp } = insightsLast;
+          const metric = insightsState.metric;
+          // ---- competition table
+          const compRows = Array.from(comp.values())
+            .map((e) => ({ e, c: compStats(e.cur), p: compStats(e.prev) }))
+            .filter((x) => x.c && x.c.cost >= 1)
+            .sort((a, b) => b.c.cost - a.c.cost);
+          document.getElementById("insCompBody").innerHTML = compRows.length
+            ? compRows.map(({ e, c, p }) => {
+                const v = competitionVerdict(c, p);
+                const dCpc = p && p.cpc && c.cpc ? ((c.cpc - p.cpc) / p.cpc) * 100 : null;
+                return `<tr><td>${v.icon}</td><td>${escapeHtml(e.name)}${e.type ? `<div class="delta" style="color:var(--ink-muted)">${escapeHtml(e.type.replace(/_/g, " ").toLowerCase())}</div>` : ""}</td>
+                  <td>${fmt$(c.cost)}</td><td>${c.cpc != null ? fmt$(c.cpc) : "—"}${dCpc != null ? `<div class="delta" style="color:var(--ink-muted)">${dCpc > 0 ? "▲" : "▼"} ${Math.abs(Math.round(dCpc))}%</div>` : ""}</td>
+                  <td>${pctPts(c.is, p && p.is)}</td><td>${pctPts(c.top, p && p.top)}</td><td>${pctPts(c.abs, p && p.abs)}</td>
+                  <td>${pctPts(c.lr, p && p.lr)}</td><td>${pctPts(c.lb, p && p.lb)}</td><td class="why-cell">${escapeHtml(v.text)}</td></tr>`;
+              }).join("")
+            : `<tr><td colspan="10" style="text-align:center;padding:20px;color:var(--ink-muted)">No campaigns with spend in this period.</td></tr>`;
+
+          // ---- day × hour grid
+          const tot = cells.flat().reduce((t, c) => ({ cost: t.cost + c.cost, conv: t.conv + c.conv }), { cost: 0, conv: 0 });
+          const avgCpa = tot.conv > 0 ? tot.cost / tot.conv : null;
+          const maxV = Math.max(1e-9, ...cells.flat().map((c) => (metric === "conv" ? c.conv : c.cost)));
+          const minCost = Math.max(5, (avgCpa || 20) * 0.5);
+          const cellHtml = (c) => {
+            let bg = "transparent", txt = "", title = `${fmt$(c.cost)} spend · ${c.conv.toFixed(1)} conv${c.conv > 0 ? ` · ${fmt$(c.cost / c.conv)}/conv` : ""}`;
+            if (metric === "cpa") {
+              if (c.conv >= 1 && avgCpa) { bg = heatColor(c.cost / c.conv / avgCpa); txt = fmt$(c.cost / c.conv).replace(".00", ""); }
+              else if (c.cost >= minCost) { bg = NOCONV_BG; txt = "0 conv"; }
+            } else {
+              const v = metric === "conv" ? c.conv : c.cost;
+              if (v > 0) { const k = v / maxV; bg = `rgba(42,120,214,${(0.08 + k * 0.85).toFixed(2)})`; txt = metric === "conv" ? (v >= 10 ? Math.round(v) : v.toFixed(1)) : `$${Math.round(v)}`; }
+            }
+            return `<td class="hm-cell" style="background:${bg}" title="${escapeHtml(title)}">${txt}</td>`;
+          };
+          const hourLbl = (h) => (h === 0 ? "12a" : h < 12 ? `${h}a` : h === 12 ? "12p" : `${h - 12}p`);
+          document.getElementById("insHeatmap").innerHTML = `<table class="heatmap"><thead><tr><th></th>${Array.from({ length: 24 }, (_, h) => `<th>${hourLbl(h)}</th>`).join("")}<th class="hm-sum">Day</th></tr></thead><tbody>${cells
+            .map((row, d) => {
+              const s = row.reduce((t, c) => ({ cost: t.cost + c.cost, conv: t.conv + c.conv }), { cost: 0, conv: 0 });
+              return `<tr><th>${DOW_SHORT[d]}</th>${row.map(cellHtml).join("")}<td class="hm-sum">${s.conv > 0 ? fmt$(s.cost / s.conv) : "—"}<div class="delta">${fmt$(s.cost)} · ${s.conv.toFixed(0)} conv</div></td></tr>`;
+            })
+            .join("")}</tbody></table>`;
+          document.getElementById("insHeatLegend").innerHTML = metric === "cpa"
+            ? `<span><i class="hm-sw" style="background:${heatColor(0.5)}"></i>Half the average cost/conv</span><span><i class="hm-sw" style="background:${heatColor(1)}"></i>Average (${avgCpa ? fmt$(avgCpa) : "—"})</span><span><i class="hm-sw" style="background:${heatColor(2)}"></i>Double</span><span><i class="hm-sw" style="background:${NOCONV_BG}"></i>Spend, no conversions</span><span class="muted-sub">Blank = too little data</span>`
+            : `<span><i class="hm-sw" style="background:rgba(42,120,214,0.15)"></i>Less</span><span><i class="hm-sw" style="background:rgba(42,120,214,0.9)"></i>More ${metric === "conv" ? "conversions" : "spend"}</span>`;
+
+          // ---- schedule suggestions (3-hour blocks per day, need enough data)
+          const tips = [];
+          if (avgCpa) {
+            for (let d = 0; d < 7; d++) {
+              for (let b = 0; b < 8; b++) {
+                const blk = cells[d].slice(b * 3, b * 3 + 3).reduce((t, c) => ({ cost: t.cost + c.cost, conv: t.conv + c.conv }), { cost: 0, conv: 0 });
+                const label = `${DOW_SHORT[d]} ${hourLbl(b * 3)}–${hourLbl((b * 3 + 3) % 24)}`;
+                if (blk.conv >= 3) {
+                  const r = blk.cost / blk.conv / avgCpa;
+                  if (r <= 0.7) tips.push({ score: (1 - r) * blk.conv, kind: "up", text: `${label}: ${fmt$(blk.cost / blk.conv)}/conv vs ${fmt$(avgCpa)} average (${blk.conv.toFixed(0)} conv) — consider a +${r <= 0.5 ? 20 : 10}% bid adjustment` });
+                  else if (r >= 1.5) tips.push({ score: (r - 1) * blk.cost / avgCpa, kind: "down", text: `${label}: ${fmt$(blk.cost / blk.conv)}/conv vs ${fmt$(avgCpa)} average — consider −${r >= 2 ? 30 : 15}%` });
+                } else if (blk.conv < 0.5 && blk.cost >= avgCpa * 2) {
+                  tips.push({ score: blk.cost / avgCpa, kind: "down", text: `${label}: ${fmt$(blk.cost)} spent, no conversions — consider −30% or excluding these hours` });
+                }
+              }
+            }
+          }
+          tips.sort((a, b) => b.score - a.score);
+          document.getElementById("insTips").innerHTML = tips.length
+            ? `<ul>${tips.slice(0, 8).map((t) => `<li>${t.kind === "up" ? "⬆️" : "⬇️"} ${escapeHtml(t.text)}</li>`).join("")}</ul><div class="story-muted">Ad schedule bid adjustments apply to Search campaigns; Performance Max ignores them. Check that a pattern holds over 90 days before acting on it.</div>`
+            : `<div class="story-muted">No strong day/hour pattern yet — cost/conv is fairly even, or there isn't enough data.</div>`;
+          const page = document.getElementById("page-insights");
+          if (page) {
+            page._copyRows = [["Campaign/Account", "Spend", "Avg CPC", "Imp. share", "Top IS", "Abs. top IS", "Lost to rank", "Lost to budget", "Verdict"],
+              ...compRows.map(({ e, c, p }) => [e.name, c.cost.toFixed(2), c.cpc != null ? c.cpc.toFixed(2) : "", c.is != null ? Math.round(c.is * 100) : "", c.top != null ? Math.round(c.top * 100) : "", c.abs != null ? Math.round(c.abs * 100) : "", c.lr != null ? Math.round(c.lr * 100) : "", c.lb != null ? Math.round(c.lb * 100) : "", competitionVerdict(c, p).text])];
+            page._summaryText = `Timing & competition (${formatDateShort(insightsLast.start)} – ${formatDateShort(insightsLast.end)}): ${tips.slice(0, 3).map((t) => t.text).join("; ") || "no strong day/hour pattern"}.`;
+          }
+        }
+
+        function bindInsightsControls() {
+          const bind = (id, fn) => {
+            const el = document.getElementById(id);
+            if (el && !el.dataset.boundIns) { el.addEventListener("change", fn); el.dataset.boundIns = "true"; }
+          };
+          bind("insAccount", (e) => { insightsState.account = e.target.value; loadInsightsPage(false); });
+          bind("insDays", (e) => { insightsState.days = Number(e.target.value); loadInsightsPage(false); });
+          bind("insMetric", (e) => { insightsState.metric = e.target.value; renderInsights(); });
+        }
+
+        // ============ ONE-CLICK WEEKLY REPORT ============
+        async function portalTotalsFor(range, accts) {
+          if (!isPortalConnected()) return null;
+          const key = `${range.startDate}|${range.endDate}`;
+          let pd = portalRangeCache.get(key);
+          if (!pd) {
+            pd = await fetchPortalData(range.startDate, range.endDate);
+            portalRangeCache.set(key, pd);
+          }
+          const ids = new Set();
+          accts.forEach((a) => franchiseIdsForAccount(a, pd.franchises).forEach((id) => ids.add(id)));
+          // Franchises served by GTHQ's location campaigns have no own account; include every franchise with PPC leads.
+          pd.franchises.forEach((f) => { if (f.ppcLeads > 0) ids.add(f.id); });
+          let leads = 0, bookings = 0, revenue = 0;
+          ids.forEach((id) => {
+            const f = pd.franchises.get(id);
+            if (!f) return;
+            const rate = f.totalLeads > 0 ? f.booked / f.totalLeads : 0;
+            const avg = f.booked > 0 ? f.bookedValueCents / 100 / f.booked : 0;
+            leads += f.ppcLeads;
+            bookings += f.ppcLeads * rate;
+            revenue += f.ppcLeads * rate * avg;
+          });
+          return { leads, bookings, revenue };
+        }
+
+        function reportSummary(entry) {
+          const rows = entry.accounts
+            .filter((a) => (a.cost || 0) > 0 || (a.prev && a.prev.cost > 0))
+            .map((a) => ({ ...a, _goal: goalFor(a), _status: statusFor(a) }));
+          const spent = rows.filter((r) => r.cost > 0);
+          const sum = (arr, f) => arr.reduce((t, r) => t + (Number(f(r)) || 0), 0);
+          const cost = sum(spent, (r) => r.cost), conv = sum(spent, (r) => r.conv);
+          const pCost = sum(rows, (r) => r.prev && r.prev.cost), pConv = sum(rows, (r) => r.prev && r.prev.conv);
+          return {
+            rows, spent, cost, conv, pCost, pConv,
+            cpa: conv > 0 ? cost / conv : null, pCpa: pConv > 0 ? pCost / pConv : null,
+            within: spent.filter((r) => r._status.key === "good").length,
+            close: spent.filter((r) => r._status.key === "warn").length,
+          };
+        }
+
+        async function openWeeklyReport() {
+          const btn = document.getElementById("weeklyReportBtn");
+          const win = window.open("", "_blank");
+          if (!win) return toast("Allow pop-ups for this site to open the report", true);
+          win.document.write(`<p style="font-family:sans-serif;padding:40px">Building the report… (about a minute if the data isn't loaded yet)</p>`);
+          if (btn) btn.disabled = true;
+          try {
+            const scope = weeklyMode === "weekly" ? "weekly" : "lastWeek";
+            const [wk, mtd] = await Promise.all([getReport(scope), getReport("mtd")]);
+            const W = reportSummary(wk), M = reportSummary(mtd);
+            const [wkP, mtdP] = await Promise.all([
+              portalTotalsFor(wk.range, wk.accounts).catch(() => null),
+              portalTotalsFor(mtd.range, mtd.accounts).catch(() => null),
+            ]);
+            const pw = mtd.pacingWindow || {};
+            const projSpend = pw.daysElapsed > 0 && pw.daysInProjection ? (M.cost / pw.daysElapsed) * pw.daysInProjection : null;
+            const fc = forecastLast ? forecastLast.rows.reduce((t, r) => t + (r.projSpend || 0), 0) : null;
+            const wins = W.spent.filter((r) => r.conv > 0 && r.prev && r.prev.conv > 0).map((r) => ({ r, d: pctDelta(r.cost / r.conv, r.prev.cost / r.prev.conv) })).filter((x) => x.d != null && x.d <= -10).sort((a, b) => a.d - b.d).slice(0, 3);
+            const probs = W.spent.filter((r) => r._status.key === "bad" || r._status.key === "warn").sort((a, b) => b.cost - a.cost).slice(0, 4);
+            const health = (healthState && healthState.findings ? healthState.findings : []).filter((f) => f.severity === "critical").slice(0, 5);
+            const d = (c, p, lower) => {
+              const x = pctDelta(c, p);
+              if (x == null || !Number.isFinite(x)) return "";
+              const good = lower ? x < 0 : x > 0;
+              return `<span class="${Math.abs(x) < 2 ? "" : good ? "up" : "down"}">${x > 0 ? "▲" : "▼"} ${Math.abs(x).toFixed(0)}%</span>`;
+            };
+            const kpi = (label, v, sub) => `<div class="k"><div class="kl">${label}</div><div class="kv">${v}</div><div class="ks">${sub || ""}</div></div>`;
+            const money = (v) => (v == null ? "—" : fmt$(v));
+            const statusRows = (S) => S.spent
+              .slice()
+              .sort((a, b) => a._status.rank - b._status.rank || b.cost - a.cost)
+              .map((r) => `<tr class="s-${r._status.key}"><td>${r._status.icon}</td><td>${escapeHtml(r.name)}</td><td>${fmt$(r.cost)}</td><td>${fmtN(Math.round(r.conv * 10) / 10)}</td><td><b>${r.conv > 0 ? fmt$(r.cost / r.conv) : "—"}</b> ${r.prev && r.prev.conv > 0 && r.conv > 0 ? d(r.cost / r.conv, r.prev.cost / r.prev.conv, true) : ""}</td><td>${fmt$(r._goal)}</td></tr>`)
+              .join("");
+            const bookingKpis = (P, cost) => P && P.leads > 0
+              ? kpi("Portal PPC leads", fmtN(P.leads), `${fmt$(cost / P.leads)} / lead`) + kpi("Est. bookings", P.bookings.toFixed(0), P.bookings > 0 ? `${fmt$(cost / P.bookings)} / booking` : "") + kpi("Est. ROAS", P.revenue > 0 ? `${(P.revenue / cost).toFixed(1)}×` : "—", P.revenue > 0 ? `${fmt$(P.revenue)} est. revenue` : "")
+              : "";
+            const title = `Google Ads report — ${rangeLabel(wk.range)}`;
+            const html = `<!doctype html><html><head><meta charset="utf-8"><title>${escapeHtml(title)}</title>
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;600;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+body{font-family:Jost,Arial,sans-serif;color:#0b0c08;margin:0;background:#f4f3ec}
+.page{max-width:900px;margin:0 auto;background:#fff;padding:36px 44px}
+h1{font-size:26px;margin:0 0 2px;font-weight:800}h2{font-size:15px;text-transform:uppercase;letter-spacing:.05em;border-bottom:2px solid #0b0c08;padding-bottom:4px;margin:28px 0 12px}
+.sub{color:#5a5d50;font-size:13px}.brand{display:flex;justify-content:space-between;align-items:baseline;border-bottom:4px solid #e76829;padding-bottom:10px;margin-bottom:8px}
+.ks-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.k{border:1px solid #e2e0d2;border-radius:8px;padding:10px 12px}
+.kl{font-size:11px;text-transform:uppercase;color:#5a5d50;letter-spacing:.04em}.kv{font-size:22px;font-weight:800;margin:2px 0}.ks{font-size:12px;color:#5a5d50}
+.up{color:#2f7a1f;font-weight:600}.down{color:#c73a17;font-weight:600}
+table{width:100%;border-collapse:collapse;font-size:12.5px}th{text-align:left;font-size:11px;text-transform:uppercase;color:#5a5d50;border-bottom:1px solid #0b0c08;padding:5px 6px}
+td{padding:5px 6px;border-bottom:1px solid #eeede4}td:nth-child(n+3){font-family:'JetBrains Mono',monospace;font-size:12px}
+tr.s-good td:first-child{color:#2f7a1f}ul{margin:4px 0 0 18px;padding:0;font-size:13.5px;line-height:1.55}
+.notes{border:1px dashed #b9b7a6;border-radius:8px;min-height:70px;padding:10px;font-size:13.5px}
+.bar{position:sticky;top:0;background:#0b0c08;color:#fff;padding:10px 16px;display:flex;gap:10px;align-items:center;font-size:13px}
+.bar button{background:#e76829;color:#fff;border:0;border-radius:6px;padding:8px 14px;font:600 13px Jost,Arial;cursor:pointer}
+@media print{.bar{display:none}body{background:#fff}.page{padding:0;max-width:none}h2{break-after:avoid}tr{break-inside:avoid}}
+</style></head><body>
+<div class="bar"><button onclick="window.print()">🖨 Print / Save as PDF</button><span>Tip: click into "Notes" to add your own comments before saving.</span></div>
+<div class="page">
+<div class="brand"><div><h1>Google Ads — Weekly Report</h1><div class="sub">${escapeHtml(rangeLabel(wk.range))} vs ${escapeHtml(rangeLabel(wk.prevRange))} · Month to date ${escapeHtml(rangeLabel(mtd.range))}</div></div><div class="sub">GameTruck · ${escapeHtml(new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }))}</div></div>
+<h2>How the week went</h2>
+<div class="ks-row">${kpi("Spend", fmt$(W.cost), `${d(W.cost, W.pCost)} vs ${fmt$(W.pCost)}`)}${kpi("Conversions", fmtN(Math.round(W.conv)), `${d(W.conv, W.pConv)} vs ${fmtN(Math.round(W.pConv))}`)}${kpi("Cost / conv", money(W.cpa), `${d(W.cpa, W.pCpa, true)} vs ${money(W.pCpa)}`)}${kpi("Within goal", `${W.within} / ${W.spent.length}`, `${W.close} close`)}</div>
+${wkP && wkP.leads > 0 ? `<div class="ks-row" style="margin-top:10px">${bookingKpis(wkP, W.cost)}<div></div></div>` : ""}
+<h2>Month to date</h2>
+<div class="ks-row">${kpi("Spend", fmt$(M.cost), `${d(M.cost, M.pCost)} vs same days last month`)}${kpi("Conversions", fmtN(Math.round(M.conv)), `${d(M.conv, M.pConv)}`)}${kpi("Cost / conv", money(M.cpa), `${d(M.cpa, M.pCpa, true)} vs ${money(M.pCpa)}`)}${kpi("Pacing", fc != null ? fmt$(fc) : projSpend != null ? fmt$(projSpend) : "—", fc != null ? "projected month-end (last-7-day run-rate)" : "projected month-end at current pace")}</div>
+${mtdP && mtdP.leads > 0 ? `<div class="ks-row" style="margin-top:10px">${bookingKpis(mtdP, M.cost)}<div></div></div>` : ""}
+<h2>Wins &amp; watch-outs</h2>
+<ul>${wins.map((x) => `<li>✅ <b>${escapeHtml(x.r.name)}</b>: cost/conv ${fmt$(x.r.prev.cost / x.r.prev.conv)} → ${fmt$(x.r.cost / x.r.conv)} (${Math.abs(x.d).toFixed(0)}% better)</li>`).join("")}
+${probs.map((r) => `<li>${r._status.icon} <b>${escapeHtml(r.name)}</b>: ${r.conv > 0 ? `${fmt$(r.cost / r.conv)}/conv vs ${fmt$(r._goal)} goal` : `${fmt$(r.cost)} spent, no conversions`}${(() => { try { const w = diagnoseAccount(r)[0]; return w ? ` — ${escapeHtml(w)}` : ""; } catch (e) { return ""; } })()}</li>`).join("")}
+${health.map((f) => `<li>🩺 <b>${escapeHtml(f.account)}</b>: ${escapeHtml(f.detail)}</li>`).join("")}
+${!wins.length && !probs.length && !health.length ? "<li>No major wins or problems this week.</li>" : ""}</ul>
+<h2>Accounts vs cost/conv goal — this week</h2>
+<table><thead><tr><th></th><th>Account</th><th>Spend</th><th>Conv</th><th>Cost/conv (vs prev week)</th><th>Goal</th></tr></thead><tbody>${statusRows(W)}</tbody></table>
+<h2>Accounts vs cost/conv goal — month to date</h2>
+<table><thead><tr><th></th><th>Account</th><th>Spend</th><th>Conv</th><th>Cost/conv (vs last month)</th><th>Goal</th></tr></thead><tbody>${statusRows(M)}</tbody></table>
+<h2>Notes</h2><div class="notes" contenteditable="true">Add your comments here…</div>
+<p class="sub" style="margin-top:18px">Est. bookings = Portal PPC leads × each franchise's booking rate; est. revenue uses each franchise's average booking value. Source: Google Ads${wkP ? " + GameTruck Portal" : ""}.</p>
+</div></body></html>`;
+            win.document.open();
+            win.document.write(html);
+            win.document.close();
+          } catch (err) {
+            win.document.body.innerHTML = `<p style="font-family:sans-serif;padding:40px;color:#c73a17">Couldn't build the report: ${escapeHtml(err.message || String(err))}</p>`;
+          } finally {
+            if (btn) btn.disabled = false;
+          }
         }
 
         // ============ REPORT PAGES (Weekly · Month to Date · Markets) ============
@@ -9720,7 +10375,9 @@
         }
 
         function loadMtdPage(force) {
-          return loadPerformancePage("page-mtd", "mtd", { title: "Month-to-date Google Ads report", projection: true, tableId: "mtd" }, force);
+          const p = loadPerformancePage("page-mtd", "mtd", { title: "Month-to-date Google Ads report", projection: true, tableId: "mtd" }, force);
+          Promise.resolve(p).then(() => loadForecast(force));
+          return p;
         }
 
         // ---------- Markets ----------
@@ -9998,7 +10655,7 @@
         }
 
         // ---------- Page router ----------
-        const PAGES = ["today", "weekly", "mtd", "markets", "traffic", "accounts", "search", "trends", "changes", "health"];
+        const PAGES = ["today", "weekly", "mtd", "markets", "traffic", "accounts", "search", "trends", "insights", "changes", "health"];
         let activePage = "today";
 
         function renderCurrentPage(force) {
@@ -10008,6 +10665,7 @@
           if (activePage === "health") return renderHealthPage();
           if (activePage === "traffic") return loadTrafficPage(force);
           if (activePage === "trends") return loadTrendsPage(force);
+          if (activePage === "insights") return loadInsightsPage(force);
         }
 
         function showPage(name, opts) {
@@ -11472,6 +12130,7 @@
           updateGa4Ui();
           bindHealthControls();
           bindTrendControls();
+          bindInsightsControls();
           initPageRouter();
           refreshViewSelects();
 
@@ -18818,52 +19477,67 @@ levis@gametruck`;
             a.name.length > 22 ? a.name.substring(0, 22) + "…" : a.name,
           );
           const costs = top.map((a) => a.cost);
-          const convs = top.map((a) => a.conv);
-          const costColors = top.map((a) => {
-            const h = getHealth(a.cpa, a);
-            return {
-              good: "#7aa52b",
-              warn: "#d4a017",
-              bad: "#c73a17",
-              none: "#7a7d70",
-            }[h];
-          });
-
           if (spendChart) spendChart.destroy();
+          const STATUS = {
+            good: { color: "#7aa52b", label: "On target" },
+            warn: { color: "#d4a017", label: "Attention" },
+            bad: { color: "#c73a17", label: "Critical" },
+            none: { color: "#a3a597", label: "No data" },
+          };
+          const health = top.map((a) => getHealth(a.cpa, a));
+          const endLabels = {
+            id: "spendEndLabels",
+            afterDatasetsDraw(chart) {
+              const { ctx } = chart;
+              const meta = chart.getDatasetMeta(0);
+              ctx.save();
+              ctx.font = "600 11px 'JetBrains Mono', monospace";
+              ctx.fillStyle = "#3a3d33";
+              ctx.textBaseline = "middle";
+              meta.data.forEach((bar, i) => {
+                const a = top[i];
+                const cpa = a.conv > 0 ? fmt$(a.cost / a.conv) + "/conv" : "no conv";
+                ctx.fillText(`${fmt$(a.cost)} · ${cpa}`, bar.x + 6, bar.y);
+              });
+              ctx.restore();
+            },
+          };
           spendChart = new Chart(document.getElementById("spendChart"), {
             type: "bar",
             data: {
               labels,
               datasets: [
                 {
-                  label: "Cost ($)",
+                  label: "Spend",
                   data: costs,
-                  backgroundColor: costColors,
-                  borderRadius: 3,
-                  borderColor: "#0b0c08",
-                  borderWidth: 1.5,
-                  yAxisID: "y",
-                },
-                {
-                  label: "Conversions",
-                  data: convs,
-                  backgroundColor: "#0b0c08",
-                  borderRadius: 3,
-                  yAxisID: "y1",
+                  backgroundColor: health.map((h) => STATUS[h].color),
+                  borderRadius: 4,
+                  borderSkipped: "start",
+                  barPercentage: 0.72,
+                  categoryPercentage: 0.9,
                 },
               ],
             },
+            plugins: [endLabels],
             options: {
+              indexAxis: "y",
               responsive: true,
               maintainAspectRatio: false,
+              layout: { padding: { right: 150 } },
               plugins: {
                 legend: {
+                  position: "bottom",
                   labels: {
-                    color: "#0b0c08",
-                    font: { family: "Jost", size: 11, weight: "700" },
+                    color: "#3a3d33",
+                    font: { family: "Jost", size: 11, weight: "600" },
                     usePointStyle: true,
                     pointStyle: "rectRounded",
+                    generateLabels: () =>
+                      ["good", "warn", "bad", "none"]
+                        .filter((h) => health.includes(h))
+                        .map((h) => ({ text: STATUS[h].label, fillStyle: STATUS[h].color, strokeStyle: STATUS[h].color, pointStyle: "rectRounded", fontColor: "#3a3d33" })),
                   },
+                  onClick: () => {},
                 },
                 tooltip: {
                   backgroundColor: "#0b0c08",
@@ -18874,32 +19548,31 @@ levis@gametruck`;
                   padding: 10,
                   titleFont: { family: "Jost", weight: "800" },
                   bodyFont: { family: "JetBrains Mono" },
+                  callbacks: {
+                    title: (items) => top[items[0].dataIndex].name,
+                    label: (item) => {
+                      const a = top[item.dataIndex];
+                      return [
+                        `Spend: ${fmt$(a.cost)}`,
+                        `Conversions: ${fmtN(Math.round(a.conv * 10) / 10)}`,
+                        `Cost/conv: ${a.conv > 0 ? fmt$(a.cost / a.conv) : "—"} (goal ${fmt$(goalFor(a))})`,
+                        `Status: ${STATUS[health[item.dataIndex]].label}`,
+                      ];
+                    },
+                  },
                 },
               },
               scales: {
                 x: {
-                  ticks: {
-                    color: "#3a3d33",
-                    font: { family: "JetBrains Mono", size: 9 },
-                    maxRotation: 45,
-                  },
-                  grid: { color: "#e4e8d6" },
+                  beginAtZero: true,
+                  ticks: { color: "#5a5d50", font: { family: "JetBrains Mono", size: 10 }, maxTicksLimit: 5, callback: (v) => "$" + Number(v).toLocaleString() },
+                  grid: { color: "#efeddf" },
+                  border: { display: false },
                 },
                 y: {
-                  position: "left",
-                  ticks: {
-                    color: "#3a3d33",
-                    font: { family: "JetBrains Mono", size: 10 },
-                  },
-                  grid: { color: "#e4e8d6" },
-                },
-                y1: {
-                  position: "right",
-                  ticks: {
-                    color: "#3a3d33",
-                    font: { family: "JetBrains Mono", size: 10 },
-                  },
-                  grid: { drawOnChartArea: false },
+                  ticks: { color: "#0b0c08", font: { family: "Jost", size: 11, weight: "600" } },
+                  grid: { display: false },
+                  border: { color: "#d8d6c4" },
                 },
               },
             },
@@ -18920,11 +19593,11 @@ levis@gametruck`;
           healthChart = new Chart(document.getElementById("healthChart"), {
             type: "doughnut",
             data: {
-              labels: ["On Target", "Attention", "Critical", "No Data"],
+              labels: [`On Target (${good})`, `Attention (${warn})`, `Critical (${bad})`, `No Data (${none})`],
               datasets: [
                 {
                   data: [good, warn, bad, none],
-                  backgroundColor: ["#7aa52b", "#d4a017", "#c73a17", "#7a7d70"],
+                  backgroundColor: ["#7aa52b", "#d4a017", "#c73a17", "#a3a597"],
                   borderColor: "#ffffff",
                   borderWidth: 4,
                 },
