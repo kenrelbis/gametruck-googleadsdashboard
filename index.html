@@ -1089,6 +1089,53 @@
         background: var(--ink, #111);
         color: #fff;
       }
+      .trend-toggle {
+        font-size: 12px;
+        display: inline-flex;
+        gap: 4px;
+        align-items: center;
+        cursor: pointer;
+      }
+      .trend-chart-wrap {
+        position: relative;
+        height: 360px;
+        background: #fff;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        border-radius: 10px;
+        padding: 10px;
+        margin-bottom: 12px;
+      }
+      #trendStories {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+        gap: 12px;
+      }
+      .story {
+        background: #fff;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        border-left: 5px solid var(--muted);
+        border-radius: 10px;
+        padding: 14px 16px;
+        font-size: 13px;
+        line-height: 1.45;
+      }
+      .story.spike { border-left-color: #c73a17; }
+      .story.good { border-left-color: #7aa52b; }
+      .story-head { display: flex; gap: 8px; align-items: baseline; font-weight: 700; font-size: 14px; }
+      .story-icon { font-size: 16px; }
+      .story-when { font-size: 12px; color: var(--ink-muted); margin: 2px 0 8px; }
+      .story-sec { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; margin-top: 10px; color: var(--ink-muted); }
+      .story ul { margin: 4px 0 0 18px; padding: 0; }
+      .story-muted { color: var(--ink-muted); font-size: 12px; }
+      table.trend-tl td, table.trend-tl th { text-align: left; font-family: inherit; vertical-align: top; }
+      table.trend-tl td:first-child { white-space: nowrap; font-weight: 600; width: 90px; }
+      table.trend-tl td div { padding: 2px 0; }
+      .tl-dot { margin-right: 6px; vertical-align: middle; }
+      .tl-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; }
+      @media (max-width: 640px) {
+        #trendStories { grid-template-columns: 1fr; }
+        .trend-chart-wrap { height: 280px; }
+      }
       .report-controls {
         display: flex;
         gap: 10px;
@@ -3513,6 +3560,7 @@
           <button data-nav="traffic">📱 Traffic</button>
           <button data-nav="accounts">📊 Accounts</button>
           <button data-nav="search">🔍 Search Terms</button>
+          <button data-nav="trends">📉 Trends</button>
           <button data-nav="changes">📜 Changes</button>
           <button data-nav="health">🩺 Health</button>
         </nav>
@@ -3981,6 +4029,54 @@
           </table>
         </div>
 
+        </div>
+        <div class="page" data-page="trends" id="page-trends" style="display: none">
+          <div class="section-head">
+            <h2>Trends &amp; What Changed</h2>
+            <div class="meta">Daily performance with change markers — when a spike or a good run started, what changed around it, and what to keep</div>
+          </div>
+          <div class="report-controls">
+            <select id="trendAccount" class="btn btn-ghost" style="cursor: pointer" title="Account"></select>
+            <select id="trendMetric" class="btn btn-ghost" style="cursor: pointer" title="Metric">
+              <option value="cpa">Cost / conv</option>
+              <option value="conv">Conversions</option>
+              <option value="cost">Cost</option>
+              <option value="cpc">Avg CPC</option>
+              <option value="ctr">CTR</option>
+              <option value="convRate">Conv. rate</option>
+              <option value="is">Impression share</option>
+            </select>
+            <select id="trendDays" class="btn btn-ghost" style="cursor: pointer" title="Period">
+              <option value="30">Last 30 days</option>
+              <option value="90" selected>Last 90 days</option>
+              <option value="180">Last 180 days</option>
+            </select>
+            <label class="trend-toggle"><input type="checkbox" id="trendShowChanges" checked /> Changes</label>
+            <label class="trend-toggle"><input type="checkbox" id="trendShowNotes" checked /> Notes</label>
+            <label class="trend-toggle"><input type="checkbox" id="trendShowHolidays" checked /> Holidays</label>
+            <label class="trend-toggle"><input type="checkbox" id="trendShowLY" checked /> Last year</label>
+            <label class="trend-toggle"><input type="checkbox" id="trendShowLeads" /> Portal / GA4 leads</label>
+            <button class="btn btn-ghost" onclick="addTrendNote()">＋ Add note</button>
+            <button class="btn btn-ghost" onclick="loadTrendsPage(true)">↻ Refresh</button>
+            <span class="report-status" id="trendStatus"></span>
+          </div>
+          <div class="trend-chart-wrap"><canvas id="trendChart"></canvas></div>
+          <div id="trendNotesList"></div>
+          <div class="section-head" style="margin-top: 28px">
+            <h2>What happened</h2>
+            <div class="meta">Spikes and good runs found in this period, newest first, with the likely reasons</div>
+          </div>
+          <div id="trendStories"></div>
+          <div class="section-head" style="margin-top: 28px">
+            <h2>Timeline</h2>
+            <div class="meta">Changes, your notes and holidays in this period. Google keeps 30 days of change history; older changes come from the log this dashboard saves each time it loads them</div>
+          </div>
+          <div class="table-wrap">
+            <table class="trend-tl">
+              <thead><tr><th>Date</th><th>What happened</th></tr></thead>
+              <tbody id="trendTimeline"></tbody>
+            </table>
+          </div>
         </div>
         <div class="page" data-page="health" style="display: none">
           <div class="section-head">
@@ -7899,6 +7995,8 @@
           "check-failed": "Check failed",
           "ga4-noncustomer-leads": "Non-customer forms counted as leads",
           "lead-mismatch": "Lead counts disagree (3-way)",
+          "trend-spike": "New cost/conv spike",
+          "trend-good": "Cost/conv improving",
         };
         let healthState = null; // { runAt, findings: [...], checked, failed }
         let healthRunning = false;
@@ -7933,16 +8031,24 @@
           const v = (row, keys) => rowValue(row, keys);
           const n = (row, keys) => asNumber(rowValue(row, keys), 0);
 
-          // 1. Conversions stopped (daily totals, last 21 days)
+          // 1. Conversions stopped (daily totals; 25 days so the trend check has a baseline)
           const daily = await healthQuery(tools, a.customerId, {
             fields: ["segments.date", "metrics.cost_micros", "metrics.conversions"],
             resource: "customer",
-            conditions: [`segments.date BETWEEN '${ymdAddDays(today, -21)}' AND '${yesterday}'`],
+            conditions: [`segments.date BETWEEN '${ymdAddDays(today, -25)}' AND '${yesterday}'`],
           });
-          const days = daily
+          const allDays = daily
             .map((r) => ({ date: String(v(r, ["segments.date"]) || ""), cost: n(r, ["metrics.cost_micros", "metrics.costMicros"]) / 1e6, conv: n(r, ["metrics.conversions"]) }))
             .sort((x, y) => (x.date < y.date ? -1 : 1));
+          const days = allDays.filter((d) => d.date > ymdAddDays(today, -22));
           const totalCost = days.reduce((t, d) => t + d.cost, 0);
+          // 1b. New cost/conv spike or good run (7 days vs the 14 before)
+          const sig = recentTrendSignal(allDays);
+          if (sig && sig.kind === "spike") {
+            add("warning", "trend-spike", `Cost/conv jumped to ${fmt$(sig.cpa)} over the last 7 days, up ${Math.round((sig.r - 1) * 100)}% from ${fmt$(sig.base)} — started around ${formatDateShort(sig.since)}`, "Open Trends for this account to see what changed around the start date.");
+          } else if (sig && sig.kind === "good") {
+            add("info", "trend-good", `Cost/conv dropped to ${fmt$(sig.cpa)} over the last 7 days, down ${Math.round((1 - sig.r) * 100)}% from ${fmt$(sig.base)} — since around ${formatDateShort(sig.since)}`, "Open Trends to see what changed, and keep it.");
+          }
           const lastConv = [...days].reverse().find((d) => d.conv > 0);
           if (totalCost >= 100 && !lastConv) {
             add("critical", "conv-stopped", `No conversions in the last 21 days while spending ${fmt$(totalCost)}`, "Check the website form/tag and call tracking; in Google Ads open Goals → Conversions → Diagnostics.");
@@ -8752,6 +8858,647 @@
           return hi >= 10 && hi / lo > 1.6 ? hi / lo : null;
         }
 
+        // ============ TRENDS (daily lines + change markers + "what happened") ============
+        const CHANGE_LOG_KEY = "gt_change_log_v1"; // our own copy of change history (Google keeps 30 days)
+        const TREND_NOTES_KEY = "gt_trend_notes_v1";
+        const trendCache = new Map(); // key → { days, campaigns, ly, ... }
+        let trendChart = null;
+        let trendState = { account: "all", metric: "cpa", days: 90, showLY: true, showLeads: true, showHolidays: true, showChanges: true, showNotes: true };
+        let trendLast = null;
+
+        const TREND_METRICS = {
+          cpa: { label: "Cost / Conv", fmt: (v) => fmt$(v), lowerIsBetter: true },
+          conv: { label: "Conversions", fmt: (v) => fmtN(Math.round(v * 10) / 10) },
+          cost: { label: "Spend", fmt: (v) => fmt$(v) },
+          cpc: { label: "Avg CPC", fmt: (v) => fmt$(v), lowerIsBetter: true },
+          ctr: { label: "CTR", fmt: (v) => `${(v * 100).toFixed(2)}%` },
+          convRate: { label: "Conv rate", fmt: (v) => `${(v * 100).toFixed(1)}%` },
+          is: { label: "Imp. share", fmt: (v) => `${Math.round(v * 100)}%` },
+        };
+
+        // ---- persistent change log ----
+        function loadChangeLog() {
+          try {
+            return JSON.parse(localStorage.getItem(CHANGE_LOG_KEY) || "[]") || [];
+          } catch (e) {
+            return [];
+          }
+        }
+        function mergeIntoChangeLog(groups) {
+          if (!groups || !groups.length) return;
+          const log = loadChangeLog();
+          const key = (g) => [g.customerId, g.day, g.user, g.type, g.op, g.campaign].join("||");
+          const map = new Map(log.map((g) => [key(g), g]));
+          groups.forEach((g) => map.set(key(g), Object.assign({}, map.get(key(g)) || {}, g)));
+          const merged = Array.from(map.values()).sort((a, b) => (a.day < b.day ? 1 : -1)).slice(0, 6000);
+          try {
+            localStorage.setItem(CHANGE_LOG_KEY, JSON.stringify(merged));
+          } catch (e) {}
+        }
+
+        // ---- user notes ----
+        function loadTrendNotes() {
+          try {
+            return JSON.parse(localStorage.getItem(TREND_NOTES_KEY) || "[]") || [];
+          } catch (e) {
+            return [];
+          }
+        }
+        function saveTrendNotes(notes) {
+          try {
+            localStorage.setItem(TREND_NOTES_KEY, JSON.stringify(notes));
+          } catch (e) {}
+        }
+        function addTrendNote() {
+          const date = window.prompt("Date of the note (YYYY-MM-DD):", __localYMD(new Date()));
+          if (!date) return;
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(date.trim())) return toast("Use the format YYYY-MM-DD", true);
+          const text = (window.prompt("What happened? (e.g. Halloween promo started, owner on vacation)") || "").trim();
+          if (!text) return;
+          const notes = loadTrendNotes();
+          notes.push({ id: `n${Date.now()}`, date: date.trim(), account: trendState.account, text });
+          saveTrendNotes(notes);
+          renderTrends();
+          toast("Note added");
+        }
+        function deleteTrendNote(id) {
+          if (!window.confirm("Delete this note?")) return;
+          saveTrendNotes(loadTrendNotes().filter((n) => n.id !== id));
+          renderTrends();
+        }
+
+        // ---- US holidays & school breaks ----
+        function nthWeekday(year, month, weekday, n) {
+          const d = new Date(Date.UTC(year, month, 1));
+          const shift = (weekday - d.getUTCDay() + 7) % 7;
+          d.setUTCDate(1 + shift + (n - 1) * 7);
+          return d.toISOString().slice(0, 10);
+        }
+        function lastWeekday(year, month, weekday) {
+          const d = new Date(Date.UTC(year, month + 1, 0));
+          const shift = (d.getUTCDay() - weekday + 7) % 7;
+          d.setUTCDate(d.getUTCDate() - shift);
+          return d.toISOString().slice(0, 10);
+        }
+        function easterDate(y) {
+          const a = y % 19, b = Math.floor(y / 100), c = y % 100, d = Math.floor(b / 4), e = b % 4;
+          const f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3), h = (19 * a + b - d - g + 15) % 30;
+          const i = Math.floor(c / 4), k = c % 4, l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor((a + 11 * h + 22 * l) / 451);
+          const month = Math.floor((h + l - 7 * m + 114) / 31), day = ((h + l - 7 * m + 114) % 31) + 1;
+          return `${y}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+        }
+        function holidaysBetween(start, end) {
+          const out = [];
+          const y0 = Number(start.slice(0, 4)), y1 = Number(end.slice(0, 4));
+          for (let y = y0; y <= y1; y++) {
+            const p = (m, d) => `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+            const thanksgiving = nthWeekday(y, 10, 4, 4);
+            out.push(
+              [p(1, 1), "New Year's Day"], [nthWeekday(y, 0, 1, 3), "MLK Day"], [nthWeekday(y, 1, 1, 3), "Presidents' Day"],
+              [p(3, 15), "Spring break season (approx.)"], [easterDate(y), "Easter"], [lastWeekday(y, 4, 1), "Memorial Day"],
+              [p(6, 1), "Summer break starts (approx.)"], [p(7, 4), "Independence Day"], [p(8, 15), "Back to school (approx.)"],
+              [nthWeekday(y, 8, 1, 1), "Labor Day"], [p(10, 31), "Halloween"], [thanksgiving, "Thanksgiving"],
+              [ymdAddDays(thanksgiving, 1), "Black Friday"], [p(12, 20), "Winter break starts (approx.)"], [p(12, 25), "Christmas"],
+            );
+          }
+          return out.filter(([d]) => d >= start && d <= end).map(([date, name]) => ({ date, name }));
+        }
+
+        // ---- data ----
+        function trendAccounts() {
+          return (liveRange ? accounts.filter((a) => a._liveFetchId === liveRange.fetchId) : accounts).filter((a) => a.customerId);
+        }
+
+        async function fetchTrendData(accountId, days, force) {
+          const end = ymdAddDays(__localYMD(new Date()), -1);
+          const start = ymdAddDays(end, -(days - 1));
+          const key = `${accountId}|${start}|${end}`;
+          if (!force && trendCache.has(key)) return trendCache.get(key);
+          const tools = await ensureAdsMcpTools();
+          const targets = accountId === "all" ? trendAccounts().filter((a) => (a.cost || 0) > 0 || (a.enabledCampaignCount || 0) > 0) : trendAccounts().filter((a) => a.customerId === accountId);
+          if (!targets.length) throw new Error("Accounts haven't loaded yet — wait for the live refresh, then try again.");
+          const lyStart = ymdAddDays(start, -364), lyEnd = ymdAddDays(end, -364); // same weekdays last year
+          const chStart = ymdAddDays(__localYMD(new Date()), -29);
+          const status = document.getElementById("trendStatus");
+          let done = 0;
+          const per = await runWithConcurrencyLimit(targets, 3, async (a) => {
+            const camp = await mcpSearchRows(tools, a.customerId, {
+              fields: ["segments.date", "campaign.name", "metrics.cost_micros", "metrics.clicks", "metrics.impressions", "metrics.conversions", "metrics.search_impression_share", "metrics.search_budget_lost_impression_share", "metrics.search_rank_lost_impression_share"],
+              resource: "campaign",
+              conditions: [`segments.date BETWEEN '${start}' AND '${end}'`, "metrics.impressions > 0"],
+              limit: 10000,
+            }, { loginCustomerId: ADS_MCP_ANCHOR_MCC_ID });
+            const ly = await mcpSearchRows(tools, a.customerId, {
+              fields: ["segments.date", "metrics.cost_micros", "metrics.clicks", "metrics.impressions", "metrics.conversions"],
+              resource: "customer",
+              conditions: [`segments.date BETWEEN '${lyStart}' AND '${lyEnd}'`],
+            }, { loginCustomerId: ADS_MCP_ANCHOR_MCC_ID }).catch(() => ({ rows: [], mode: "empty" }));
+            const ch = await mcpSearchRows(tools, a.customerId, {
+              fields: ["change_event.change_date_time", "change_event.change_resource_type", "change_event.resource_change_operation", "change_event.user_email", "campaign.name"],
+              resource: "change_event",
+              conditions: [`change_event.change_date_time >= '${chStart}'`, `change_event.change_date_time <= '${__localYMD(new Date())} 23:59:59'`],
+              orderings: ["change_event.change_date_time DESC"],
+              limit: 1000,
+            }, { loginCustomerId: ADS_MCP_ANCHOR_MCC_ID }).catch(() => ({ rows: [], mode: "empty" }));
+            done += 1;
+            if (status) status.textContent = `Loading ${days} days for ${targets.length} account${targets.length === 1 ? "" : "s"}… ${done}/${targets.length}`;
+            if (camp.mode === "empty") throw new Error(`Couldn't load ${a.name}`);
+            return { a, camp: camp.rows, ly: ly.rows, ch: ch.rows };
+          });
+
+          const v = (r, k) => rowValue(r, k);
+          const n = (r, k) => asNumber(rowValue(r, k), 0);
+          const byDay = new Map();
+          const byCampDay = new Map(); // campaign → Map(day → {cost, conv, clicks})
+          const lyByDay = new Map();
+          const changes = [];
+          let failed = 0;
+          per.forEach((res) => {
+            if (res.status !== "fulfilled") {
+              failed += 1;
+              return;
+            }
+            const { a, camp, ly, ch } = res.value;
+            camp.forEach((r) => {
+              const day = String(v(r, ["segments.date"]) || "");
+              const cost = n(r, ["metrics.cost_micros", "metrics.costMicros"]) / 1e6;
+              const clicks = n(r, ["metrics.clicks"]);
+              const impr = n(r, ["metrics.impressions"]);
+              const conv = n(r, ["metrics.conversions"]);
+              const is = n(r, ["metrics.search_impression_share", "metrics.searchImpressionShare"]);
+              const lb = n(r, ["metrics.search_budget_lost_impression_share"]);
+              const lr = n(r, ["metrics.search_rank_lost_impression_share"]);
+              const d = byDay.get(day) || { cost: 0, clicks: 0, impr: 0, conv: 0, elig: 0, isImpr: 0, lostB: 0, lostR: 0 };
+              d.cost += cost; d.clicks += clicks; d.impr += impr; d.conv += conv;
+              if (is > 0 && impr > 0) {
+                const e = impr / is;
+                d.elig += e; d.isImpr += impr; d.lostB += e * lb; d.lostR += e * lr;
+              }
+              byDay.set(day, d);
+              const cname = accountId === "all" ? `${a.name} › ${v(r, ["campaign.name"])}` : String(v(r, ["campaign.name"]) || "");
+              if (!byCampDay.has(cname)) byCampDay.set(cname, new Map());
+              const cd = byCampDay.get(cname).get(day) || { cost: 0, conv: 0, clicks: 0 };
+              cd.cost += cost; cd.conv += conv; cd.clicks += clicks;
+              byCampDay.get(cname).set(day, cd);
+            });
+            ly.forEach((r) => {
+              const day = ymdAddDays(String(v(r, ["segments.date"]) || ""), 364);
+              const d = lyByDay.get(day) || { cost: 0, conv: 0, clicks: 0, impr: 0 };
+              d.cost += n(r, ["metrics.cost_micros", "metrics.costMicros"]) / 1e6;
+              d.conv += n(r, ["metrics.conversions"]);
+              d.clicks += n(r, ["metrics.clicks"]);
+              d.impr += n(r, ["metrics.impressions"]);
+              lyByDay.set(day, d);
+            });
+            const groups = new Map();
+            ch.forEach((r) => {
+              const when = String(v(r, ["change_event.change_date_time", "changeEvent.changeDateTime"]) || "");
+              const g = {
+                account: a.name, customerId: a.customerId, day: when.slice(0, 10), latest: when,
+                user: String(v(r, ["change_event.user_email", "changeEvent.userEmail"]) || "unknown"),
+                type: String(v(r, ["change_event.change_resource_type", "changeEvent.changeResourceType"]) || ""),
+                op: String(v(r, ["change_event.resource_change_operation", "changeEvent.resourceChangeOperation"]) || ""),
+                campaign: String(v(r, ["campaign.name"]) || ""), count: 0,
+              };
+              g.auto = isAutoApplyUser(g.user);
+              const k = [g.day, g.user, g.type, g.op, g.campaign].join("||");
+              const e = groups.get(k) || g;
+              e.count += 1;
+              groups.set(k, e);
+            });
+            changes.push(...groups.values());
+          });
+          mergeIntoChangeLog(changes);
+          const dates = [];
+          for (let d = start; d <= end; d = ymdAddDays(d, 1)) dates.push(d);
+          const result = { start, end, dates, byDay, byCampDay, lyByDay, failed, accountId, fetchedAt: new Date() };
+          trendCache.set(key, result);
+          return result;
+        }
+
+        // Portal (PPC leads per day) and GA4 (paid leads per day) for the overlay.
+        async function fetchTrendLeads(accountId, start, end) {
+          const out = { portal: null, ga4: null, notes: [] };
+          const acct = accounts.find((a) => a.customerId === accountId);
+          if (isPortalConnected()) {
+            try {
+              let ids = [];
+              if (accountId === "all") ids = null;
+              else if (acct) {
+                const cachedPortal = Array.from(portalRangeCache.values())[0];
+                ids = cachedPortal ? franchiseIdsForAccount(acct, cachedPortal.franchises) : [];
+                if (!ids.length) {
+                  const m = String(acct.name).match(/\((\d{1,4})\)/);
+                  if (m) ids = [Number(m[1])].concat(PORTAL_EXTRA_FRANCHISES[accountId] || []);
+                }
+              }
+              if (ids === null || ids.length) {
+                const names = await ensurePortalTools();
+                const calls = ids === null ? [null] : ids;
+                const series = new Map();
+                for (const fid of calls) {
+                  const args = { start_date: start, end_date: end, group_by: "day" };
+                  if (fid != null) args.franchise_id = fid;
+                  const rep = parseToolResult(await portalRpc("tools/call", { name: names.leadChannel, arguments: args }));
+                  const rows = (rep && rep.summary_by_date) || [];
+                  rows.forEach((r) => {
+                    const k = String((r.meta && r.meta.key) || "");
+                    const day = k.length === 8 ? `${k.slice(0, 4)}-${k.slice(4, 6)}-${k.slice(6, 8)}` : null;
+                    if (!day) return;
+                    const base = (r.data && r.data.channel && r.data.channel.base) || {};
+                    series.set(day, (series.get(day) || 0) + (Number(base.PPC && base.PPC.count) || 0));
+                  });
+                }
+                out.portal = series;
+              } else out.notes.push("No Portal franchise matched this account");
+            } catch (e) {
+              out.notes.push(`Portal: ${e.message || e}`);
+            }
+          }
+          if (isGa4Connected()) {
+            try {
+              const rows = await ga4RunReport(["date", "sessionGoogleAdsCustomerId"], ["keyEvents:lead_submitted"], { startDate: start, endDate: end }, 20000);
+              const series = new Map();
+              rows.forEach((r) => {
+                const id = String(r.sessionGoogleAdsCustomerId || "").replace(/\D+/g, "");
+                if (!id) return;
+                if (accountId !== "all" && id !== accountId) return;
+                const k = String(r.date || "");
+                const day = k.length === 8 ? `${k.slice(0, 4)}-${k.slice(4, 6)}-${k.slice(6, 8)}` : k;
+                series.set(day, (series.get(day) || 0) + (Number(r["keyEvents:lead_submitted"]) || 0));
+              });
+              out.ga4 = series;
+            } catch (e) {
+              out.notes.push(`GA4: ${e.message || e}`);
+            }
+          }
+          return out;
+        }
+
+        // ---- maths ----
+        function sumWindow(byDay, dates, i0, i1) {
+          const t = { cost: 0, clicks: 0, impr: 0, conv: 0, elig: 0, isImpr: 0, lostB: 0, lostR: 0, days: 0 };
+          for (let i = Math.max(0, i0); i <= i1 && i < dates.length; i++) {
+            const d = byDay.get(dates[i]);
+            t.days += 1;
+            if (!d) continue;
+            t.cost += d.cost; t.clicks += d.clicks; t.impr += d.impr || 0; t.conv += d.conv;
+            t.elig += d.elig || 0; t.isImpr += d.isImpr || 0; t.lostB += d.lostB || 0; t.lostR += d.lostR || 0;
+          }
+          return t;
+        }
+        function metricOf(t, metric) {
+          switch (metric) {
+            case "cpa": return t.conv > 0 ? t.cost / t.conv : null;
+            case "conv": return t.days ? t.conv / t.days : 0;
+            case "cost": return t.days ? t.cost / t.days : 0;
+            case "cpc": return t.clicks > 0 ? t.cost / t.clicks : null;
+            case "ctr": return t.impr > 0 ? t.clicks / t.impr : null;
+            case "convRate": return t.clicks > 0 ? t.conv / t.clicks : null;
+            case "is": return t.elig > 0 ? Math.min(1, t.isImpr / t.elig) : null;
+          }
+          return null;
+        }
+
+        // Finds spikes (cost/conv up ≥25%) and good runs (down ≥20%) using a
+        // 7-day window against the 14 days before it.
+        function detectEpisodes(data) {
+          const { dates, byDay } = data;
+          const flags = dates.map((_, i) => {
+            if (i < 20) return 0;
+            const w = sumWindow(byDay, dates, i - 6, i);
+            const b = sumWindow(byDay, dates, i - 20, i - 7);
+            if (w.conv < 3 || b.conv < 5 || w.cost < 30) return 0;
+            const r = (w.cost / w.conv) / (b.cost / b.conv);
+            return r >= 1.25 ? 1 : r <= 0.8 ? -1 : 0;
+          });
+          const eps = [];
+          let i = 0;
+          while (i < dates.length) {
+            if (!flags[i]) { i++; continue; }
+            const kind = flags[i];
+            let j = i;
+            while (j + 1 < dates.length && (flags[j + 1] === kind || (flags[j + 1] === 0 && flags[j + 2] === kind))) j++;
+            if (j - i + 1 >= 3) {
+              // start = the day with the sharpest step in cost/conv (7 days after vs 7 days before)
+              let startIdx = i - 6, bestStep = -Infinity;
+              for (let k = Math.max(7, i - 10); k <= i; k++) {
+                const aft = sumWindow(byDay, dates, k, Math.min(k + 6, j));
+                const bef = sumWindow(byDay, dates, k - 7, k - 1);
+                if (!(aft.conv > 0 && bef.conv > 0 && aft.cost > 0 && bef.cost > 0)) continue;
+                const step = kind * Math.log((aft.cost / aft.conv) / (bef.cost / bef.conv));
+                if (step > bestStep + 1e-9) { bestStep = step; startIdx = k; }
+              }
+              // a rise right after a good run (or a drop right after a spike) is just a return to normal
+              const prev = eps[eps.length - 1];
+              const rebound = prev && prev.kind !== (kind > 0 ? "spike" : "good") && prev.endIdx >= startIdx - 14;
+              if (!rebound) eps.push({ kind: kind > 0 ? "spike" : "good", startIdx, endIdx: j });
+            }
+            i = j + 1;
+          }
+          return eps;
+        }
+
+        function explainEpisode(ep, data, leads, ctx) {
+          const { dates, byDay, byCampDay, lyByDay } = data;
+          const s = ep.startIdx, e = Math.min(ep.endIdx, s + 13);
+          const A = sumWindow(byDay, dates, s - 14, s - 1);
+          const B = sumWindow(byDay, dates, s, e);
+          const per = (t, k) => (t.days ? t[k] / t.days : 0);
+          const cpaA = A.conv > 0 ? A.cost / A.conv : null, cpaB = B.conv > 0 ? B.cost / B.conv : null;
+          const pct = (x, y) => (x > 0 && y != null ? ((y - x) / x) * 100 : null);
+          const out = { reasons: [], changes: [], keep: [], watch: [] };
+          out.title = ep.kind === "spike"
+            ? `Cost/conv up ${Math.round(pct(cpaA, cpaB))}% (${fmt$(cpaA)} → ${fmt$(cpaB)})`
+            : `Cost/conv down ${Math.round(-pct(cpaA, cpaB))}% (${fmt$(cpaA)} → ${fmt$(cpaB)})`;
+          out.when = `${formatDateShort(dates[s])} – ${formatDateShort(dates[ep.endIdx])}`;
+          out.start = dates[s];
+
+          // drivers: cost/conv = CPC ÷ conv rate
+          const cpcA = metricOf(A, "cpc"), cpcB = metricOf(B, "cpc");
+          const crA = metricOf(A, "convRate"), crB = metricOf(B, "convRate");
+          const dCpc = pct(cpcA, cpcB), dCr = pct(crA, crB);
+          if (dCpc != null && dCr != null) {
+            if (Math.abs(dCpc) >= Math.abs(dCr)) out.reasons.push(`Clicks got ${dCpc > 0 ? "more" : "less"} expensive: CPC ${fmt$(cpcA)} → ${fmt$(cpcB)} (${dCpc > 0 ? "+" : ""}${Math.round(dCpc)}%)`);
+            else out.reasons.push(`${dCr < 0 ? "Fewer" : "More"} clicks turned into conversions: ${(crA * 100).toFixed(1)}% → ${(crB * 100).toFixed(1)}%`);
+          }
+          const dImpr = pct(per(A, "impr"), per(B, "impr"));
+          if (dImpr != null && Math.abs(dImpr) >= 20) out.reasons.push(`Impressions per day ${dImpr > 0 ? "up" : "down"} ${Math.abs(Math.round(dImpr))}% (search demand or reach changed)`);
+          const isA = metricOf(A, "is"), isB = metricOf(B, "is");
+          const lrA = A.elig ? A.lostR / A.elig : null, lrB = B.elig ? B.lostR / B.elig : null;
+          const lbA = A.elig ? A.lostB / A.elig : null, lbB = B.elig ? B.lostB / B.elig : null;
+          if (isA != null && isB != null && Math.abs(isB - isA) >= 0.05) out.reasons.push(`Impression share ${Math.round(isA * 100)}% → ${Math.round(isB * 100)}%${lrA != null && Math.abs(lrB - lrA) >= 0.05 ? ` (lost to rank ${Math.round(lrA * 100)}% → ${Math.round(lrB * 100)}%)` : ""}${lbA != null && Math.abs(lbB - lbA) >= 0.05 ? ` (lost to budget ${Math.round(lbA * 100)}% → ${Math.round(lbB * 100)}%)` : ""}`);
+
+          // which campaign drove it
+          let best = null;
+          byCampDay.forEach((m, name) => {
+            const sum = (i0, i1) => {
+              const t = { cost: 0, conv: 0, days: 0 };
+              for (let i = Math.max(0, i0); i <= i1; i++) {
+                const d = m.get(dates[i]);
+                t.days += 1;
+                if (d) { t.cost += d.cost; t.conv += d.conv; }
+              }
+              return t;
+            };
+            const a = sum(s - 14, s - 1), b = sum(s, e);
+            if (!cpaA) return;
+            const excess = (b.cost - b.conv * cpaA) / b.days - (a.cost - a.conv * cpaA) / a.days;
+            const score = ep.kind === "spike" ? excess : -excess;
+            if (!best || score > best.score) best = { name, score, a, b };
+          });
+          if (best && best.score > 0) {
+            const ca = best.a.conv > 0 ? best.a.cost / best.a.conv : null, cb = best.b.conv > 0 ? best.b.cost / best.b.conv : null;
+            const spA = best.a.cost / best.a.days, spB = best.b.cost / best.b.days;
+            const spend = Math.abs(spB - spA) >= 0.1 * Math.max(spA, 1) ? `spend ${fmt$(spA)}/day → ${fmt$(spB)}/day, ` : "";
+            out.reasons.push(`Biggest driver: "${best.name}" — ${spend}cost/conv ${ca ? fmt$(ca) : "no conv"} → ${cb ? fmt$(cb) : "no conv"}`);
+          }
+
+          // changes, notes, holidays around the start
+          const from = ymdAddDays(dates[s], -4), to = ymdAddDays(dates[s], 1);
+          out.changes = ctx.changes.filter((c) => c.day >= from && c.day <= to).sort((x, y) => Math.abs(new Date(x.day) - new Date(dates[s])) - Math.abs(new Date(y.day) - new Date(dates[s]))).slice(0, 6);
+          const notes = ctx.notes.filter((nn) => nn.date >= ymdAddDays(dates[s], -3) && nn.date <= ymdAddDays(dates[s], 3));
+          const hols = ctx.holidays.filter((h) => h.date >= ymdAddDays(dates[s], -5) && h.date <= ymdAddDays(dates[s], 5));
+          notes.forEach((nn) => out.reasons.push(`Your note (${formatDateShort(nn.date)}): ${nn.text}`));
+          hols.forEach((h) => out.reasons.push(`Around ${h.name} (${formatDateShort(h.date)})`));
+
+          // last year same weeks
+          const lyA = sumWindow(lyByDay, dates, s - 14, s - 1), lyB = sumWindow(lyByDay, dates, s, e);
+          if (lyA.conv >= 5 && lyB.conv >= 3) {
+            const r = (lyB.cost / lyB.conv) / (lyA.cost / lyA.conv);
+            if ((ep.kind === "spike" && r >= 1.15) || (ep.kind === "good" && r <= 0.87)) out.reasons.push(`Same pattern last year (${r > 1 ? "+" : ""}${Math.round((r - 1) * 100)}% in the same weeks) — likely seasonal`);
+          }
+
+          // real leads check
+          const avg = (series, i0, i1) => {
+            if (!series) return null;
+            let t = 0, c = 0;
+            for (let i = Math.max(0, i0); i <= i1; i++) { t += series.get(dates[i]) || 0; c += 1; }
+            return c ? t / c : null;
+          };
+          const gConvChange = pct(per(A, "conv"), per(B, "conv"));
+          [["Portal PPC leads", leads && leads.portal], ["GA4 paid leads", leads && leads.ga4]].forEach(([label, series]) => {
+            const la = avg(series, s - 14, s - 1), lb = avg(series, s, e);
+            if (la == null || la < 0.3) return;
+            const d = pct(la, lb);
+            if (gConvChange != null && gConvChange <= -25 && d != null && d > -10) out.reasons.push(`${label} didn't drop (${la.toFixed(1)} → ${lb.toFixed(1)}/day) while Google conversions fell ${Math.abs(Math.round(gConvChange))}% — looks like tracking/attribution, not real performance`);
+            else if (d != null && Math.abs(d) >= 15) out.reasons.push(`${label} ${d > 0 ? "up" : "down"} ${Math.abs(Math.round(d))}% (${la.toFixed(1)} → ${lb.toFixed(1)}/day)`);
+          });
+
+          // suggestions
+          if (ep.kind === "good") {
+            out.changes.filter((c) => !c.auto).slice(0, 2).forEach((c) => out.keep.push(`Keep: ${describeChange(c)}${c.campaign ? ` in "${c.campaign}"` : ""} (${formatDateShort(c.day)})`));
+            if (best && best.score > 0) out.keep.push(`Keep budget behind "${best.name}" — it carried the improvement`);
+            if (!out.keep.length) out.keep.push("Hold current bids and budgets; note what was different this period");
+          } else {
+            const auto = out.changes.filter((c) => c.auto);
+            if (auto.length) out.watch.push(`Review Google auto-applied changes on ${auto.map((c) => formatDateShort(c.day)).join(", ")} — revert if they caused this`);
+            out.changes.filter((c) => !c.auto).slice(0, 2).forEach((c) => out.watch.push(`Check the ${describeChange(c).toLowerCase()} on ${formatDateShort(c.day)}${c.campaign ? ` in "${c.campaign}"` : ""}`));
+            if (dCpc != null && dCpc > 15 && lrB != null && lrA != null && lrB > lrA) out.watch.push("Rising CPC + more impression share lost to rank: competitors bidding up, or quality/ad strength slipped");
+            if (dCr != null && dCr < -15) out.watch.push("Conversion rate fell: check the landing page, lead form and conversion tracking");
+            if (dImpr != null && dImpr < -20) out.watch.push("Less search volume: compare with last year before cutting bids");
+          }
+          return out;
+        }
+
+        // ---- page ----
+        function populateTrendAccountSelect() {
+          const sel = document.getElementById("trendAccount");
+          if (!sel) return;
+          const list = trendAccounts().slice().sort((a, b) => (b.cost || 0) - (a.cost || 0));
+          sel.innerHTML = `<option value="all">All accounts</option>` + list.map((a) => `<option value="${escapeHtml(a.customerId)}">${escapeHtml(a.name)}</option>`).join("");
+          sel.value = list.some((a) => a.customerId === trendState.account) ? trendState.account : "all";
+          trendState.account = sel.value;
+        }
+
+        async function loadTrendsPage(force) {
+          const status = document.getElementById("trendStatus");
+          if (!status) return;
+          populateTrendAccountSelect();
+          try {
+            const token = await ensureAdsMcpAccessToken();
+            if (!token) throw new Error("Connect Ads MCP first (button at the top).");
+            status.textContent = "Loading…";
+            const data = await fetchTrendData(trendState.account, trendState.days, force);
+            status.textContent = isPortalConnected() || isGa4Connected() ? "Loading leads overlay…" : "";
+            const leads = trendState.showLeads ? await fetchTrendLeads(trendState.account, data.start, data.end) : null;
+            trendLast = { data, leads };
+            status.textContent = `${formatDateShort(data.start)} – ${formatDateShort(data.end)}${data.failed ? ` · ${data.failed} account(s) failed` : ""}${leads && leads.notes.length ? ` · ${leads.notes.join(" · ")}` : ""}`;
+            renderTrends();
+          } catch (err) {
+            status.textContent = `Couldn't load: ${err.message || err}`;
+          }
+        }
+
+        function renderTrends() {
+          if (!trendLast) return;
+          const { data, leads } = trendLast;
+          const { dates, byDay, lyByDay } = data;
+          const metric = trendState.metric;
+          const M = TREND_METRICS[metric];
+          const acctName = trendState.account === "all" ? "All accounts" : (accounts.find((a) => a.customerId === trendState.account) || {}).name || trendState.account;
+          const daily = dates.map((d, i) => metricOf(sumWindow(byDay, dates, i, i), metric));
+          const avg7 = dates.map((d, i) => (i < 6 ? null : metricOf(sumWindow(byDay, dates, i - 6, i), metric)));
+          const ly7 = dates.map((d, i) => (i < 6 ? null : metricOf(sumWindow(lyByDay, dates, i - 6, i), metric)));
+          const notes = loadTrendNotes().filter((nn) => nn.account === "all" || nn.account === trendState.account || trendState.account === "all");
+          const holidays = holidaysBetween(data.start, data.end);
+          const log = loadChangeLog().filter((c) => (trendState.account === "all" || c.customerId === trendState.account) && c.day >= data.start && c.day <= data.end);
+          const episodes = detectEpisodes(data);
+
+          // markers by date
+          const markers = new Map();
+          const addM = (date, kind, text) => {
+            if (!markers.has(date)) markers.set(date, []);
+            markers.get(date).push({ kind, text });
+          };
+          if (trendState.showChanges) log.forEach((c) => addM(c.day, c.auto ? "auto" : "change", `${c.auto ? "🤖 Google auto-apply" : c.user}: ${describeChange(c)}${c.campaign ? ` (${c.campaign})` : ""}${trendState.account === "all" ? ` — ${c.account}` : ""}`));
+          if (trendState.showNotes) notes.forEach((nn) => addM(nn.date, "note", `📝 ${nn.text}`));
+          if (trendState.showHolidays) holidays.forEach((h) => addM(h.date, "holiday", `📅 ${h.name}`));
+          const vals = [...daily, ...avg7].filter((x) => x != null && Number.isFinite(x));
+          const sorted = vals.slice().sort((a, b) => a - b);
+          const top = sorted.length ? sorted[Math.floor(sorted.length * 0.97)] * 1.15 : 1;
+          const kindColor = { change: "#2f6fdf", auto: "#e76829", note: "#7aa52b", holiday: "#8a5cc2" };
+          const markerPoints = dates.map((d) => (markers.has(d) ? top : null));
+          const markerColors = dates.map((d) => {
+            const ks = (markers.get(d) || []).map((m) => m.kind);
+            return kindColor[ks.includes("auto") ? "auto" : ks.includes("change") ? "change" : ks.includes("note") ? "note" : "holiday"];
+          });
+
+          const datasets = [
+            { label: `${M.label} (daily)`, data: daily.map((x) => (x != null && x <= top ? x : x != null ? top : null)), borderColor: "rgba(11,12,8,0.25)", backgroundColor: "rgba(11,12,8,0.25)", borderWidth: 1, pointRadius: 0, spanGaps: true, yAxisID: "y" },
+            { label: `${M.label} (7-day)`, data: avg7, borderColor: "#0b0c08", borderWidth: 2.5, pointRadius: 0, spanGaps: true, yAxisID: "y" },
+          ];
+          if (trendState.showLY && ly7.some((x) => x != null)) datasets.push({ label: "Same weeks last year (7-day)", data: ly7, borderColor: "#9a9c90", borderDash: [6, 4], borderWidth: 1.5, pointRadius: 0, spanGaps: true, yAxisID: "y" });
+          if (leads && leads.portal) datasets.push({ type: "bar", label: "Portal PPC leads / day", data: dates.map((d) => leads.portal.get(d) || 0), backgroundColor: "rgba(231,104,41,0.16)", barPercentage: 0.6, order: 10, yAxisID: "y2" });
+          if (leads && leads.ga4) datasets.push({ label: "GA4 paid leads / day (7-day avg)", data: dates.map((d, i) => { if (i < 6) return null; let t = 0; for (let k = i - 6; k <= i; k++) t += leads.ga4.get(dates[k]) || 0; return t / 7; }), borderColor: "#2f6fdf", borderWidth: 1.5, pointRadius: 0, yAxisID: "y2" });
+          datasets.push({ label: "Markers", data: markerPoints, showLine: false, pointStyle: "triangle", pointRotation: 180, pointRadius: dates.map((d) => (markers.has(d) ? 7 : 0)), pointHoverRadius: 9, pointBackgroundColor: markerColors, pointBorderColor: "#0b0c08", yAxisID: "y" });
+
+          const shade = {
+            id: "trendShade",
+            beforeDatasetsDraw(chart) {
+              const { ctx, chartArea, scales } = chart;
+              episodes.forEach((ep) => {
+                const x0 = scales.x.getPixelForValue(ep.startIdx), x1 = scales.x.getPixelForValue(ep.endIdx);
+                ctx.save();
+                ctx.fillStyle = ep.kind === "spike" ? "rgba(199,58,23,0.10)" : "rgba(122,165,43,0.12)";
+                ctx.fillRect(x0, chartArea.top, Math.max(2, x1 - x0), chartArea.bottom - chartArea.top);
+                ctx.restore();
+              });
+              markers.forEach((_, date) => {
+                const i = dates.indexOf(date);
+                if (i < 0) return;
+                const x = scales.x.getPixelForValue(i);
+                ctx.save();
+                ctx.strokeStyle = "rgba(11,12,8,0.15)";
+                ctx.setLineDash([2, 3]);
+                ctx.beginPath();
+                ctx.moveTo(x, chartArea.top);
+                ctx.lineTo(x, chartArea.bottom);
+                ctx.stroke();
+                ctx.restore();
+              });
+            },
+          };
+
+          const canvas = document.getElementById("trendChart");
+          if (trendChart) trendChart.destroy();
+          trendChart = new Chart(canvas, {
+            type: "line",
+            data: { labels: dates.map((d) => formatDateShort(d)), datasets },
+            plugins: [shade],
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              interaction: { mode: "index", intersect: false },
+              plugins: {
+                legend: { labels: { color: "#0b0c08", font: { family: "Jost", size: 11, weight: "600" }, filter: (item) => item.text !== "Markers" } },
+                tooltip: {
+                  backgroundColor: "#0b0c08", titleColor: "#ffe92e", bodyColor: "#fff", borderColor: "#e76829", borderWidth: 2, padding: 10,
+                  filter: (item) => item.dataset.label !== "Markers" || markers.has(dates[item.dataIndex]),
+                  callbacks: {
+                    label: (item) => {
+                      if (item.dataset.label === "Markers") return (markers.get(dates[item.dataIndex]) || []).map((m) => m.text);
+                      const v = item.raw;
+                      if (v == null) return null;
+                      if (item.dataset.yAxisID === "y2") return `${item.dataset.label}: ${Number(v).toFixed(1)}`;
+                      return `${item.dataset.label}: ${M.fmt(v)}`;
+                    },
+                  },
+                },
+              },
+              scales: {
+                x: { ticks: { maxTicksLimit: 12, color: "#0b0c08", font: { family: "JetBrains Mono", size: 10 } }, grid: { display: false } },
+                y: { suggestedMax: top, beginAtZero: true, ticks: { callback: (v) => M.fmt(v), color: "#0b0c08", font: { family: "JetBrains Mono", size: 10 } } },
+                y2: { display: !!(leads && (leads.portal || leads.ga4)), position: "right", beginAtZero: true, grid: { display: false }, title: { display: true, text: "Leads / day" } },
+              },
+            },
+          });
+
+          // story cards
+          const ctx = { changes: loadChangeLog().filter((c) => trendState.account === "all" || c.customerId === trendState.account), notes, holidays };
+          const stories = episodes.slice().reverse().map((ep) => ({ ep, x: explainEpisode(ep, data, leads, ctx) }));
+          const cards = document.getElementById("trendStories");
+          cards.innerHTML = stories.length
+            ? stories
+                .map(({ ep, x }) => `<div class="story ${ep.kind}">
+                  <div class="story-head"><span class="story-icon">${ep.kind === "spike" ? "🔺" : "🟢"}</span><strong>${escapeHtml(x.title)}</strong><span class="story-when">${escapeHtml(x.when)}</span></div>
+                  ${x.reasons.length ? `<div class="story-sec">Why</div><ul>${x.reasons.map((r) => `<li>${escapeHtml(r)}</li>`).join("")}</ul>` : ""}
+                  <div class="story-sec">Changes around the start (${escapeHtml(formatDateShort(ymdAddDays(x.start, -4)))} – ${escapeHtml(formatDateShort(ymdAddDays(x.start, 1)))})</div>
+                  ${x.changes.length ? `<ul>${x.changes.map((c) => `<li>${escapeHtml(formatDateShort(c.day))} — ${escapeHtml(c.auto ? "🤖 Google auto-apply" : c.user)}: ${escapeHtml(describeChange(c))}${c.campaign ? ` (${escapeHtml(c.campaign)})` : ""}</li>`).join("")}</ul>` : `<div class="story-muted">${ep.startIdx < dates.length - 30 && x.start < ymdAddDays(__localYMD(new Date()), -29) ? "Older than Google's 30-day change history — the dashboard keeps its own log from now on." : "No account changes recorded."}</div>`}
+                  ${x.keep.length ? `<div class="story-sec">✅ Keep doing</div><ul>${x.keep.map((r) => `<li>${escapeHtml(r)}</li>`).join("")}</ul>` : ""}
+                  ${x.watch.length ? `<div class="story-sec">👀 Check</div><ul>${x.watch.map((r) => `<li>${escapeHtml(r)}</li>`).join("")}</ul>` : ""}
+                </div>`)
+                .join("")
+            : `<div class="story-muted">No clear spikes or good runs in this period for ${escapeHtml(acctName)} (cost/conv stayed within ±20–25% of the prior two weeks).</div>`;
+
+          // timeline list
+          const tl = Array.from(markers.entries()).sort((a, b) => (a[0] < b[0] ? 1 : -1));
+          document.getElementById("trendTimeline").innerHTML = tl.length
+            ? tl.map(([d, ms]) => `<tr><td>${escapeHtml(formatDateShort(d))}</td><td>${ms.map((m) => `<div><span class="tl-dot" style="background:${kindColor[m.kind]}"></span>${escapeHtml(m.text)}</div>`).join("")}</td></tr>`).join("")
+            : `<tr><td colspan="2" style="text-align:center;padding:20px;color:var(--ink-muted)">No markers in this period.</td></tr>`;
+          document.getElementById("trendNotesList").innerHTML = notes.length
+            ? notes.sort((a, b) => (a.date < b.date ? 1 : -1)).map((nn) => `<span class="neg-chip">📝 ${escapeHtml(formatDateShort(nn.date))}: ${escapeHtml(nn.text)} <button class="icon-btn" onclick="deleteTrendNote('${nn.id}')" title="Delete note">×</button></span>`).join("")
+            : `<span class="story-muted">No notes yet — add one for promos, owner availability, site changes…</span>`;
+        }
+
+        function bindTrendControls() {
+          const bind = (id, ev, fn) => {
+            const el = document.getElementById(id);
+            if (el && !el.dataset.boundTrend) {
+              el.addEventListener(ev, fn);
+              el.dataset.boundTrend = "true";
+            }
+          };
+          bind("trendAccount", "change", (e) => { trendState.account = e.target.value; loadTrendsPage(false); });
+          bind("trendMetric", "change", (e) => { trendState.metric = e.target.value; renderTrends(); });
+          bind("trendDays", "change", (e) => { trendState.days = Number(e.target.value); loadTrendsPage(false); });
+          ["LY", "Leads", "Holidays", "Changes", "Notes"].forEach((k) =>
+            bind(`trendShow${k}`, "change", (e) => {
+              trendState[`show${k}`] = e.target.checked;
+              if (k === "Leads" && e.target.checked && trendLast && !trendLast.leads) return loadTrendsPage(false);
+              renderTrends();
+            }),
+          );
+        }
+
+        // Daily-check helper: spike/good-run detection on the last 24 days of daily totals.
+        function recentTrendSignal(days) {
+          // days: [{date, cost, conv}] ascending, ending yesterday
+          if (days.length < 24) return null;
+          const n = days.length;
+          const win = (i0, i1) => days.slice(i0, i1 + 1).reduce((t, d) => ({ cost: t.cost + d.cost, conv: t.conv + d.conv }), { cost: 0, conv: 0 });
+          const ratioAt = (end) => {
+            const w = win(end - 6, end), b = win(end - 20, end - 7);
+            if (w.conv < 3 || b.conv < 5 || w.cost < 30) return null;
+            return { r: (w.cost / w.conv) / (b.cost / b.conv), w, b };
+          };
+          const now = ratioAt(n - 1), before = ratioAt(n - 4);
+          if (!now) return null;
+          if (now.r >= 1.3 && (!before || before.r < 1.3)) return { kind: "spike", r: now.r, cpa: now.w.cost / now.w.conv, base: now.b.cost / now.b.conv, since: days[n - 4].date };
+          if (now.r <= 0.75 && (!before || before.r > 0.75)) return { kind: "good", r: now.r, cpa: now.w.cost / now.w.conv, base: now.b.cost / now.b.conv, since: days[n - 4].date };
+          return null;
+        }
+
         // ============ REPORT PAGES (Weekly · Month to Date · Markets) ============
         // Each page pulls its own date range from Google Ads (and the Portal
         // for Markets) and keeps it in memory, so switching pages is instant
@@ -9245,7 +9992,7 @@
         }
 
         // ---------- Page router ----------
-        const PAGES = ["today", "weekly", "mtd", "markets", "traffic", "accounts", "search", "changes", "health"];
+        const PAGES = ["today", "weekly", "mtd", "markets", "traffic", "accounts", "search", "trends", "changes", "health"];
         let activePage = "today";
 
         function renderCurrentPage(force) {
@@ -9254,6 +10001,7 @@
           if (activePage === "markets") return loadMarketsPage(force);
           if (activePage === "health") return renderHealthPage();
           if (activePage === "traffic") return loadTrafficPage(force);
+          if (activePage === "trends") return loadTrendsPage(force);
         }
 
         function showPage(name, opts) {
@@ -9891,6 +10639,7 @@
               });
             });
             changeHistoryRows = Array.from(groups.values()).sort((a, b) => (a.latest < b.latest ? 1 : -1));
+            mergeIntoChangeLog(changeHistoryRows);
             renderChangeHistory();
             if (failed && label) label.textContent += ` · ${failed} account${failed === 1 ? "" : "s"} failed to load`;
             render(); // refresh drill-downs and alerts with change data
@@ -10716,6 +11465,7 @@
           updatePortalUi();
           updateGa4Ui();
           bindHealthControls();
+          bindTrendControls();
           initPageRouter();
           refreshViewSelects();
 
