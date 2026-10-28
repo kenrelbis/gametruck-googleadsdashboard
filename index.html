@@ -1105,6 +1105,17 @@
         padding: 10px;
         margin-bottom: 12px;
       }
+      .chg-box { background: #fff; border: 2.5px solid var(--black); border-radius: 10px; padding: 14px 16px; }
+      .chg-group h4 { margin: 14px 0 6px; font-size: 13px; }
+      .chg-item { display: flex; gap: 10px; align-items: flex-start; padding: 7px 4px; border-bottom: 1px solid #efeddf; cursor: pointer; font-size: 13px; }
+      .chg-item input { margin-top: 3px; }
+      .chg-item.manual { cursor: default; }
+      .chg-manual { font-size: 12px; color: #8a5a00; margin-top: 2px; }
+      td.lq-flag { background: rgba(235, 104, 52, 0.12); font-weight: 700; }
+      .zbar { height: 5px; background: #efeddf; border-radius: 3px; margin-bottom: 3px; min-width: 60px; }
+      .zbar span { display: block; height: 100%; background: #2a78d6; border-radius: 3px; }
+      .zbar.leads span { background: #eb6834; }
+      .zip-table td.why-cell { text-align: left; white-space: normal; min-width: 260px; font-family: "Jost", sans-serif; font-size: 12.5px; }
       .match-tag { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 10px; border: 1px solid; }
       .match-tag.exact { color: #1d5fae; border-color: #2a78d6; background: rgba(42, 120, 214, 0.08); }
       .match-tag.phrase { color: #0f7a55; border-color: #1baf7a; background: rgba(27, 175, 122, 0.08); }
@@ -3613,6 +3624,7 @@
           <button data-nav="trends">📉 Trends</button>
           <button data-nav="insights">⏱️ Timing &amp; Competition</button>
           <button data-nav="keywords">🔑 Keyword Rank</button>
+          <button data-nav="zips">📍 Zip Codes</button>
           <button data-nav="changes">📜 Changes</button>
           <button data-nav="health">🩺 Health</button>
         </nav>
@@ -3941,6 +3953,8 @@
           </div>
           <div class="summary report-kpis"></div>
           <div class="table-wrap"><table class="report-table"></table></div>
+          <h3 class="sub-head" style="margin-top: 28px">Lead quality by market — why leads don't book</h3>
+          <div id="leadQuality"></div>
           <details class="metro-details"><summary>Which franchises are counted in each metro</summary><div class="metro-map">Connect Portal to see the franchise list.</div></details>
         </div>
 
@@ -4181,12 +4195,37 @@
           <div class="table-wrap">
             <table class="report-table kw-table"><thead><tr><th></th><th>Keyword</th><th>Match</th><th>Spend</th><th>Conv</th><th>Cost/conv</th><th>Imp. share</th><th>Lost to rank</th><th>QS</th><th title="Google's estimate of the bid needed to show at the top of the page">Top-of-page bid</th><th>Why / what to do</th></tr></thead><tbody id="kwBody"></tbody></table>
           </div>
+          <h3 class="sub-head" style="margin-top: 26px">📝 Suggested changes — download for Google Ads Editor</h3>
+          <div id="kwChanges" class="chg-box"></div>
           <h3 class="sub-head" style="margin-top: 26px">Broad vs exact overlap</h3>
           <div class="overlap-grid" id="kwOverlap"></div>
           <h3 class="sub-head" style="margin-top: 26px">Searches behind broad keywords</h3>
           <div class="table-wrap">
             <table class="report-table"><thead><tr><th>Broad keyword</th><th>Spend</th><th>Cost/conv</th><th>Searches matched</th><th title="Share of spend on searches that are not the keyword itself">Spend on other searches</th><th title="Searches that spent at least the goal with no conversions">Likely waste</th><th>Lost to rank</th></tr></thead><tbody id="kwBroadBody"></tbody></table>
           </div>
+        </div>
+        <div class="page" data-page="zips" id="page-zips" style="display: none">
+          <div class="section-head">
+            <h2>Zip Codes</h2>
+            <div class="meta">Where the ad money goes vs where Portal leads come from — raise bids where leads are cheap, cut where money gets no leads</div>
+          </div>
+          <div class="report-controls">
+            <select id="zipFranchise" class="btn btn-ghost" style="cursor: pointer; max-width: 360px" title="Franchise"></select>
+            <select id="zipDays" class="btn btn-ghost" style="cursor: pointer" title="Period">
+              <option value="30">Last 30 days</option>
+              <option value="90" selected>Last 90 days</option>
+              <option value="180">Last 180 days</option>
+            </select>
+            <button class="btn btn-ghost" onclick="loadZipPage(true)">🔄 Refresh</button>
+            <button class="btn btn-ghost" onclick="copyReport('page-zips')">📋 Copy</button>
+            <button class="btn btn-ghost" onclick="exportReportCsv('page-zips', 'zip-codes')">↓ CSV</button>
+            <span class="report-status" id="zipStatus"></span>
+          </div>
+          <div class="summary" id="zipKpis"></div>
+          <div class="table-wrap">
+            <table class="report-table zip-table"><thead><tr><th></th><th>Zip</th><th>Ad spend</th><th>Clicks</th><th>Google conv</th><th>Portal leads</th><th>Cost per lead</th><th>Suggestion</th></tr></thead><tbody id="zipBody"></tbody></table>
+          </div>
+          <div class="story-muted" style="margin-top: 6px">Ad spend counts where people physically were (location of presence), from this franchise's own account plus GTHQ campaigns. Portal leads include every channel. Zip bid adjustments only work for zips your campaigns target by zip — otherwise exclude or add the zip in Locations.</div>
         </div>
         <div class="page" data-page="trends" id="page-trends" style="display: none">
           <div class="section-head">
@@ -8172,6 +8211,7 @@
           "ga4-noncustomer-leads": "Non-customer forms counted as leads",
           "lead-mismatch": "Lead counts disagree (3-way)",
           "trend-spike": "New cost/conv spike",
+          "money-kw": "Money keyword losing ground",
           "trend-good": "Cost/conv improving",
         };
         let healthState = null; // { runAt, findings: [...], checked, failed }
@@ -8353,6 +8393,48 @@
           if (lowQs.length) {
             add("warning", "low-qs", `${lowQs.length} keyword${lowQs.length === 1 ? "" : "s"} with quality score ≤4 spent ${fmt$(lowQs.reduce((t, k) => t + k.cost, 0))} in 30 days: ${lowQs.slice(0, 4).map((k) => `"${k.kw}" (QS ${k.qs}, ${fmt$(k.cost)})`).join(", ")}`, "Tighten ad group themes, use the keyword in headlines, and improve landing-page relevance; pause if it never converts.");
           }
+
+          // 6. Money keywords losing their auctions (last 7 days vs the 7 before)
+          try {
+            const kwWeek = async (from, to) => healthQuery(tools, a.customerId, {
+              fields: ["ad_group_criterion.keyword.text", "ad_group_criterion.keyword.match_type", "ad_group.id", "ad_group_criterion.criterion_id", "metrics.impressions", "metrics.cost_micros", "metrics.conversions", "metrics.search_impression_share", "metrics.search_rank_lost_impression_share"],
+              resource: "keyword_view",
+              conditions: [`segments.date BETWEEN '${from}' AND '${to}'`, "metrics.impressions > 0"],
+              limit: 2000,
+            });
+            const [cur, prev] = await Promise.all([kwWeek(ymdAddDays(today, -7), yesterday), kwWeek(ymdAddDays(today, -14), ymdAddDays(today, -8))]);
+            const pick = (rows) => {
+              const m = new Map();
+              rows.forEach((r) => {
+                const impr = n(r, ["metrics.impressions"]), is = n(r, ["metrics.search_impression_share"]);
+                m.set(`${v(r, ["ad_group.id"])}|${v(r, ["ad_group_criterion.criterion_id"])}`, {
+                  text: String(v(r, ["ad_group_criterion.keyword.text"]) || ""), match: String(v(r, ["ad_group_criterion.keyword.match_type"]) || ""),
+                  conv: n(r, ["metrics.conversions"]), cost: n(r, ["metrics.cost_micros", "metrics.costMicros"]) / 1e6,
+                  elig: is > 0 ? impr / is : 0, is: is > 0 ? is : null, lr: is > 0 ? n(r, ["metrics.search_rank_lost_impression_share"]) : null,
+                });
+              });
+              return m;
+            };
+            const C = pick(cur), P = pick(prev);
+            const starred = loadMoneyKw();
+            const both = Array.from(C.entries()).map(([id, c]) => ({ id, c, p: P.get(id) })).filter((x) => x.p);
+            const totConv = both.reduce((t, x) => t + x.c.conv + x.p.conv, 0);
+            let cum = 0;
+            const money = new Set();
+            both.slice().sort((x, y) => y.c.conv + y.p.conv - (x.c.conv + x.p.conv)).forEach((x) => {
+              const conv = x.c.conv + x.p.conv, cost = x.c.cost + x.p.cost;
+              if (cum < totConv * 0.6 && conv >= 2 && cost / conv <= goal * 1.5) money.add(x.id);
+              cum += conv;
+            });
+            both.forEach((x) => { if (starred.has(`${a.customerId}|${kwNorm(x.c.text)}|${x.c.match}`)) money.add(x.id); });
+            const drops = both
+              .filter((x) => money.has(x.id) && x.c.elig >= 30 && x.p.elig >= 30 && x.c.is != null && x.p.is != null)
+              .map((x) => ({ ...x, dIs: (x.c.is - x.p.is) * 100, dLr: ((x.c.lr || 0) - (x.p.lr || 0)) * 100 }))
+              .filter((x) => x.dIs <= -10 || x.dLr >= 10)
+              .sort((x, y) => x.dIs - y.dIs)
+              .slice(0, 3);
+            drops.forEach((x) => add("warning", "money-kw", `Money keyword "${x.c.text}" (${(x.c.match || "").toLowerCase()}): impression share ${Math.round(x.p.is * 100)}% → ${Math.round(x.c.is * 100)}%, lost to rank ${Math.round((x.p.lr || 0) * 100)}% → ${Math.round((x.c.lr || 0) * 100)}% vs the week before`, "Open Keyword Rank: if quality is fine, raise its bid; if a quality part is below average, fix the ad or landing page."));
+          } catch (e) {}
           return findings;
         }
 
@@ -9034,10 +9116,174 @@
           return hi >= 10 && hi / lo > 1.6 ? hi / lo : null;
         }
 
+        // ============ SAVED RESULTS (IndexedDB) ============
+        // Page caches survive a reload: results are saved in this browser and
+        // reused until they go stale (1 hour for ranges that include today,
+        // 12 hours for ranges that end before today). Refresh buttons always
+        // fetch fresh data.
+        const PCACHE_DB = "gt_cache_v1";
+        const PCACHE_MAX_PER_MAP = 30;
+        const pcacheMaps = new Map();
+        let pcacheDbPromise = null;
+        let pcacheReady = null;
+
+        function pcacheSerialize(v) {
+          return JSON.stringify(v, function (k, x) {
+            if (x instanceof Map) return { __m: Array.from(x.entries()) };
+            if (x instanceof Set) return { __s: Array.from(x.values()) };
+            return x;
+          });
+        }
+        function pcacheDeserialize(s) {
+          return JSON.parse(s, (k, x) => {
+            if (x && typeof x === "object" && !Array.isArray(x)) {
+              if (Array.isArray(x.__m) && Object.keys(x).length === 1) return new Map(x.__m);
+              if (Array.isArray(x.__s) && Object.keys(x).length === 1) return new Set(x.__s);
+            }
+            return x;
+          });
+        }
+        function pcacheDb() {
+          if (pcacheDbPromise) return pcacheDbPromise;
+          pcacheDbPromise = new Promise((resolve) => {
+            try {
+              const req = indexedDB.open(PCACHE_DB, 1);
+              req.onupgradeneeded = () => req.result.createObjectStore("kv");
+              req.onsuccess = () => resolve(req.result);
+              req.onerror = () => resolve(null);
+            } catch (e) {
+              resolve(null);
+            }
+          });
+          return pcacheDbPromise;
+        }
+        function pcacheTtl(key) {
+          const dates = String(key).match(/\d{4}-\d{2}-\d{2}/g) || [];
+          const last = dates.sort().pop();
+          const today = __localYMD(new Date());
+          return !last || last >= today ? 60 * 60 * 1000 : 12 * 60 * 60 * 1000;
+        }
+        async function pcacheWrite(name, key, value, t) {
+          const db = await pcacheDb();
+          if (!db) return;
+          try {
+            const tx = db.transaction("kv", "readwrite");
+            tx.objectStore("kv").put({ t, v: pcacheSerialize(value) }, `${name}|${key}`);
+          } catch (e) {}
+        }
+        async function pcacheRemove(name, key) {
+          const db = await pcacheDb();
+          if (!db) return;
+          try {
+            db.transaction("kv", "readwrite").objectStore("kv").delete(`${name}|${key}`);
+          } catch (e) {}
+        }
+
+        // A Map whose entries are also saved to IndexedDB, with expiry.
+        function pcacheMap(name) {
+          const mem = new Map();
+          const saved = new Map(); // key → savedAt (ms)
+          const fresh = (k) => mem.has(k) && Date.now() - (saved.get(k) || 0) < pcacheTtl(k);
+          const m = {
+            has: (k) => fresh(k),
+            get: (k) => (fresh(k) ? mem.get(k) : undefined),
+            savedAt: (k) => saved.get(k) || null,
+            set(k, v) {
+              const t = Date.now();
+              mem.set(k, v);
+              saved.set(k, t);
+              pcacheWrite(name, k, v, t);
+              if (mem.size > PCACHE_MAX_PER_MAP) {
+                const oldest = Array.from(saved.entries()).sort((a, b) => a[1] - b[1])[0];
+                if (oldest) m.delete(oldest[0]);
+              }
+              return m;
+            },
+            delete(k) {
+              mem.delete(k);
+              saved.delete(k);
+              pcacheRemove(name, k);
+              return true;
+            },
+            clear() {
+              Array.from(mem.keys()).forEach((k) => m.delete(k));
+            },
+            keys: () => Array.from(mem.keys()).filter(fresh)[Symbol.iterator](),
+            values: () => Array.from(mem.keys()).filter(fresh).map((k) => mem.get(k))[Symbol.iterator](),
+            entries: () => Array.from(mem.keys()).filter(fresh).map((k) => [k, mem.get(k)])[Symbol.iterator](),
+            forEach: (fn) => Array.from(mem.keys()).filter(fresh).forEach((k) => fn(mem.get(k), k, m)),
+            get size() {
+              return Array.from(mem.keys()).filter(fresh).length;
+            },
+            _restore(k, v, t) {
+              if (!mem.has(k) || (saved.get(k) || 0) < t) {
+                mem.set(k, v);
+                saved.set(k, t);
+              }
+            },
+          };
+          pcacheMaps.set(name, m);
+          return m;
+        }
+
+        // Loads saved entries into every registered map (once, at start-up).
+        function pcacheLoad() {
+          if (pcacheReady) return pcacheReady;
+          pcacheReady = (async () => {
+            const db = await pcacheDb();
+            if (!db) return;
+            await new Promise((resolve) => {
+              try {
+                const store = db.transaction("kv", "readonly").objectStore("kv");
+                const req = store.openCursor();
+                const stale = [];
+                req.onsuccess = () => {
+                  const c = req.result;
+                  if (!c) {
+                    stale.forEach((k) => pcacheRemoveRaw(k));
+                    return resolve();
+                  }
+                  const full = String(c.key);
+                  const i = full.indexOf("|");
+                  const name = full.slice(0, i), key = full.slice(i + 1);
+                  const m = pcacheMaps.get(name);
+                  const rec = c.value || {};
+                  if (m && Date.now() - (rec.t || 0) < pcacheTtl(key)) {
+                    try {
+                      m._restore(key, pcacheDeserialize(rec.v), rec.t);
+                    } catch (e) {}
+                  } else stale.push(full);
+                  c.continue();
+                };
+                req.onerror = () => resolve();
+              } catch (e) {
+                resolve();
+              }
+            });
+          })();
+          return pcacheReady;
+        }
+        async function pcacheRemoveRaw(fullKey) {
+          const db = await pcacheDb();
+          if (!db) return;
+          try {
+            db.transaction("kv", "readwrite").objectStore("kv").delete(fullKey);
+          } catch (e) {}
+        }
+
+        // "saved 2h ago" note for a cached entry.
+        function savedNote(map, key) {
+          const t = map && map.savedAt ? map.savedAt(key) : null;
+          if (!t) return "";
+          const mins = Math.round((Date.now() - t) / 60000);
+          if (mins < 2) return "";
+          return ` · saved ${mins < 60 ? `${mins} min` : `${Math.round(mins / 60)}h`} ago — 🔄 Refresh for the latest`;
+        }
+
         // ============ TRENDS (daily lines + change markers + "what happened") ============
         const CHANGE_LOG_KEY = "gt_change_log_v1"; // our own copy of change history (Google keeps 30 days)
         const TREND_NOTES_KEY = "gt_trend_notes_v1";
-        const trendCache = new Map(); // key → { days, campaigns, ly, ... }
+        const trendCache = pcacheMap("trend"); // key → { days, campaigns, ly, ... }
         let trendChart = null;
         let trendLeadsChart = null;
         let trendState = { account: "all", metric: "cpa", days: 90, showLY: true, showLeads: true, showHolidays: true, showChanges: true, showNotes: true };
@@ -9147,6 +9393,7 @@
         }
 
         async function fetchTrendData(accountId, days, force) {
+          await pcacheLoad();
           const end = ymdAddDays(__localYMD(new Date()), -1);
           const start = ymdAddDays(end, -(days - 1));
           const key = `${accountId}|${start}|${end}`;
@@ -9505,7 +9752,7 @@
             const leads = trendState.showLeads ? await fetchTrendLeads(trendState.account, data.start, data.end) : null;
             if (stale()) return;
             trendLast = { data, leads };
-            status.textContent = `${formatDateShort(data.start)} – ${formatDateShort(data.end)}${data.failed ? ` · ${data.failed} account(s) failed` : ""}${leads && leads.notes.length ? ` · ${leads.notes.join(" · ")}` : ""}`;
+            status.textContent = `${formatDateShort(data.start)} – ${formatDateShort(data.end)}${data.failed ? ` · ${data.failed} account(s) failed` : ""}${savedNote(trendCache, `${trendState.account}|${data.start}|${data.end}`)}${leads && leads.notes.length ? ` · ${leads.notes.join(" · ")}` : ""}`;
             renderTrends();
           } catch (err) {
             if (stale()) return;
@@ -9715,7 +9962,7 @@
         // ============ FORECAST & BUDGET PLANNER (MTD page) ============
         // Month-end projection from the last 7 days' run-rate, and the daily
         // budget each account needs to land on its monthly budget target.
-        const forecastCache = new Map(); // month key → { rows, fetchedAt }
+        const forecastCache = pcacheMap("forecast"); // month key → { rows, fetchedAt }
         let forecastLast = null;
 
         function monthInfo() {
@@ -9753,6 +10000,7 @@
         async function loadForecast(force) {
           const box = document.getElementById("forecastSection");
           if (!box) return;
+          await pcacheLoad();
           const status = document.getElementById("forecastStatus");
           const mi = monthInfo();
           if (mi.daysDone < 1) {
@@ -9870,7 +10118,7 @@
 
         // ============ TIMING & COMPETITION PAGE ============
         const insightsState = { account: "", days: 90, metric: "cpa" };
-        const insightsCache = new Map();
+        const insightsCache = pcacheMap("insights");
         let insightsLast = null;
         let insightsSeq = 0;
         const DOW = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"];
@@ -9888,6 +10136,7 @@
         async function loadInsightsPage(force) {
           const status = document.getElementById("insStatus");
           if (!status) return;
+          await pcacheLoad();
           populateInsightsAccountSelect();
           const seq = ++insightsSeq;
           const acct = insightsState.account, days = insightsState.days;
@@ -9964,7 +10213,7 @@
             }
             if (seq !== insightsSeq) return;
             insightsLast = insightsCache.get(key);
-            status.textContent = `${formatDateShort(start)} – ${formatDateShort(end)} vs ${formatDateShort(pStart)} – ${formatDateShort(pEnd)}${insightsLast.failed ? ` · ${insightsLast.failed} account(s) failed` : ""} · hours are in each account's time zone`;
+            status.textContent = `${formatDateShort(start)} – ${formatDateShort(end)} vs ${formatDateShort(pStart)} – ${formatDateShort(pEnd)}${insightsLast.failed ? ` · ${insightsLast.failed} account(s) failed` : ""} · hours are in each account's time zone${savedNote(insightsCache, key)}`;
             renderInsights();
           } catch (err) {
             if (seq === insightsSeq) status.textContent = `Couldn't load: ${err.message || err}`;
@@ -10242,7 +10491,7 @@ ${!wins.length && !probs.length && !health.length ? "<li>No major wins or proble
         // broad/exact overlap and the searches behind broad keywords.
         const MONEY_KW_KEY = "gt_money_kw_v1";
         const kwState = { account: "", days: 30, filter: "attention", openBroad: new Set() };
-        const kwCache = new Map();
+        const kwCache = pcacheMap("keywords");
         let kwLast = null;
         let kwSeq = 0;
         const MATCH_LABEL = { EXACT: "Exact", PHRASE: "Phrase", BROAD: "Broad" };
@@ -10281,6 +10530,7 @@ ${!wins.length && !probs.length && !health.length ? "<li>No major wins or proble
         async function loadKeywordsPage(force) {
           const status = document.getElementById("kwStatus");
           if (!status) return;
+          await pcacheLoad();
           populateKwAccountSelect();
           const seq = ++kwSeq;
           const acct = kwState.account, days = kwState.days;
@@ -10305,7 +10555,7 @@ ${!wins.length && !probs.length && !health.length ? "<li>No major wins or proble
                   limit: 2000,
                 }, opt),
                 mcpSearchRows(tools, acct, {
-                  fields: ["campaign.name", "metrics.impressions", "metrics.cost_micros", "metrics.conversions", "metrics.search_impression_share", "metrics.search_rank_lost_impression_share", "metrics.search_budget_lost_impression_share"],
+                  fields: ["campaign.name", "campaign.bidding_strategy_type", "metrics.impressions", "metrics.cost_micros", "metrics.conversions", "metrics.search_impression_share", "metrics.search_rank_lost_impression_share", "metrics.search_budget_lost_impression_share"],
                   resource: "campaign",
                   conditions: [when, "campaign.advertising_channel_type = 'SEARCH'", "metrics.impressions > 0"],
                 }, opt),
@@ -10316,7 +10566,7 @@ ${!wins.length && !probs.length && !health.length ? "<li>No major wins or proble
                   limit: 5000,
                 }, opt).catch(() => ({ rows: [], mode: "empty" })),
                 mcpSearchRows(tools, acct, {
-                  fields: ["search_term_view.search_term", "segments.keyword.info.text", "segments.keyword.info.match_type", "campaign.name", "ad_group.id", "metrics.clicks", "metrics.cost_micros", "metrics.conversions"],
+                  fields: ["search_term_view.search_term", "segments.keyword.info.text", "segments.keyword.info.match_type", "campaign.name", "ad_group.id", "ad_group.name", "metrics.clicks", "metrics.cost_micros", "metrics.conversions"],
                   resource: "search_term_view",
                   conditions: [when, "metrics.clicks > 0"],
                   orderings: ["metrics.cost_micros DESC"],
@@ -10370,6 +10620,7 @@ ${!wins.length && !probs.length && !health.length ? "<li>No major wins or proble
                 const is = n(r, ["metrics.search_impression_share"]);
                 return {
                   name: String(v(r, ["campaign.name"]) || ""),
+                  bidding: String(v(r, ["campaign.bidding_strategy_type", "campaign.biddingStrategyType"]) || ""),
                   cost: n(r, ["metrics.cost_micros", "metrics.costMicros"]) / 1e6,
                   conv: n(r, ["metrics.conversions"]),
                   impr,
@@ -10385,6 +10636,7 @@ ${!wins.length && !probs.length && !health.length ? "<li>No major wins or proble
                 kwMatch: String(v(r, ["segments.keyword.info.match_type"]) || ""),
                 campaign: String(v(r, ["campaign.name"]) || ""),
                 adGroupId: String(v(r, ["ad_group.id"]) || ""),
+                adGroup: String(v(r, ["ad_group.name"]) || ""),
                 clicks: n(r, ["metrics.clicks"]),
                 cost: n(r, ["metrics.cost_micros", "metrics.costMicros"]) / 1e6,
                 conv: n(r, ["metrics.conversions"]),
@@ -10393,7 +10645,7 @@ ${!wins.length && !probs.length && !health.length ? "<li>No major wins or proble
             }
             if (seq !== kwSeq) return;
             kwLast = kwCache.get(key);
-            status.textContent = `${formatDateShort(kwLast.start)} – ${formatDateShort(kwLast.end)} · Search campaigns only (Performance Max has no keywords)`;
+            status.textContent = `${formatDateShort(kwLast.start)} – ${formatDateShort(kwLast.end)} · Search campaigns only (Performance Max has no keywords)${savedNote(kwCache, key)}`;
             renderKeywords();
           } catch (err) {
             if (seq === kwSeq) status.textContent = `Couldn't load: ${err.message || err}`;
@@ -10597,6 +10849,7 @@ ${!wins.length && !probs.length && !health.length ? "<li>No major wins or proble
                 }).join("")
               : `<tr><td colspan="7" style="color:var(--ink-muted);padding:16px">No broad keywords with spend.</td></tr>`;
 
+          renderChangeList();
           const page = document.getElementById("page-keywords");
           if (page) {
             page._copyRows = [["Keyword", "Match", "Campaign", "Ad group", "Money", "Spend", "Conv", "Cost/conv", "Imp. share", "Lost to rank", "Top IS", "Abs. top IS", "QS", "Expected CTR", "Ad relevance", "Landing page", "Top-of-page bid est.", "Verdict"],
@@ -10623,11 +10876,380 @@ ${!wins.length && !probs.length && !health.length ? "<li>No major wins or proble
           });
         }
 
+        // ============ CHANGE LIST (Google Ads Editor import) ============
+        // Turns what the Keyword Rank page finds into a reviewable list of
+        // changes, exported as a CSV that Google Ads Editor can import
+        // (Account → Import → From file). Nothing is changed in Google Ads
+        // from the dashboard itself.
+        const SMART_BIDDING = new Set(["MAXIMIZE_CONVERSIONS", "TARGET_CPA", "MAXIMIZE_CONVERSION_VALUE", "TARGET_ROAS", "TARGET_IMPRESSION_SHARE", "MAXIMIZE_CLICKS"]);
+        const CHANGE_MATCH = { EXACT: "Exact", PHRASE: "Phrase", BROAD: "Broad" };
+        let changeItems = [];
+        const changeUnchecked = new Set();
+
+        function buildChangeList() {
+          if (!kwLast) return [];
+          const { keywords, searchTerms, campaigns } = kwLast;
+          const acctRow = accounts.find((a) => a.customerId === kwLast.acct) || { customerId: kwLast.acct };
+          const goal = goalFor(acctRow);
+          const strategy = new Map(campaigns.map((c) => [c.name, c.bidding || ""]));
+          const kwTexts = new Set(keywords.map((k) => kwNorm(k.text)));
+          const exactTexts = new Set(keywords.filter((k) => k.match === "EXACT").map((k) => kwNorm(k.text)));
+          const agName = new Map(keywords.map((k) => [k.adGroupId, k.adGroup]));
+          const items = [];
+          const round = (x) => Math.round(x * 100) / 100;
+          // 1. Raise bids on money keywords losing to rank (quality is fine)
+          keywords.filter((k) => k.money && k.lr != null && k.lr >= 0.15 && k.cpc).forEach((k) => {
+            const badQ = [k.qsCtr, k.qsAd, k.qsLp].includes("BELOW_AVERAGE") || (k.qs && k.qs < 6);
+            if (badQ) return;
+            const smart = SMART_BIDDING.has(strategy.get(k.campaign));
+            const target = round(Math.min(k.cpc * 1.5, Math.max(k.cpc * 1.2, k.topPage || 0)));
+            items.push({
+              id: `bid|${k.id}`, kind: "bid", icon: "⬆️",
+              title: `Raise bid: "${k.text}" (${CHANGE_MATCH[k.match]})`,
+              detail: `${k.campaign} › ${k.adGroup} · losing ${Math.round(k.lr * 100)}% to rank, QS ${k.qs || "—"} · avg CPC ${fmt$(k.cpc)} → max CPC ${fmt$(target)}${k.topPage ? ` (top of page ≈ ${fmt$(k.topPage)})` : ""}`,
+              manual: smart ? `Campaign uses ${String(strategy.get(k.campaign)).replace(/_/g, " ").toLowerCase()} — max CPC is ignored. Raise the campaign's target/budget or move this keyword to its own campaign.` : null,
+              row: smart ? null : { campaign: k.campaign, adGroup: k.adGroup, keyword: k.text, type: CHANGE_MATCH[k.match], maxCpc: target.toFixed(2), status: "" },
+            });
+          });
+          // 2. Pause keywords that spend without converting
+          keywords.filter((k) => k.conv === 0 && k.cost >= goal * 3 && !k.starred).forEach((k) => {
+            items.push({
+              id: `pause|${k.id}`, kind: "pause", icon: "⏸️",
+              title: `Pause: "${k.text}" (${CHANGE_MATCH[k.match]})`,
+              detail: `${k.campaign} › ${k.adGroup} · ${fmt$(k.cost)} spent, no conversions in this period`,
+              row: { campaign: k.campaign, adGroup: k.adGroup, keyword: k.text, type: CHANGE_MATCH[k.match], maxCpc: "", status: "Paused" },
+            });
+          });
+          // 3. New exact keywords from converting searches
+          const seenNew = new Set();
+          searchTerms.filter((t) => t.kwMatch !== "EXACT" && t.conv >= 2 && t.cost / t.conv <= goal && !kwTexts.has(kwNorm(t.term))).forEach((t) => {
+            const key = `${t.adGroupId}|${kwNorm(t.term)}`;
+            if (seenNew.has(key)) return;
+            seenNew.add(key);
+            const ag = t.adGroup || agName.get(t.adGroupId);
+            if (!ag) return;
+            items.push({
+              id: `new|${key}`, kind: "new", icon: "✚",
+              title: `Add exact keyword: [${t.term}]`,
+              detail: `${t.campaign} › ${ag} · came in through "${t.kwText}" (${(CHANGE_MATCH[t.kwMatch] || t.kwMatch).toLowerCase()}): ${fmtN(Math.round(t.conv * 10) / 10)} conv at ${fmt$(t.cost / t.conv)}`,
+              row: { campaign: t.campaign, adGroup: ag, keyword: t.term, type: "Exact", maxCpc: "", status: "Enabled" },
+            });
+          });
+          // 4. Negatives for searches that spend without converting
+          const seenNeg = new Set();
+          searchTerms.filter((t) => t.kwMatch !== "EXACT" && t.conv === 0 && t.cost >= goal && !kwTexts.has(kwNorm(t.term))).forEach((t) => {
+            const ag = t.adGroup || agName.get(t.adGroupId);
+            const key = `${t.adGroupId}|${kwNorm(t.term)}`;
+            if (!ag || seenNeg.has(key)) return;
+            seenNeg.add(key);
+            items.push({
+              id: `neg|${key}`, kind: "neg", icon: "⛔",
+              title: `Negative keyword: [${t.term}]`,
+              detail: `${t.campaign} › ${ag} · ${fmt$(t.cost)} spent, ${fmtN(t.clicks)} clicks, no conversions (via "${t.kwText}")`,
+              row: { campaign: t.campaign, adGroup: ag, keyword: t.term, type: "Negative exact", maxCpc: "", status: "" },
+            });
+          });
+          // 5. Let exact keywords win their own searches (block them in the broad ad group)
+          const seenSteal = new Set();
+          searchTerms.filter((t) => t.kwMatch === "BROAD" && exactTexts.has(kwNorm(t.term)) && kwNorm(t.kwText) !== kwNorm(t.term) && t.cost >= 5).forEach((t) => {
+            const ag = t.adGroup || agName.get(t.adGroupId);
+            const key = `${t.adGroupId}|${kwNorm(t.term)}`;
+            if (!ag || seenSteal.has(key)) return;
+            seenSteal.add(key);
+            items.push({
+              id: `steal|${key}`, kind: "steal", icon: "🔀",
+              title: `Send [${t.term}] to its exact keyword`,
+              detail: `${t.campaign} › ${ag} · broad "${t.kwText}" took ${fmtN(t.clicks)} clicks (${fmt$(t.cost)}) for a search you have as an exact keyword — add it as a negative here`,
+              row: { campaign: t.campaign, adGroup: ag, keyword: t.term, type: "Negative exact", maxCpc: "", status: "" },
+            });
+          });
+          // 6. Ad schedule ideas from the Timing page (manual — set in Google Ads)
+          if (insightsLast && insightsLast.acct === kwLast.acct) {
+            const tips = (document.getElementById("insTips") || {}).innerText || "";
+            tips.split("\n").filter((l) => /consider/.test(l)).slice(0, 6).forEach((l, i) => {
+              items.push({ id: `sched|${i}|${l}`, kind: "sched", icon: "🕒", title: "Ad schedule bid adjustment", detail: l.replace(/^[⬆️⬇️\s]+/u, ""), manual: "Set under Campaign → Ad schedule (Search campaigns only).", row: null });
+            });
+          }
+          return items;
+        }
+
+        function renderChangeList() {
+          const box = document.getElementById("kwChanges");
+          if (!box) return;
+          changeItems = buildChangeList();
+          if (!changeItems.length) {
+            box.innerHTML = `<div class="story-muted">No changes suggested for this account and period.</div>`;
+            return;
+          }
+          const groups = [["bid", "Raise bids on money keywords losing to rank"], ["new", "New exact keywords from converting searches"], ["neg", "Negative keywords (searches that cost money and never convert)"], ["steal", "Let exact keywords win their own searches"], ["pause", "Pause keywords that don't convert"], ["sched", "Ad schedule (set manually)"]];
+          const counts = { csv: changeItems.filter((x) => x.row && !changeUnchecked.has(x.id)).length };
+          box.innerHTML = `<div class="report-controls">
+              <button class="btn btn-primary-ghost" onclick="downloadChangeCsv()">⬇ Download for Google Ads Editor (${counts.csv})</button>
+              <button class="btn btn-ghost" onclick="copyChangeList()">📋 Copy as a list</button>
+              <span class="report-status">Untick anything you don't want. In Google Ads Editor: Account → Import → From file, review, then Post.</span>
+            </div>` + groups.map(([kind, label]) => {
+              const xs = changeItems.filter((x) => x.kind === kind);
+              if (!xs.length) return "";
+              return `<div class="chg-group"><h4>${escapeHtml(label)} <span class="muted-sub">${xs.length}</span></h4>${xs.map((x, i) => {
+                const idx = changeItems.indexOf(x);
+                return `<label class="chg-item ${x.row ? "" : "manual"}"><input type="checkbox" ${changeUnchecked.has(x.id) ? "" : "checked"} onchange="toggleChange(${idx}, this.checked)" ${x.row ? "" : "disabled"} />
+                  <span><strong>${x.icon} ${escapeHtml(x.title)}</strong><div class="delta" style="color:var(--ink-muted)">${escapeHtml(x.detail)}</div>${x.manual ? `<div class="chg-manual">✋ ${escapeHtml(x.manual)}</div>` : ""}</span></label>`;
+              }).join("")}</div>`;
+            }).join("");
+        }
+
+        function toggleChange(idx, on) {
+          const x = changeItems[idx];
+          if (!x) return;
+          if (on) changeUnchecked.delete(x.id);
+          else changeUnchecked.add(x.id);
+          const btn = document.querySelector("#kwChanges .btn-primary-ghost");
+          if (btn) btn.textContent = `⬇ Download for Google Ads Editor (${changeItems.filter((y) => y.row && !changeUnchecked.has(y.id)).length})`;
+        }
+
+        function downloadChangeCsv() {
+          const rows = changeItems.filter((x) => x.row && !changeUnchecked.has(x.id)).map((x) => x.row);
+          if (!rows.length) return toast("Nothing selected", true);
+          const acctRow = accounts.find((a) => a.customerId === kwLast.acct) || {};
+          const head = ["Account", "Campaign", "Ad group", "Keyword", "Criterion Type", "Max CPC", "Status"];
+          const acctId = String(kwLast.acct).replace(/(\d{3})(\d{3})(\d{4})/, "$1-$2-$3");
+          const lines = [head, ...rows.map((r) => [acctId, r.campaign, r.adGroup, r.keyword, r.type, r.maxCpc, r.status])];
+          const csv = lines.map((l) => l.map((c) => `"${String(c ?? "").replace(/"/g, '""')}"`).join(",")).join("\r\n");
+          const a = document.createElement("a");
+          a.href = URL.createObjectURL(new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8" }));
+          a.download = `editor-changes-${String(acctRow.name || kwLast.acct).replace(/[^a-z0-9]+/gi, "-").toLowerCase()}-${__localYMD(new Date())}.csv`;
+          a.click();
+          setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+          toast(`Downloaded ${rows.length} changes — import in Google Ads Editor`);
+        }
+
+        function copyChangeList() {
+          const xs = changeItems.filter((x) => !changeUnchecked.has(x.id));
+          const acctRow = accounts.find((a) => a.customerId === kwLast.acct) || {};
+          const text = `Changes for ${acctRow.name || kwLast.acct}:\n` + xs.map((x) => `- ${x.title} — ${x.detail}${x.manual ? ` (${x.manual})` : ""}`).join("\n");
+          try {
+            navigator.clipboard.writeText(text).then(() => toast("Copied"), () => window.prompt("Copy:", text));
+          } catch (e) {
+            window.prompt("Copy:", text);
+          }
+        }
+
+        // ============ LEAD QUALITY BY MARKET (Markets page) ============
+        // Portal close reasons grouped into what they mean for ads.
+        const CLOSE_GROUPS = {
+          fit: { label: "Wrong fit", reasons: ["Out of Area", "Trash", "Customer Not Interested - Services", "Not Interested - Different Activity"], tip: "Tighten location targeting and add negatives for off-topic searches" },
+          price: { label: "Price", reasons: ["Not Interested - Price"], tip: "Pre-qualify in the ads: show price or 'from $' and what's included" },
+          reach: { label: "Couldn't reach", reasons: ["Unreachable", "Archived - Inactivity"], tip: "Follow-up speed — a sales issue more than an ads issue" },
+          timing: { label: "Timing / taken", reasons: ["Not Interested - Time Unavailable", "Already Booked"], tip: "Dates unavailable — consider lowering spend on fully booked weeks" },
+        };
+        function closeGroupOf(reason) {
+          for (const [k, g] of Object.entries(CLOSE_GROUPS)) if (g.reasons.includes(reason)) return k;
+          return "other";
+        }
+
+        function renderLeadQuality() {
+          const box = document.getElementById("leadQuality");
+          if (!box) return;
+          if (!marketsLast || !marketsLast.portal) {
+            box.innerHTML = `<div class="story-muted">Connect Portal to see lead quality by market.</div>`;
+            return;
+          }
+          const list = marketsLast.list.filter((m) => m.franchises.length && m.totalLeads >= 5);
+          const pct = (x, n) => (n > 0 ? Math.round((x / n) * 100) : 0);
+          const rows = list.map((m) => {
+            const reasons = {}, statuses = {};
+            m.franchises.forEach((f) => {
+              Object.entries(f.closeReasons || {}).forEach(([r, c]) => (reasons[r] = (reasons[r] || 0) + c));
+              Object.entries(f.statusCounts || {}).forEach(([s, c]) => (statuses[s] = (statuses[s] || 0) + c));
+            });
+            const g = { fit: 0, price: 0, reach: 0, timing: 0, other: 0 };
+            Object.entries(reasons).forEach(([r, c]) => (g[closeGroupOf(r)] += c));
+            const top = Object.entries(reasons).sort((a, b) => b[1] - a[1])[0];
+            const n = m.totalLeads;
+            const open = (statuses.NeedsCallBack || 0) + (statuses.Active || 0) + (statuses.New || 0);
+            const worst = Object.keys(CLOSE_GROUPS).map((k) => ({ k, share: g[k] / n })).sort((a, b) => b.share - a.share)[0];
+            const limits = { fit: 0.12, price: 0.08, reach: 0.12, timing: 0.1 };
+            const tip = worst && worst.share >= limits[worst.k] ? CLOSE_GROUPS[worst.k].tip : "No major lead-quality problem";
+            return { m, n, booked: statuses.Booked || 0, open, g, top, tip, flagged: worst && worst.share >= limits[worst.k] ? worst.k : null };
+          }).sort((a, b) => b.n - a.n);
+          const cell = (x, n, k, r) => `<td class="${r.flagged === k ? "lq-flag" : ""}">${x ? `${pct(x, n)}%<div class="delta" style="color:var(--ink-muted)">${x}</div>` : "—"}</td>`;
+          box.innerHTML = `<div class="table-wrap"><table class="report-table"><thead><tr><th>Metro</th><th>Leads</th><th>Booked</th><th>Still open</th><th title="${escapeHtml(CLOSE_GROUPS.fit.reasons.join(", "))}">Wrong fit</th><th>Price</th><th title="${escapeHtml(CLOSE_GROUPS.reach.reasons.join(", "))}">Couldn't reach</th><th title="${escapeHtml(CLOSE_GROUPS.timing.reasons.join(", "))}">Timing / taken</th><th>Top close reason</th><th>What it means</th></tr></thead><tbody>${rows.map((r) => `<tr>
+              <td>${escapeHtml(r.m.name)}</td><td>${fmtN(r.n)}</td><td>${pct(r.booked, r.n)}%<div class="delta" style="color:var(--ink-muted)">${r.booked}</div></td><td>${pct(r.open, r.n)}%</td>
+              ${cell(r.g.fit, r.n, "fit", r)}${cell(r.g.price, r.n, "price", r)}${cell(r.g.reach, r.n, "reach", r)}${cell(r.g.timing, r.n, "timing", r)}
+              <td>${r.top ? `${escapeHtml(r.top[0])} (${r.top[1]})` : "—"}</td><td class="why-cell">${escapeHtml(r.tip)}</td></tr>`).join("") || `<tr><td colspan="10" style="text-align:center;padding:20px;color:var(--ink-muted)">No markets with 5+ leads in this period.</td></tr>`}</tbody></table></div>
+            <div class="story-muted" style="margin-top:6px">All Portal leads in the metro (the Portal doesn't split close reasons by channel). Shares are of all leads received in the period; recent leads may still be open.</div>`;
+        }
+
+        // ============ ZIP CODES PAGE ============
+        const zipState = { franchise: null, days: 90 };
+        const zipCache = pcacheMap("zip");
+        let zipLast = null;
+        let zipSeq = 0;
+        const zipNameCache = new Map(); // geo constant id → zip
+
+        async function populateZipFranchiseSelect() {
+          const sel = document.getElementById("zipFranchise");
+          if (!sel) return null;
+          const end = ymdAddDays(__localYMD(new Date()), -1);
+          const start = ymdAddDays(end, -(zipState.days - 1));
+          const key = `${start}|${end}`;
+          let pd = portalRangeCache.get(key);
+          if (!pd) {
+            pd = await fetchPortalData(start, end);
+            portalRangeCache.set(key, pd);
+          }
+          const list = Array.from(pd.franchises.values()).filter((f) => f.totalLeads > 0).sort((a, b) => b.ppcLeads - a.ppcLeads || b.totalLeads - a.totalLeads);
+          // default: the franchise of the biggest-spend account that maps to one
+          if (zipState.franchise == null || !list.some((f) => f.id === zipState.franchise)) {
+            const acc = trendAccounts().filter((a) => (a.cost || 0) > 0).sort((a, b) => (b.cost || 0) - (a.cost || 0));
+            let pick = null;
+            for (const a of acc) {
+              const ids = franchiseIdsForAccount(a, pd.franchises);
+              if (ids.length) { pick = ids[0]; break; }
+            }
+            zipState.franchise = pick != null ? pick : list.length ? list[0].id : null;
+          }
+          sel.innerHTML = list.map((f) => `<option value="${f.id}">${escapeHtml(f.label)} — ${f.ppcLeads} PPC / ${f.totalLeads} leads</option>`).join("");
+          if (zipState.franchise != null) sel.value = String(zipState.franchise);
+          return pd;
+        }
+
+        async function loadZipPage(force) {
+          const status = document.getElementById("zipStatus");
+          if (!status) return;
+          const seq = ++zipSeq;
+          try {
+            await pcacheLoad();
+            if (!isPortalConnected()) throw new Error("Connect Portal (button at the top) — zip codes come from Portal leads.");
+            const token = await ensureAdsMcpAccessToken();
+            if (!token) throw new Error("Connect Ads MCP first (button at the top).");
+            status.textContent = "Loading…";
+            const pd = await populateZipFranchiseSelect();
+            const fid = zipState.franchise;
+            if (fid == null) throw new Error("No franchises with leads in this period.");
+            const end = ymdAddDays(__localYMD(new Date()), -1);
+            const start = ymdAddDays(end, -(zipState.days - 1));
+            const key = `${fid}|${start}|${end}`;
+            if (force || !zipCache.has(key)) {
+              const names = await ensurePortalTools();
+              if (!names.zip) throw new Error("This Portal login doesn't have the zip code report");
+              const accts = trendAccounts().filter((a) => franchiseIdsForAccount(a, pd.franchises).includes(fid) || String(a.customerId) === "8261103563");
+              status.textContent = `Loading Portal zip codes + Google location data for ${accts.length} account${accts.length === 1 ? "" : "s"}…`;
+              const tools = await ensureAdsMcpTools();
+              const [zipRes, geo] = await Promise.all([
+                portalRpc("tools/call", { name: names.zip, arguments: { start_date: start, end_date: end, group_by: "year", franchise_id: fid } }),
+                runWithConcurrencyLimit(accts, 3, async (a) => {
+                  const r = await mcpSearchRows(tools, a.customerId, {
+                    fields: ["segments.geo_target_postal_code", "metrics.cost_micros", "metrics.clicks", "metrics.conversions"],
+                    resource: "geographic_view",
+                    conditions: [`segments.date BETWEEN '${start}' AND '${end}'`, "geographic_view.location_type = 'LOCATION_OF_PRESENCE'", "metrics.impressions > 0"],
+                    limit: 10000,
+                  }, { loginCustomerId: ADS_MCP_ANCHOR_MCC_ID });
+                  return { a, rows: r.rows, ok: r.mode !== "empty" };
+                }),
+              ]);
+              const rep = parseToolResult(zipRes);
+              const zr = ((rep && rep.summary_by_franchise) || [])[0];
+              const zipLeads = new Map();
+              Object.entries((zr && zr.data && zr.data.zipcodes && zr.data.zipcodes.base) || {}).forEach(([z, o]) => zipLeads.set(String(z).slice(0, 5), { leads: Number(o.count) || 0, valueCents: Number(o.sum) || 0 }));
+              const byId = new Map();
+              let failed = 0;
+              geo.forEach((x) => {
+                if (x.status !== "fulfilled" || !x.value.ok) return void (failed += 1);
+                const hq = String(x.value.a.customerId) === "8261103563";
+                x.value.rows.forEach((r) => {
+                  const m = String(rowValue(r, ["segments.geo_target_postal_code", "segments.geoTargetPostalCode"]) || "").match(/(\d+)$/);
+                  if (!m) return;
+                  const e = byId.get(m[1]) || { cost: 0, clicks: 0, conv: 0, hqCost: 0 };
+                  const cost = asNumber(rowValue(r, ["metrics.cost_micros", "metrics.costMicros"]), 0) / 1e6;
+                  e.cost += cost; if (hq) e.hqCost += cost;
+                  e.clicks += asNumber(rowValue(r, ["metrics.clicks"]), 0);
+                  e.conv += asNumber(rowValue(r, ["metrics.conversions"]), 0);
+                  byId.set(m[1], e);
+                });
+              });
+              // geo constant ids → zip codes
+              const need = Array.from(byId.keys()).filter((id) => !zipNameCache.has(id));
+              const anyAcct = accts[0];
+              for (let i = 0; i < need.length && anyAcct; i += 400) {
+                const chunk = need.slice(i, i + 400);
+                const r = await mcpSearchRows(tools, anyAcct.customerId, { fields: ["geo_target_constant.id", "geo_target_constant.name"], resource: "geo_target_constant", conditions: [`geo_target_constant.id IN (${chunk.join(",")})`] }, { loginCustomerId: ADS_MCP_ANCHOR_MCC_ID });
+                r.rows.forEach((row) => zipNameCache.set(String(rowValue(row, ["geo_target_constant.id"])), String(rowValue(row, ["geo_target_constant.name"]) || "")));
+              }
+              const zips = new Map();
+              byId.forEach((e, id) => {
+                const z = (zipNameCache.get(id) || "").slice(0, 5);
+                if (!/^\d{5}$/.test(z)) return;
+                const cur = zips.get(z) || { zip: z, cost: 0, clicks: 0, conv: 0, hqCost: 0, leads: 0, valueCents: 0 };
+                cur.cost += e.cost; cur.clicks += e.clicks; cur.conv += e.conv; cur.hqCost += e.hqCost;
+                zips.set(z, cur);
+              });
+              // GTHQ spends nationally — keep only zips this franchise gets leads from or its own account spends in
+              const ownSpend = new Set(Array.from(zips.values()).filter((z) => z.cost - z.hqCost >= 1).map((z) => z.zip));
+              zipLeads.forEach((v, z) => {
+                const cur = zips.get(z) || { zip: z, cost: 0, clicks: 0, conv: 0, hqCost: 0, leads: 0, valueCents: 0 };
+                cur.leads = v.leads; cur.valueCents = v.valueCents;
+                zips.set(z, cur);
+              });
+              const rows = Array.from(zips.values()).filter((z) => z.leads > 0 || ownSpend.has(z.zip));
+              zipCache.set(key, { rows, failed, start, end, fid, label: (pd.franchises.get(fid) || {}).label || String(fid), accts: accts.map((a) => a.name) });
+            }
+            if (seq !== zipSeq) return;
+            zipLast = zipCache.get(key);
+            status.textContent = `${formatDateShort(zipLast.start)} – ${formatDateShort(zipLast.end)} · ad spend from ${zipLast.accts.join(", ")}${zipLast.failed ? ` · ${zipLast.failed} account(s) failed` : ""}${savedNote(zipCache, key)}`;
+            renderZips();
+          } catch (err) {
+            if (seq === zipSeq) status.textContent = `Couldn't load: ${err.message || err}`;
+          }
+        }
+
+        function renderZips() {
+          if (!zipLast) return;
+          const rows = zipLast.rows.slice();
+          const T = rows.reduce((t, z) => ({ cost: t.cost + z.cost, leads: t.leads + z.leads, conv: t.conv + z.conv }), { cost: 0, leads: 0, conv: 0 });
+          const avgCpl = T.leads > 0 ? T.cost / T.leads : null;
+          rows.forEach((z) => {
+            z.cpl = z.leads > 0 && z.cost > 0 ? z.cost / z.leads : null;
+            if (avgCpl && z.cost >= avgCpl * 2 && z.leads === 0) { z.kind = "down"; z.tip = `${fmt$(z.cost)} spent, no leads — lower the bid (−20%) or exclude this zip`; }
+            else if (avgCpl && z.cpl != null && z.leads >= 2 && z.cpl <= avgCpl * 0.6) { z.kind = "up"; z.tip = `Leads at ${fmt$(z.cpl)} vs ${fmt$(avgCpl)} average — raise the bid (+15–20%)`; }
+            else if (z.leads >= 3 && z.cost < (avgCpl || 10)) { z.kind = "up"; z.tip = "Plenty of leads but little ad spend — make sure it's targeted, consider +15%"; }
+            else if (avgCpl && z.cpl != null && z.cpl >= avgCpl * 2 && z.cost >= avgCpl * 2) { z.kind = "down"; z.tip = `Leads cost ${fmt$(z.cpl)} vs ${fmt$(avgCpl)} average — consider −15%`; }
+            else { z.kind = "ok"; z.tip = ""; }
+          });
+          rows.sort((a, b) => b.cost + b.leads * (avgCpl || 20) - (a.cost + a.leads * (avgCpl || 20)));
+          document.getElementById("zipKpis").innerHTML = [
+            kpiCard("Ad spend in these zips", fmt$(T.cost), `${rows.filter((z) => z.cost >= 1).length} zips with spend`),
+            kpiCard("Portal leads", fmtN(T.leads), `${rows.filter((z) => z.leads > 0).length} zips with leads`),
+            kpiCard("Cost per lead", avgCpl != null ? fmt$(avgCpl) : "—", "ad spend ÷ all Portal leads"),
+            kpiCard("Bid changes suggested", String(rows.filter((z) => z.kind !== "ok").length), `${rows.filter((z) => z.kind === "up").length} up · ${rows.filter((z) => z.kind === "down").length} down`),
+          ].join("");
+          const maxCost = Math.max(1, ...rows.map((z) => z.cost)), maxLeads = Math.max(1, ...rows.map((z) => z.leads));
+          document.getElementById("zipBody").innerHTML = rows.length
+            ? rows.slice(0, 150).map((z) => `<tr class="zip-${z.kind}"><td>${z.kind === "up" ? "⬆️" : z.kind === "down" ? "⬇️" : ""}</td><td><strong>${z.zip}</strong></td>
+                <td><div class="zbar"><span style="width:${Math.round((z.cost / maxCost) * 100)}%"></span></div>${fmt$(z.cost)}${z.hqCost >= 1 ? `<div class="delta" style="color:var(--ink-muted)">${fmt$(z.hqCost)} GTHQ</div>` : ""}</td>
+                <td>${fmtN(z.clicks)}</td><td>${fmtN(Math.round(z.conv * 10) / 10)}</td>
+                <td><div class="zbar leads"><span style="width:${Math.round((z.leads / maxLeads) * 100)}%"></span></div>${fmtN(z.leads)}</td>
+                <td>${z.cpl != null ? fmt$(z.cpl) : "—"}</td><td class="why-cell">${escapeHtml(z.tip)}</td></tr>`).join("")
+            : `<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--ink-muted)">No zip data for this franchise and period.</td></tr>`;
+          const page = document.getElementById("page-zips");
+          if (page) {
+            page._copyRows = [["Zip", "Ad spend", "GTHQ spend", "Clicks", "Google conv", "Portal leads", "Cost per lead", "Suggestion"], ...rows.map((z) => [z.zip, z.cost.toFixed(2), z.hqCost.toFixed(2), z.clicks, z.conv.toFixed(1), z.leads, z.cpl != null ? z.cpl.toFixed(2) : "", z.tip])];
+            page._summaryText = `Zip codes for ${zipLast.label} (${formatDateShort(zipLast.start)} – ${formatDateShort(zipLast.end)}): ${fmt$(T.cost)} ad spend, ${T.leads} Portal leads${avgCpl ? ` (${fmt$(avgCpl)}/lead)` : ""}.`;
+          }
+        }
+
+        function bindZipControls() {
+          const f = document.getElementById("zipFranchise");
+          if (f && !f.dataset.boundZip) { f.addEventListener("change", (e) => { zipState.franchise = Number(e.target.value); loadZipPage(false); }); f.dataset.boundZip = "true"; }
+          const d = document.getElementById("zipDays");
+          if (d && !d.dataset.boundZip) { d.addEventListener("change", (e) => { zipState.days = Number(e.target.value); loadZipPage(false); }); d.dataset.boundZip = "true"; }
+        }
+
         // ============ REPORT PAGES (Weekly · Month to Date · Markets) ============
         // Each page pulls its own date range from Google Ads (and the Portal
         // for Markets) and keeps it in memory, so switching pages is instant
         // after the first load. "Refresh" re-pulls.
-        const reportCache = new Map(); // key → { range, scope, accounts, pacingWindow, prevRange, fetchedAt }
+        const reportCache = pcacheMap("report"); // key → { range, scope, accounts, pacingWindow, prevRange, fetchedAt }
         const reportLoading = new Map(); // key → Promise
         let weeklyMode = "lastWeek"; // "lastWeek" | "weekly" (this week so far)
         let marketsScope = "mtd";
@@ -10661,6 +11283,7 @@ ${!wins.length && !probs.length && !health.length ? "<li>No major wins or proble
         // Live accounts for a scope's range, reusing the main refresh when it
         // already covers exactly that range.
         async function getReport(scope, force) {
+          await pcacheLoad();
           const range = resolveClientDateRange(scope);
           const key = reportKey(scope, range);
           if (!force && reportCache.has(key)) return reportCache.get(key);
@@ -10814,6 +11437,7 @@ ${!wins.length && !probs.length && !health.length ? "<li>No major wins or proble
           const el = document.getElementById(pageId);
           if (!el) return;
           const status = el.querySelector(".report-status");
+          await pcacheLoad();
           const range = resolveClientDateRange(scope);
           const cached = reportCache.get(reportKey(scope, range));
           if (cached && !force) {
@@ -10876,8 +11500,8 @@ ${!wins.length && !probs.length && !health.length ? "<li>No major wins or proble
           200790: "Albuquerque, NM", 200803: "Los Angeles, CA", 200807: "San Francisco Bay Area, CA", 200819: "Seattle-Tacoma, WA",
           200820: "Portland, OR", 200825: "San Diego, CA", 200839: "Las Vegas, NV", 200862: "Sacramento, CA", 200881: "Spokane, WA",
         };
-        const marketGeoCache = new Map(); // range key → { rows, failed, fetchedAt }
-        const portalRangeCache = new Map(); // range key → portalData-like
+        const marketGeoCache = pcacheMap("marketGeo"); // range key → { rows, failed, fetchedAt }
+        const portalRangeCache = pcacheMap("portal"); // range key → portalData-like
 
         function metroIdFromResource(v) {
           const m = String(v || "").match(/(\d{6})/);
@@ -11073,6 +11697,7 @@ ${!wins.length && !probs.length && !health.length ? "<li>No major wins or proble
         async function loadMarketsPage(force) {
           const el = document.getElementById("page-markets");
           if (!el) return;
+          await pcacheLoad();
           document.querySelectorAll("[data-markets-scope]").forEach((b) => b.classList.toggle("active", b.dataset.marketsScope === marketsScope));
           const status = el.querySelector(".report-status");
           const range = resolveClientDateRange(marketsScope);
@@ -11110,15 +11735,16 @@ ${!wins.length && !probs.length && !health.length ? "<li>No major wins or proble
               marketsLast.unlocated = Math.max(0, acctTotal - geoTotal);
               marketsLast.acctTotal = acctTotal;
             }
-            status.textContent = portal ? "" : "Connect Portal (button at the top) to add real leads, bookings and cost per booking.";
+            status.textContent = portal ? savedNote(marketGeoCache, key).replace(/^ · /, "") : "Connect Portal (button at the top) to add real leads, bookings and cost per booking.";
             renderMarketsTable();
+            renderLeadQuality();
           } catch (err) {
             status.textContent = `Couldn't load: ${err.message || err}`;
           }
         }
 
         // ---------- Page router ----------
-        const PAGES = ["today", "weekly", "mtd", "markets", "traffic", "accounts", "search", "trends", "insights", "keywords", "changes", "health"];
+        const PAGES = ["today", "weekly", "mtd", "markets", "traffic", "accounts", "search", "trends", "insights", "keywords", "zips", "changes", "health"];
         let activePage = "today";
 
         function renderCurrentPage(force) {
@@ -11130,6 +11756,7 @@ ${!wins.length && !probs.length && !health.length ? "<li>No major wins or proble
           if (activePage === "trends") return loadTrendsPage(force);
           if (activePage === "insights") return loadInsightsPage(force);
           if (activePage === "keywords") return loadKeywordsPage(force);
+          if (activePage === "zips") return loadZipPage(force);
         }
 
         function showPage(name, opts) {
@@ -11479,6 +12106,7 @@ ${!wins.length && !probs.length && !health.length ? "<li>No major wins or proble
           portalToolNames = {
             leadChannel: resolveToolName(tools, "lead_channel_report"),
             leadStatus: resolveToolName(tools, "lead_status_report"),
+            zip: resolveToolName(tools, "lead_zipcode_distribution_report"),
           };
           if (!portalToolNames.leadChannel || !portalToolNames.leadStatus) {
             throw new Error("Portal is missing the lead_channel / lead_status reports");
@@ -11507,7 +12135,9 @@ ${!wins.length && !probs.length && !health.length ? "<li>No major wins or proble
             portalRpc("tools/call", { name: names.leadStatus, arguments: args }),
           ]);
           const channel = readPortalFranchiseSummary(parseToolResult(channelRes), "channel");
-          const status = readPortalFranchiseSummary(parseToolResult(statusRes), "status");
+          const statusParsed = parseToolResult(statusRes);
+          const status = readPortalFranchiseSummary(statusParsed, "status");
+          const reasons = readPortalFranchiseSummary(statusParsed, "close_reason");
           const franchises = new Map();
           const ids = new Set([...channel.keys(), ...status.keys()]);
           ids.forEach((id) => {
@@ -11522,6 +12152,8 @@ ${!wins.length && !probs.length && !health.length ? "<li>No major wins or proble
               totalLeads: sumCounts(ch) || sumCounts(st),
               booked: Number(st.Booked && st.Booked.count) || 0,
               bookedValueCents: Number(st.Booked && st.Booked.sum) || 0,
+              statusCounts: Object.fromEntries(Object.entries(st).map(([k, v]) => [k, Number(v && v.count) || 0])),
+              closeReasons: Object.fromEntries(Object.entries((reasons.get(id) || {}).base || {}).map(([k, v]) => [k, Number(v && v.count) || 0])),
             });
           });
           return { range: { startDate, endDate }, franchises, fetchedAt: new Date() };
@@ -12596,6 +13228,8 @@ ${!wins.length && !probs.length && !health.length ? "<li>No major wins or proble
           bindTrendControls();
           bindInsightsControls();
           bindKeywordControls();
+          bindZipControls();
+          pcacheLoad();
           initPageRouter();
           refreshViewSelects();
 
