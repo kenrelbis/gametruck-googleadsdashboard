@@ -1105,6 +1105,31 @@
         padding: 10px;
         margin-bottom: 12px;
       }
+      .match-tag { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 10px; border: 1px solid; }
+      .match-tag.exact { color: #1d5fae; border-color: #2a78d6; background: rgba(42, 120, 214, 0.08); }
+      .match-tag.phrase { color: #0f7a55; border-color: #1baf7a; background: rgba(27, 175, 122, 0.08); }
+      .match-tag.broad { color: #b54a1e; border-color: #eb6834; background: rgba(235, 104, 52, 0.08); }
+      .qs-parts { display: flex; gap: 3px; justify-content: flex-end; margin-top: 2px; }
+      .qs-part { font-size: 10px; width: 14px; text-align: center; }
+      .qs-part.good { color: #2f7a1f; } .qs-part.avg { color: #8a8c80; } .qs-part.bad { color: #c73a17; } .qs-part.none { color: #c9c7b8; }
+      .star-btn { border: 0; background: none; font-size: 17px; cursor: pointer; color: #b9b7a6; padding: 0 2px; }
+      .star-btn.on { color: #e3a008; }
+      .kw-table th, .kw-table td { padding: 10px 8px !important; }
+      .kw-table td:nth-child(2) { text-align: left; white-space: normal; min-width: 170px; }
+      .kw-table td.why-cell { text-align: left; white-space: normal; min-width: 240px; max-width: 340px; font-family: "Jost", sans-serif; font-size: 12.5px; line-height: 1.35; }
+      .kw-table tr.kw-bad td:first-child { box-shadow: inset 4px 0 0 #c73a17; }
+      .kw-table tr.kw-warn td:first-child { box-shadow: inset 4px 0 0 #d4a017; }
+      .is-bar { display: flex; height: 12px; border-radius: 4px; overflow: hidden; background: #efeddf; gap: 2px; }
+      .is-bar span { display: block; height: 100%; }
+      .is-bar .won, .is-legend .won { background: #2a78d6; }
+      .is-bar .rank, .is-legend .rank { background: #eb6834; }
+      .is-bar .budget, .is-legend .budget { background: #6250d6; }
+      .is-legend { display: flex; gap: 16px; font-size: 12px; color: var(--ink-muted); margin: 0 0 8px 2px; }
+      .is-legend span { display: inline-flex; align-items: center; gap: 6px; }
+      .is-legend i { display: inline-block; width: 14px; height: 10px; border-radius: 2px; }
+      .overlap-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+      .overlap-col h4 { margin: 0 0 8px; font-size: 13px; }
+      @media (max-width: 900px) { .overlap-grid { grid-template-columns: 1fr; } }
       .heatmap { border-collapse: separate; border-spacing: 2px; width: 100%; font-size: 10.5px; }
       table.heatmap thead { background: transparent; }
       table.heatmap th, table.heatmap thead th { font-weight: 600; color: var(--ink-muted) !important; padding: 2px; text-align: center; background: transparent !important; border: 0 !important; letter-spacing: 0; font-size: 10px; }
@@ -3587,6 +3612,7 @@
           <button data-nav="search">🔍 Search Terms</button>
           <button data-nav="trends">📉 Trends</button>
           <button data-nav="insights">⏱️ Timing &amp; Competition</button>
+          <button data-nav="keywords">🔑 Keyword Rank</button>
           <button data-nav="changes">📜 Changes</button>
           <button data-nav="health">🩺 Health</button>
         </nav>
@@ -4111,6 +4137,56 @@
           <div class="hm-wrap" id="insHeatmap"></div>
           <h3 class="sub-head" style="margin-top: 20px">Schedule suggestions</h3>
           <div class="story" id="insTips"></div>
+        </div>
+        <div class="page" data-page="keywords" id="page-keywords" style="display: none">
+          <div class="section-head">
+            <h2>Keyword Rank</h2>
+            <div class="meta">Which keywords lose impression share to rank, whether your money keywords win their auctions, and what broad match is doing</div>
+          </div>
+          <div class="report-controls">
+            <select id="kwAccount" class="btn btn-ghost" style="cursor: pointer" title="Account"></select>
+            <select id="kwDays" class="btn btn-ghost" style="cursor: pointer" title="Period">
+              <option value="7">Last 7 days</option>
+              <option value="30" selected>Last 30 days</option>
+              <option value="90">Last 90 days</option>
+            </select>
+            <button class="btn btn-ghost" onclick="loadKeywordsPage(true)">🔄 Refresh</button>
+            <button class="btn btn-ghost" onclick="copyReport('page-keywords')">📋 Copy</button>
+            <button class="btn btn-ghost" onclick="exportReportCsv('page-keywords', 'keyword-rank')">↓ CSV</button>
+            <span class="report-status" id="kwStatus"></span>
+          </div>
+          <div class="summary" id="kwKpis"></div>
+          <h3 class="sub-head">Impression share by campaign — lost to rank vs lost to budget</h3>
+          <div class="is-legend"><span><i class="won"></i>Won</span><span><i class="rank"></i>Lost to rank</span><span><i class="budget"></i>Lost to budget</span></div>
+          <div class="table-wrap">
+            <table class="report-table"><thead><tr><th>Campaign</th><th>Spend</th><th>Cost/conv</th><th>Imp. share</th><th style="min-width: 180px">Share of searches</th><th>Lost to rank</th><th>Lost to budget</th><th>What it means</th></tr></thead><tbody id="kwCampBody"></tbody></table>
+          </div>
+          <h3 class="sub-head" style="margin-top: 26px">By match type</h3>
+          <div class="table-wrap">
+            <table class="report-table"><thead><tr><th>Match type</th><th>Keywords</th><th>Spend</th><th>Conv</th><th>Cost/conv</th><th>Imp. share</th><th>Lost to rank</th><th title="Share of all impressions lost to rank that come from this match type">Share of rank losses</th></tr></thead><tbody id="kwMatchBody"></tbody></table>
+          </div>
+          <div class="story-muted" id="kwMatchNote" style="margin: 6px 0 0 2px"></div>
+          <h3 class="sub-head" style="margin-top: 26px">Keywords</h3>
+          <div class="report-controls">
+            <div class="date-scope" style="height: 34px">
+              <button class="scope-btn active" data-kw-filter="attention">Needs attention</button>
+              <button class="scope-btn" data-kw-filter="money">💰 Money keywords</button>
+              <button class="scope-btn" data-kw-filter="losing">Losing ≥30% to rank</button>
+              <button class="scope-btn" data-kw-filter="broad">Broad</button>
+              <button class="scope-btn" data-kw-filter="all">All</button>
+            </div>
+            <span class="report-status" id="kwCount"></span>
+            <span class="report-status">💰 = money keyword (brings most of your conversions, or ☆ starred by you) · QS parts: expected CTR, ad relevance, landing page (▲ above · ● average · ▼ below)</span>
+          </div>
+          <div class="table-wrap">
+            <table class="report-table kw-table"><thead><tr><th></th><th>Keyword</th><th>Match</th><th>Spend</th><th>Conv</th><th>Cost/conv</th><th>Imp. share</th><th>Lost to rank</th><th>QS</th><th title="Google's estimate of the bid needed to show at the top of the page">Top-of-page bid</th><th>Why / what to do</th></tr></thead><tbody id="kwBody"></tbody></table>
+          </div>
+          <h3 class="sub-head" style="margin-top: 26px">Broad vs exact overlap</h3>
+          <div class="overlap-grid" id="kwOverlap"></div>
+          <h3 class="sub-head" style="margin-top: 26px">Searches behind broad keywords</h3>
+          <div class="table-wrap">
+            <table class="report-table"><thead><tr><th>Broad keyword</th><th>Spend</th><th>Cost/conv</th><th>Searches matched</th><th title="Share of spend on searches that are not the keyword itself">Spend on other searches</th><th title="Searches that spent at least the goal with no conversions">Likely waste</th><th>Lost to rank</th></tr></thead><tbody id="kwBroadBody"></tbody></table>
+          </div>
         </div>
         <div class="page" data-page="trends" id="page-trends" style="display: none">
           <div class="section-head">
@@ -10160,6 +10236,393 @@ ${!wins.length && !probs.length && !health.length ? "<li>No major wins or proble
           }
         }
 
+        // ============ KEYWORD RANK PAGE ============
+        // Impression share lost to rank per keyword, match type, money
+        // keywords, why a keyword is outranked (QS parts + bid estimates),
+        // broad/exact overlap and the searches behind broad keywords.
+        const MONEY_KW_KEY = "gt_money_kw_v1";
+        const kwState = { account: "", days: 30, filter: "attention", openBroad: new Set() };
+        const kwCache = new Map();
+        let kwLast = null;
+        let kwSeq = 0;
+        const MATCH_LABEL = { EXACT: "Exact", PHRASE: "Phrase", BROAD: "Broad" };
+
+        function loadMoneyKw() {
+          try {
+            return new Set(JSON.parse(localStorage.getItem(MONEY_KW_KEY) || "[]"));
+          } catch (e) {
+            return new Set();
+          }
+        }
+        function toggleMoneyKw(key) {
+          const s = loadMoneyKw();
+          if (s.has(key)) s.delete(key);
+          else s.add(key);
+          try {
+            localStorage.setItem(MONEY_KW_KEY, JSON.stringify(Array.from(s)));
+          } catch (e) {}
+          renderKeywords();
+        }
+        function toggleBroadTerms(id) {
+          if (kwState.openBroad.has(id)) kwState.openBroad.delete(id);
+          else kwState.openBroad.add(id);
+          renderKeywords();
+        }
+
+        function populateKwAccountSelect() {
+          const sel = document.getElementById("kwAccount");
+          if (!sel) return;
+          const list = trendAccounts().filter((a) => (a.cost || 0) > 0).sort((a, b) => (b.cost || 0) - (a.cost || 0));
+          sel.innerHTML = list.map((a) => `<option value="${escapeHtml(a.customerId)}">${escapeHtml(a.name)}</option>`).join("");
+          if (!list.some((a) => a.customerId === kwState.account)) kwState.account = list.length ? list[0].customerId : "";
+          sel.value = kwState.account;
+        }
+
+        async function loadKeywordsPage(force) {
+          const status = document.getElementById("kwStatus");
+          if (!status) return;
+          populateKwAccountSelect();
+          const seq = ++kwSeq;
+          const acct = kwState.account, days = kwState.days;
+          const end = ymdAddDays(__localYMD(new Date()), -1);
+          const start = ymdAddDays(end, -(days - 1));
+          const key = `${acct}|${start}|${end}`;
+          try {
+            const token = await ensureAdsMcpAccessToken();
+            if (!token) throw new Error("Connect Ads MCP first (button at the top).");
+            if (!acct) throw new Error("Accounts haven't loaded yet — wait for the live refresh, then try again.");
+            if (force || !kwCache.has(key)) {
+              status.textContent = "Loading keywords, campaigns and search terms…";
+              const tools = await ensureAdsMcpTools();
+              const opt = { loginCustomerId: ADS_MCP_ANCHOR_MCC_ID };
+              const when = `segments.date BETWEEN '${start}' AND '${end}'`;
+              const [kw, camp, est, terms] = await Promise.all([
+                mcpSearchRows(tools, acct, {
+                  fields: ["campaign.name", "ad_group.name", "ad_group.id", "ad_group_criterion.criterion_id", "ad_group_criterion.keyword.text", "ad_group_criterion.keyword.match_type", "ad_group_criterion.status", "ad_group_criterion.quality_info.quality_score", "ad_group_criterion.quality_info.creative_quality_score", "ad_group_criterion.quality_info.post_click_quality_score", "ad_group_criterion.quality_info.search_predicted_ctr", "metrics.impressions", "metrics.clicks", "metrics.cost_micros", "metrics.conversions", "metrics.search_impression_share", "metrics.search_rank_lost_impression_share", "metrics.search_top_impression_share", "metrics.search_absolute_top_impression_share"],
+                  resource: "keyword_view",
+                  conditions: [when, "metrics.impressions > 0"],
+                  orderings: ["metrics.cost_micros DESC"],
+                  limit: 2000,
+                }, opt),
+                mcpSearchRows(tools, acct, {
+                  fields: ["campaign.name", "metrics.impressions", "metrics.cost_micros", "metrics.conversions", "metrics.search_impression_share", "metrics.search_rank_lost_impression_share", "metrics.search_budget_lost_impression_share"],
+                  resource: "campaign",
+                  conditions: [when, "campaign.advertising_channel_type = 'SEARCH'", "metrics.impressions > 0"],
+                }, opt),
+                mcpSearchRows(tools, acct, {
+                  fields: ["ad_group.id", "ad_group_criterion.criterion_id", "ad_group_criterion.position_estimates.first_page_cpc_micros", "ad_group_criterion.position_estimates.top_of_page_cpc_micros"],
+                  resource: "ad_group_criterion",
+                  conditions: ["ad_group_criterion.type = 'KEYWORD'", "ad_group_criterion.negative = FALSE", "ad_group_criterion.status = 'ENABLED'"],
+                  limit: 5000,
+                }, opt).catch(() => ({ rows: [], mode: "empty" })),
+                mcpSearchRows(tools, acct, {
+                  fields: ["search_term_view.search_term", "segments.keyword.info.text", "segments.keyword.info.match_type", "campaign.name", "ad_group.id", "metrics.clicks", "metrics.cost_micros", "metrics.conversions"],
+                  resource: "search_term_view",
+                  conditions: [when, "metrics.clicks > 0"],
+                  orderings: ["metrics.cost_micros DESC"],
+                  limit: 3000,
+                }, opt).catch(() => ({ rows: [], mode: "empty" })),
+              ]);
+              if (kw.mode === "empty") throw new Error("Couldn't load keywords for this account");
+              const v = (r, k) => rowValue(r, k);
+              const n = (r, k) => asNumber(rowValue(r, k), 0);
+              const estMap = new Map();
+              est.rows.forEach((r) => {
+                estMap.set(`${v(r, ["ad_group.id"])}|${v(r, ["ad_group_criterion.criterion_id"])}`, {
+                  firstPage: n(r, ["ad_group_criterion.position_estimates.first_page_cpc_micros"]) / 1e6,
+                  topPage: n(r, ["ad_group_criterion.position_estimates.top_of_page_cpc_micros"]) / 1e6,
+                });
+              });
+              const keywords = kw.rows.map((r) => {
+                const impr = n(r, ["metrics.impressions"]);
+                const is = n(r, ["metrics.search_impression_share"]);
+                const cost = n(r, ["metrics.cost_micros", "metrics.costMicros"]) / 1e6;
+                const clicks = n(r, ["metrics.clicks"]);
+                const conv = n(r, ["metrics.conversions"]);
+                const id = `${v(r, ["ad_group.id"])}|${v(r, ["ad_group_criterion.criterion_id"])}`;
+                const e = estMap.get(id) || {};
+                return {
+                  id,
+                  text: String(v(r, ["ad_group_criterion.keyword.text"]) || ""),
+                  match: String(v(r, ["ad_group_criterion.keyword.match_type"]) || ""),
+                  campaign: String(v(r, ["campaign.name"]) || ""),
+                  adGroup: String(v(r, ["ad_group.name"]) || ""),
+                  adGroupId: String(v(r, ["ad_group.id"]) || ""),
+                  status: String(v(r, ["ad_group_criterion.status"]) || ""),
+                  qs: n(r, ["ad_group_criterion.quality_info.quality_score"]),
+                  qsAd: String(v(r, ["ad_group_criterion.quality_info.creative_quality_score"]) || ""),
+                  qsLp: String(v(r, ["ad_group_criterion.quality_info.post_click_quality_score"]) || ""),
+                  qsCtr: String(v(r, ["ad_group_criterion.quality_info.search_predicted_ctr"]) || ""),
+                  impr, clicks, cost, conv,
+                  cpc: clicks > 0 ? cost / clicks : null,
+                  cpa: conv > 0 ? cost / conv : null,
+                  is: is > 0 ? is : null,
+                  elig: is > 0 ? impr / is : 0,
+                  lr: is > 0 ? n(r, ["metrics.search_rank_lost_impression_share"]) : null,
+                  top: is > 0 ? n(r, ["metrics.search_top_impression_share"]) : null,
+                  abs: is > 0 ? n(r, ["metrics.search_absolute_top_impression_share"]) : null,
+                  firstPage: e.firstPage || null,
+                  topPage: e.topPage || null,
+                };
+              });
+              const campaigns = camp.rows.map((r) => {
+                const impr = n(r, ["metrics.impressions"]);
+                const is = n(r, ["metrics.search_impression_share"]);
+                return {
+                  name: String(v(r, ["campaign.name"]) || ""),
+                  cost: n(r, ["metrics.cost_micros", "metrics.costMicros"]) / 1e6,
+                  conv: n(r, ["metrics.conversions"]),
+                  impr,
+                  elig: is > 0 ? impr / is : 0,
+                  is: is > 0 ? is : null,
+                  lr: is > 0 ? n(r, ["metrics.search_rank_lost_impression_share"]) : null,
+                  lb: is > 0 ? n(r, ["metrics.search_budget_lost_impression_share"]) : null,
+                };
+              });
+              const searchTerms = terms.rows.map((r) => ({
+                term: String(v(r, ["search_term_view.search_term", "searchTermView.searchTerm"]) || ""),
+                kwText: String(v(r, ["segments.keyword.info.text"]) || ""),
+                kwMatch: String(v(r, ["segments.keyword.info.match_type"]) || ""),
+                campaign: String(v(r, ["campaign.name"]) || ""),
+                adGroupId: String(v(r, ["ad_group.id"]) || ""),
+                clicks: n(r, ["metrics.clicks"]),
+                cost: n(r, ["metrics.cost_micros", "metrics.costMicros"]) / 1e6,
+                conv: n(r, ["metrics.conversions"]),
+              }));
+              kwCache.set(key, { keywords, campaigns, searchTerms, start, end, acct, termsOk: terms.mode !== "empty" });
+            }
+            if (seq !== kwSeq) return;
+            kwLast = kwCache.get(key);
+            status.textContent = `${formatDateShort(kwLast.start)} – ${formatDateShort(kwLast.end)} · Search campaigns only (Performance Max has no keywords)`;
+            renderKeywords();
+          } catch (err) {
+            if (seq === kwSeq) status.textContent = `Couldn't load: ${err.message || err}`;
+          }
+        }
+
+        const kwNorm = (s) => String(s || "").toLowerCase().replace(/[+"\[\]]/g, "").replace(/\s+/g, " ").trim();
+
+        function qsPartIcon(v) {
+          if (v === "ABOVE_AVERAGE") return `<span class="qs-part good" title="Above average">▲</span>`;
+          if (v === "AVERAGE") return `<span class="qs-part avg" title="Average">●</span>`;
+          if (v === "BELOW_AVERAGE") return `<span class="qs-part bad" title="Below average">▼</span>`;
+          return `<span class="qs-part none" title="Not enough data">–</span>`;
+        }
+
+        function kwVerdict(k, goal, isMoney) {
+          const out = [];
+          let kind = "ok";
+          const losing = k.lr != null && k.lr >= 0.3;
+          const below = [["landing page", k.qsLp], ["ad relevance", k.qsAd], ["expected CTR", k.qsCtr]].filter((x) => x[1] === "BELOW_AVERAGE").map((x) => x[0]);
+          if (losing) {
+            kind = isMoney ? "bad" : "warn";
+            if (below.length) out.push(`Outranked mainly on quality — ${below.join(", ")} below average; fix that before raising bids`);
+            else if (k.topPage && k.cpc && k.topPage > k.cpc * 1.15) out.push(`Outbid — top of page needs about ${fmt$(k.topPage)} vs ${fmt$(k.cpc)} avg CPC now`);
+            else out.push(`Losing ${Math.round(k.lr * 100)}% of searches to rank — raise the bid${k.match === "BROAD" ? " or move budget to the exact version" : ""}`);
+            if (isMoney) out.unshift("Money keyword being outranked");
+          } else if (isMoney && k.lr != null && k.lr >= 0.15) {
+            out.push(`Money keyword losing ${Math.round(k.lr * 100)}% of searches to rank — a modest bid increase should win more of them`);
+            kind = "warn";
+          } else if (isMoney && k.is != null && k.is >= 0.8) {
+            out.push("Money keyword winning the auction — keep it funded");
+          }
+          if (k.match === "BROAD" && k.cpa != null && k.cpa > goal * 1.25) {
+            out.push(`Broad at ${fmt$(k.cpa)}/conv vs ${fmt$(goal)} goal — check its search terms`);
+            if (kind === "ok") kind = "warn";
+          } else if (k.conv === 0 && k.cost >= goal * 2) {
+            out.push(`${fmt$(k.cost)} spent, no conversions`);
+            if (kind === "ok") kind = "warn";
+          }
+          if (!out.length) out.push(k.is == null ? "Not enough impression-share data" : "OK");
+          return { kind, text: out.join(" · ") };
+        }
+
+        function renderKeywords() {
+          if (!kwLast) return;
+          const { keywords, campaigns, searchTerms, acct, termsOk } = kwLast;
+          const acctRow = accounts.find((a) => a.customerId === acct) || { customerId: acct };
+          const goal = goalFor(acctRow);
+          const manual = loadMoneyKw();
+          const kwKey = (k) => `${acct}|${kwNorm(k.text)}|${k.match}`;
+          // money keywords: starred, or the keywords that bring in most of the
+          // conversions (top ~60%) at a workable cost (≤ 1.5× goal, 3+ conv)
+          const totConv = keywords.reduce((t, k) => t + k.conv, 0);
+          let cum = 0;
+          keywords.slice().sort((a, b2) => b2.conv - a.conv).forEach((k) => {
+            k.autoMoney = cum < totConv * 0.6 && k.conv >= 3 && k.cpa != null && k.cpa <= goal * 1.5;
+            cum += k.conv;
+          });
+          keywords.forEach((k) => {
+            k.starred = manual.has(kwKey(k));
+            k.money = k.starred || k.autoMoney;
+          });
+
+          // ---- account / campaign level
+          const ct = campaigns.reduce((t, c) => ({ cost: t.cost + c.cost, conv: t.conv + c.conv, impr: t.impr + (c.is ? c.impr : 0), elig: t.elig + c.elig, lr: t.lr + c.elig * (c.lr || 0), lb: t.lb + c.elig * (c.lb || 0) }), { cost: 0, conv: 0, impr: 0, elig: 0, lr: 0, lb: 0 });
+          const pct = (x) => (x == null ? "—" : `${Math.round(x * 100)}%`);
+          const money = keywords.filter((k) => k.money);
+          const mAgg = money.reduce((t, k) => ({ elig: t.elig + k.elig, impr: t.impr + (k.is ? k.impr : 0), lr: t.lr + k.elig * (k.lr || 0) }), { elig: 0, impr: 0, lr: 0 });
+          document.getElementById("kwKpis").innerHTML = [
+            kpiCard("Search impression share", ct.elig ? pct(ct.impr / ct.elig) : "—", "all Search campaigns"),
+            kpiCard("Lost to rank", ct.elig ? pct(ct.lr / ct.elig) : "—", "outbid or lower quality"),
+            kpiCard("Lost to budget", ct.elig ? pct(ct.lb / ct.elig) : "—", "budget ran out (campaign level only)"),
+            kpiCard("Money keywords", `${money.length}`, mAgg.elig ? `${pct(mAgg.impr / mAgg.elig)} impr. share · ${pct(mAgg.lr / mAgg.elig)} lost to rank` : "★ star keywords to track them"),
+          ].join("");
+
+          document.getElementById("kwCampBody").innerHTML = campaigns.length
+            ? campaigns.slice().sort((a, b) => b.cost - a.cost).map((c) => {
+                const main = c.lr != null && c.lb != null ? (c.lr >= c.lb ? "rank" : "budget") : null;
+                const tip = c.lr == null ? "" : c.lr < 0.15 && (c.lb || 0) < 0.1 ? "Winning most auctions" : main === "rank" ? "Mostly losing to rank — see the keywords below" : "Mostly losing to budget — raise budget if cost/conv is on goal";
+                return `<tr><td>${escapeHtml(c.name)}</td><td>${fmt$(c.cost)}</td><td>${c.conv > 0 ? fmt$(c.cost / c.conv) : "—"}</td><td>${pct(c.is)}</td>
+                  <td><div class="is-bar"><span class="won" style="width:${Math.round((c.is || 0) * 100)}%"></span><span class="rank" style="width:${Math.round((c.lr || 0) * 100)}%"></span><span class="budget" style="width:${Math.round((c.lb || 0) * 100)}%"></span></div></td>
+                  <td>${pct(c.lr)}</td><td>${pct(c.lb)}</td><td class="why-cell">${escapeHtml(tip)}</td></tr>`;
+              }).join("")
+            : `<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--ink-muted)">No Search campaigns with impressions in this period.</td></tr>`;
+
+          // ---- by match type
+          const byMatch = new Map();
+          keywords.forEach((k) => {
+            const m = byMatch.get(k.match) || { cost: 0, conv: 0, impr: 0, elig: 0, lr: 0, n: 0 };
+            m.cost += k.cost; m.conv += k.conv; m.n += 1;
+            if (k.is) { m.impr += k.impr; m.elig += k.elig; m.lr += k.elig * (k.lr || 0); }
+            byMatch.set(k.match, m);
+          });
+          const totElig = Array.from(byMatch.values()).reduce((t, m) => t + m.elig * (m.elig ? m.lr / m.elig : 0), 0);
+          document.getElementById("kwMatchBody").innerHTML = ["EXACT", "PHRASE", "BROAD"].filter((m) => byMatch.has(m)).map((m) => {
+            const x = byMatch.get(m);
+            return `<tr><td><span class="match-tag ${m.toLowerCase()}">${MATCH_LABEL[m]}</span></td><td>${x.n}</td><td>${fmt$(x.cost)}</td><td>${fmtN(Math.round(x.conv * 10) / 10)}</td>
+              <td>${x.conv > 0 ? `<span class="cpa-cell ${x.cost / x.conv <= goal ? "good" : x.cost / x.conv <= goal * 1.25 ? "warn" : "bad"}">${fmt$(x.cost / x.conv)}</span>` : "—"}</td>
+              <td>${x.elig ? pct(x.impr / x.elig) : "—"}</td><td>${x.elig ? pct(x.lr / x.elig) : "—"}</td>
+              <td>${totElig > 0 ? `${Math.round((x.lr / totElig) * 100)}%` : "—"}</td></tr>`;
+          }).join("");
+          const b = byMatch.get("BROAD"), e = byMatch.get("EXACT");
+          document.getElementById("kwMatchNote").textContent = b && e && b.elig && e.elig
+            ? `Broad keywords win ${pct(b.impr / b.elig)} of their auctions (losing ${pct(b.lr / b.elig)} to rank) vs ${pct(e.impr / e.elig)} for exact. Broad keywords account for ${Math.round((b.lr / totElig) * 100)}% of the impressions lost to rank${b.conv > 0 && e.conv > 0 ? `, at ${fmt$(b.cost / b.conv)}/conv vs ${fmt$(e.cost / e.conv)} for exact` : ""}.`
+            : "";
+
+          // ---- keyword table
+          const f = kwState.filter;
+          let list = keywords.filter((k) => k.cost > 0 || k.impr >= 20);
+          if (f === "money") list = list.filter((k) => k.money);
+          else if (f === "losing") list = list.filter((k) => k.lr != null && k.lr >= 0.3);
+          else if (f === "broad") list = list.filter((k) => k.match === "BROAD");
+          else if (f === "attention") list = list.filter((k) => (k.lr != null && k.lr >= 0.3 && (k.money || k.cost >= goal)) || (k.money && k.lr != null && k.lr >= 0.15));
+          // most impressions lost to rank first, money keywords on top
+          list.sort((a, b2) => (b2.money - a.money) || (b2.elig * (b2.lr || 0)) - (a.elig * (a.lr || 0)) || b2.cost - a.cost);
+          const shown = list.slice(0, 150);
+          window._kwKeys = shown.map(kwKey);
+          document.getElementById("kwBody").innerHTML = shown.length
+            ? shown.map((k, i) => {
+                const vd = kwVerdict(k, goal, k.money);
+                const star = `<button class="star-btn ${k.starred ? "on" : ""}" title="${k.starred ? "Remove from money keywords" : "Mark as a money keyword"}" onclick="toggleMoneyKw(window._kwKeys[${i}])">${k.starred ? "★" : "☆"}</button>`;
+                const bid = k.topPage ? `${fmt$(k.topPage)}${k.cpc ? `<div class="delta" style="color:var(--ink-muted)">${k.topPage > k.cpc * 1.15 ? "above" : "within"} your ${fmt$(k.cpc)} CPC</div>` : ""}` : k.firstPage ? `1st page ${fmt$(k.firstPage)}` : "—";
+                return `<tr class="kw-${vd.kind}">
+                  <td>${star}</td>
+                  <td><strong>${escapeHtml(k.text)}</strong>${k.money ? ` <span class="money-tag" title="${k.starred ? "You marked this" : `One of the keywords bringing most of your conversions (${fmtN(Math.round(k.conv))} conv)`}">💰</span>` : ""}<div class="delta" style="color:var(--ink-muted)">${escapeHtml(k.campaign)} › ${escapeHtml(k.adGroup)}</div></td>
+                  <td><span class="match-tag ${k.match.toLowerCase()}">${MATCH_LABEL[k.match] || k.match}</span></td>
+                  <td>${fmt$(k.cost)}</td><td>${fmtN(Math.round(k.conv * 10) / 10)}</td>
+                  <td>${k.cpa != null ? `<span class="cpa-cell ${k.cpa <= goal ? "good" : k.cpa <= goal * 1.25 ? "warn" : "bad"}">${fmt$(k.cpa)}</span>` : "—"}</td>
+                  <td>${pct(k.is)}<div class="delta" style="color:var(--ink-muted)">top ${pct(k.top)}</div></td><td><strong>${pct(k.lr)}</strong></td>
+                  <td>${k.qs ? `<strong>${k.qs}</strong>/10` : "—"}<div class="qs-parts">${qsPartIcon(k.qsCtr)}${qsPartIcon(k.qsAd)}${qsPartIcon(k.qsLp)}</div></td>
+                  <td>${bid}</td>
+                  <td class="why-cell">${escapeHtml(vd.text)}</td>
+                </tr>`;
+              }).join("")
+            : `<tr><td colspan="11" style="text-align:center;padding:20px;color:var(--ink-muted)">${f === "money" ? "No money keywords yet — star (☆) keywords to track them, or they're added automatically at 3+ conversions within goal." : "Nothing matches this filter."}</td></tr>`;
+          document.getElementById("kwCount").textContent = `${shown.length}${list.length > shown.length ? ` of ${list.length}` : ""} keywords`;
+
+          // ---- broad / exact overlap
+          const byText = new Map();
+          keywords.forEach((k) => {
+            const t = kwNorm(k.text);
+            if (!byText.has(t)) byText.set(t, []);
+            byText.get(t).push(k);
+          });
+          const exactTexts = new Map();
+          keywords.filter((k) => k.match === "EXACT").forEach((k) => exactTexts.set(kwNorm(k.text), k));
+          const dupes = Array.from(byText.entries())
+            .filter(([, ks]) => ks.some((k) => k.match === "BROAD") && ks.some((k) => k.match === "EXACT"))
+            .map(([t, ks]) => {
+              const bk = ks.filter((k) => k.match === "BROAD"), ek = ks.filter((k) => k.match === "EXACT");
+              const s = (arr, f2) => arr.reduce((x, k) => x + f2(k), 0);
+              return { t, bCost: s(bk, (k) => k.cost), bConv: s(bk, (k) => k.conv), eCost: s(ek, (k) => k.cost), eConv: s(ek, (k) => k.conv), eLr: ek[0].lr };
+            })
+            .sort((a, b2) => b2.bCost - a.bCost);
+          // searches that exactly equal an exact keyword but were served by a broad keyword
+          const stolen = new Map();
+          searchTerms.forEach((st) => {
+            if (st.kwMatch !== "BROAD") return;
+            const ex = exactTexts.get(kwNorm(st.term));
+            if (!ex || kwNorm(st.kwText) === kwNorm(st.term)) return;
+            const e2 = stolen.get(st.term) || { term: st.term, exact: ex, via: new Set(), clicks: 0, cost: 0, conv: 0 };
+            e2.via.add(st.kwText);
+            e2.clicks += st.clicks; e2.cost += st.cost; e2.conv += st.conv;
+            stolen.set(st.term, e2);
+          });
+          const stolenList = Array.from(stolen.values()).sort((a, b2) => b2.cost - a.cost);
+          document.getElementById("kwOverlap").innerHTML = `
+            <div class="overlap-col"><h4>Same keyword running as broad and exact</h4>${dupes.length
+              ? `<table class="report-table"><thead><tr><th>Keyword</th><th>Broad spend</th><th>Broad cost/conv</th><th>Exact spend</th><th>Exact cost/conv</th></tr></thead><tbody>${dupes.slice(0, 15).map((d) => `<tr><td>${escapeHtml(d.t)}</td><td>${fmt$(d.bCost)}</td><td>${d.bConv > 0 ? fmt$(d.bCost / d.bConv) : "—"}</td><td>${fmt$(d.eCost)}</td><td>${d.eConv > 0 ? fmt$(d.eCost / d.eConv) : "—"}</td></tr>`).join("")}</tbody></table><div class="story-muted">If exact is cheaper per conversion, lower the broad bid or add the exact term as a negative to the broad ad group so the exact keyword gets the click.</div>`
+              : `<div class="story-muted">No keyword runs as both broad and exact.</div>`}</div>
+            <div class="overlap-col"><h4>Exact-keyword searches that went to broad keywords</h4>${!termsOk
+              ? `<div class="story-muted">Search terms couldn't be loaded.</div>`
+              : stolenList.length
+                ? `<table class="report-table"><thead><tr><th>Search</th><th>Served by broad</th><th>Clicks</th><th>Spend</th><th>Conv</th></tr></thead><tbody>${stolenList.slice(0, 15).map((s) => `<tr><td>${escapeHtml(s.term)}<div class="delta" style="color:var(--ink-muted)">exact keyword exists${s.exact.lr != null ? ` · it loses ${pct(s.exact.lr)} to rank` : ""}</div></td><td>${escapeHtml(Array.from(s.via).slice(0, 2).join(", "))}</td><td>${fmtN(s.clicks)}</td><td>${fmt$(s.cost)}</td><td>${fmtN(Math.round(s.conv * 10) / 10)}</td></tr>`).join("")}</tbody></table><div class="story-muted">The exact keyword should normally win these. When it doesn't, it's usually outranked (raise its bid) or the broad ad group has a higher bid or ad rank.</div>`
+                : `<div class="story-muted">None — your exact keywords are getting their own searches.</div>`}</div>`;
+
+          // ---- searches behind broad keywords
+          const broadKw = keywords.filter((k) => k.match === "BROAD" && k.cost > 0).sort((a, b2) => b2.cost - a.cost).slice(0, 25);
+          const termsFor = (k) => searchTerms.filter((st) => st.kwMatch === "BROAD" && kwNorm(st.kwText) === kwNorm(k.text) && (!st.adGroupId || st.adGroupId === k.adGroupId));
+          document.getElementById("kwBroadBody").innerHTML = !termsOk
+            ? `<tr><td colspan="7" style="color:var(--ink-muted);padding:16px">Search terms couldn't be loaded.</td></tr>`
+            : broadKw.length
+              ? broadKw.map((k) => {
+                  const ts = termsFor(k).sort((a, b2) => b2.cost - a.cost);
+                  const exactOwn = ts.filter((t) => kwNorm(t.term) === kwNorm(k.text)).reduce((x, t) => x + t.cost, 0);
+                  const tsCost = ts.reduce((x, t) => x + t.cost, 0);
+                  const waste = ts.filter((t) => t.conv === 0 && t.cost >= goal).reduce((x, t) => x + t.cost, 0);
+                  const open = kwState.openBroad.has(k.id);
+                  const head = `<tr class="${open ? "drill-open" : ""}"><td><button class="drill-btn" onclick="toggleBroadTerms('${escapeHtml(k.id)}')">${open ? "▾" : "▸"}</button> <strong>${escapeHtml(k.text)}</strong><div class="delta" style="color:var(--ink-muted)">${escapeHtml(k.campaign)}</div></td>
+                    <td>${fmt$(k.cost)}</td><td>${k.cpa != null ? fmt$(k.cpa) : "—"}</td><td>${fmtN(ts.length)}</td>
+                    <td>${tsCost > 0 ? `${Math.round(((tsCost - exactOwn) / tsCost) * 100)}%` : "—"}</td><td>${waste >= 1 ? `<span style="color:var(--bad)">${fmt$(waste)}</span>` : "—"}</td><td>${pct(k.lr)}</td></tr>`;
+                  const body = open
+                    ? `<tr class="drill-row"><td colspan="7"><table class="drill-table"><thead><tr><th>Search</th><th>Clicks</th><th>Spend</th><th>Conv</th><th>Cost/conv</th><th>Suggestion</th></tr></thead><tbody>${ts.slice(0, 40).map((t) => {
+                        const cpa = t.conv > 0 ? t.cost / t.conv : null;
+                        const isKw = exactTexts.has(kwNorm(t.term));
+                        const tip = t.conv >= 2 && cpa <= goal && !isKw ? "✚ Add as an exact keyword" : t.conv === 0 && t.cost >= goal ? "⛔ Consider a negative keyword" : isKw ? "Already an exact keyword" : "";
+                        return `<tr><td>${escapeHtml(t.term)}</td><td>${fmtN(t.clicks)}</td><td>${fmt$(t.cost)}</td><td>${fmtN(Math.round(t.conv * 10) / 10)}</td><td>${cpa != null ? fmt$(cpa) : "—"}</td><td>${tip}</td></tr>`;
+                      }).join("") || `<tr><td colspan="6" style="color:var(--ink-muted)">No search terms with clicks.</td></tr>`}</tbody></table></td></tr>`
+                    : "";
+                  return head + body;
+                }).join("")
+              : `<tr><td colspan="7" style="color:var(--ink-muted);padding:16px">No broad keywords with spend.</td></tr>`;
+
+          const page = document.getElementById("page-keywords");
+          if (page) {
+            page._copyRows = [["Keyword", "Match", "Campaign", "Ad group", "Money", "Spend", "Conv", "Cost/conv", "Imp. share", "Lost to rank", "Top IS", "Abs. top IS", "QS", "Expected CTR", "Ad relevance", "Landing page", "Top-of-page bid est.", "Verdict"],
+              ...list.map((k) => [k.text, MATCH_LABEL[k.match] || k.match, k.campaign, k.adGroup, k.money ? "yes" : "", k.cost.toFixed(2), k.conv.toFixed(1), k.cpa != null ? k.cpa.toFixed(2) : "", k.is != null ? Math.round(k.is * 100) : "", k.lr != null ? Math.round(k.lr * 100) : "", k.top != null ? Math.round(k.top * 100) : "", k.abs != null ? Math.round(k.abs * 100) : "", k.qs || "", k.qsCtr, k.qsAd, k.qsLp, k.topPage ? k.topPage.toFixed(2) : "", kwVerdict(k, goal, k.money).text])];
+            page._summaryText = `Keyword rank (${acctRow.name || acct}, ${formatDateShort(kwLast.start)} – ${formatDateShort(kwLast.end)}): impression share ${ct.elig ? pct(ct.impr / ct.elig) : "—"}, lost to rank ${ct.elig ? pct(ct.lr / ct.elig) : "—"}, lost to budget ${ct.elig ? pct(ct.lb / ct.elig) : "—"}. ${document.getElementById("kwMatchNote").textContent}`;
+          }
+        }
+
+        function bindKeywordControls() {
+          const bind = (id, fn) => {
+            const el = document.getElementById(id);
+            if (el && !el.dataset.boundKw) { el.addEventListener("change", fn); el.dataset.boundKw = "true"; }
+          };
+          bind("kwAccount", (e) => { kwState.account = e.target.value; kwState.openBroad.clear(); loadKeywordsPage(false); });
+          bind("kwDays", (e) => { kwState.days = Number(e.target.value); loadKeywordsPage(false); });
+          document.querySelectorAll("[data-kw-filter]").forEach((b) => {
+            if (b.dataset.boundKw) return;
+            b.addEventListener("click", () => {
+              kwState.filter = b.dataset.kwFilter;
+              document.querySelectorAll("[data-kw-filter]").forEach((x) => x.classList.toggle("active", x === b));
+              renderKeywords();
+            });
+            b.dataset.boundKw = "true";
+          });
+        }
+
         // ============ REPORT PAGES (Weekly · Month to Date · Markets) ============
         // Each page pulls its own date range from Google Ads (and the Portal
         // for Markets) and keeps it in memory, so switching pages is instant
@@ -10655,7 +11118,7 @@ ${!wins.length && !probs.length && !health.length ? "<li>No major wins or proble
         }
 
         // ---------- Page router ----------
-        const PAGES = ["today", "weekly", "mtd", "markets", "traffic", "accounts", "search", "trends", "insights", "changes", "health"];
+        const PAGES = ["today", "weekly", "mtd", "markets", "traffic", "accounts", "search", "trends", "insights", "keywords", "changes", "health"];
         let activePage = "today";
 
         function renderCurrentPage(force) {
@@ -10666,6 +11129,7 @@ ${!wins.length && !probs.length && !health.length ? "<li>No major wins or proble
           if (activePage === "traffic") return loadTrafficPage(force);
           if (activePage === "trends") return loadTrendsPage(force);
           if (activePage === "insights") return loadInsightsPage(force);
+          if (activePage === "keywords") return loadKeywordsPage(force);
         }
 
         function showPage(name, opts) {
@@ -12131,6 +12595,7 @@ ${!wins.length && !probs.length && !health.length ? "<li>No major wins or proble
           bindHealthControls();
           bindTrendControls();
           bindInsightsControls();
+          bindKeywordControls();
           initPageRouter();
           refreshViewSelects();
 
