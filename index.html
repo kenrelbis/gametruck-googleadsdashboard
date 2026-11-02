@@ -1105,6 +1105,30 @@
         padding: 10px;
         margin-bottom: 12px;
       }
+      .str-tag { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 10px; text-transform: capitalize; background: #efeddf; color: #5a5d50; }
+      .str-tag.excellent { background: rgba(0, 131, 0, 0.12); color: #1d6b12; }
+      .str-tag.good { background: rgba(42, 120, 214, 0.12); color: #1d5fae; }
+      .str-tag.average { background: rgba(212, 160, 23, 0.18); color: #8a5a00; }
+      .str-tag.poor { background: rgba(199, 58, 23, 0.14); color: #a3300f; }
+      .rate { display: inline-block; font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 9px; }
+      .rate.best { background: rgba(0, 131, 0, 0.12); color: #1d6b12; } .rate.good { background: #efeddf; color: #5a5d50; }
+      .rate.low { background: rgba(199, 58, 23, 0.14); color: #a3300f; } .rate.rare { background: rgba(212, 160, 23, 0.18); color: #8a5a00; } .rate.new { color: #9a9c90; }
+      #adLow td, #adLow th { text-align: left !important; white-space: normal; font-family: "Jost", sans-serif; }
+      .stale-note { font-size: 11.5px; color: #8a5a00; margin-top: 2px; }
+      .ad-table td:first-child, .lp-table td:nth-child(2) { text-align: left; white-space: normal; }
+      .ad-table td.why-cell, .lp-table td.why-cell { text-align: left; white-space: normal; min-width: 220px; font-family: "Jost", sans-serif; font-size: 12.5px; }
+      .sim-row { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; margin-bottom: 12px; font-size: 13px; }
+      .sim-row input, .sim-row select { font: inherit; padding: 6px 8px; border: 1.5px solid var(--line); border-radius: 6px; background: #fff; }
+      .sim-row input { width: 90px; }
+      .sim-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 8px; }
+      .sim-card { border: 1px solid #e2e0d2; border-radius: 8px; padding: 10px 12px; font-size: 13px; }
+      .sim-card .kl { font-size: 11px; text-transform: uppercase; color: #5a5d50; letter-spacing: 0.04em; }
+      .sim-card .kv { font-size: 20px; font-weight: 800; margin: 2px 0; }
+      .sim-card .ks { font-size: 12px; color: #5a5d50; margin-bottom: 4px; }
+      .sim-card.net.up { border-color: #7aa52b; background: rgba(122, 165, 43, 0.08); }
+      .sim-card.net.down { border-color: #c73a17; background: rgba(199, 58, 23, 0.06); }
+      .sim-warn { font-size: 12.5px; color: #8a5a00; margin: 4px 0 6px; }
+      @media (max-width: 800px) { .sim-grid { grid-template-columns: 1fr; } }
       .chg-box { background: #fff; border: 2.5px solid var(--black); border-radius: 10px; padding: 14px 16px; }
       .chg-group h4 { margin: 14px 0 6px; font-size: 13px; }
       .chg-item { display: flex; gap: 10px; align-items: flex-start; padding: 7px 4px; border-bottom: 1px solid #efeddf; cursor: pointer; font-size: 13px; }
@@ -3625,6 +3649,8 @@
           <button data-nav="insights">⏱️ Timing &amp; Competition</button>
           <button data-nav="keywords">🔑 Keyword Rank</button>
           <button data-nav="zips">📍 Zip Codes</button>
+          <button data-nav="adcopy">✍️ Ad Copy</button>
+          <button data-nav="landing">🛬 Landing Pages</button>
           <button data-nav="changes">📜 Changes</button>
           <button data-nav="health">🩺 Health</button>
         </nav>
@@ -3953,6 +3979,8 @@
           </div>
           <div class="summary report-kpis"></div>
           <div class="table-wrap"><table class="report-table"></table></div>
+          <h3 class="sub-head" style="margin-top: 28px">Budget shift simulator — what if you move money between accounts?</h3>
+          <div class="chg-box" id="budgetSim"></div>
           <h3 class="sub-head" style="margin-top: 28px">Lead quality by market — why leads don't book</h3>
           <div id="leadQuality"></div>
           <details class="metro-details"><summary>Which franchises are counted in each metro</summary><div class="metro-map">Connect Portal to see the franchise list.</div></details>
@@ -4204,6 +4232,43 @@
             <table class="report-table"><thead><tr><th>Broad keyword</th><th>Spend</th><th>Cost/conv</th><th>Searches matched</th><th title="Share of spend on searches that are not the keyword itself">Spend on other searches</th><th title="Searches that spent at least the goal with no conversions">Likely waste</th><th>Lost to rank</th></tr></thead><tbody id="kwBroadBody"></tbody></table>
           </div>
         </div>
+        <div class="page" data-page="adcopy" id="page-adcopy" style="display: none">
+          <div class="section-head">
+            <h2>Ad Copy</h2>
+            <div class="meta">Ad strength, headlines and descriptions that under-perform the rest of their ad, outdated wording, and new headline ideas</div>
+          </div>
+          <div class="report-controls">
+            <select id="adAccount" class="btn btn-ghost" style="cursor: pointer" title="Account"></select>
+            <select id="adDays" class="btn btn-ghost" style="cursor: pointer" title="Period"><option value="30">Last 30 days</option><option value="90" selected>Last 90 days</option></select>
+            <button class="btn btn-ghost" onclick="loadAdCopyPage(true)">🔄 Refresh</button>
+            <button class="btn btn-ghost" onclick="exportReportCsv('page-adcopy', 'ad-copy')">↓ CSV</button>
+            <span class="report-status" id="adStatus"></span>
+          </div>
+          <div class="summary" id="adKpis"></div>
+          <h3 class="sub-head">Live ads</h3>
+          <div class="table-wrap"><table class="report-table ad-table"><thead><tr><th>Ad group</th><th>Ad strength</th><th>Spend</th><th>CTR</th><th>Conv rate</th><th>Cost/conv</th><th title="Headlines / descriptions">H / D</th><th>Issues</th></tr></thead><tbody id="adBody"></tbody></table></div>
+          <h3 class="sub-head" style="margin-top: 26px">Replace or check these</h3>
+          <div class="table-wrap" id="adLow"></div>
+          <div class="story-muted" style="margin-top: 6px">Google stopped rating responsive-ad headlines, so each one is compared with the other headlines in the same ad (CTR and conversions when it was shown). "Rarely shown" means Google barely uses it — usually a sign it's weak.</div>
+          <h3 class="sub-head" style="margin-top: 26px">Headline ideas</h3>
+          <div class="chg-box" id="adIdeas"></div>
+        </div>
+        <div class="page" data-page="landing" id="page-landing" style="display: none">
+          <div class="section-head">
+            <h2>Landing Pages</h2>
+            <div class="meta">Which pages the ads send people to convert — and which waste clicks</div>
+          </div>
+          <div class="report-controls">
+            <select id="lpAccount" class="btn btn-ghost" style="cursor: pointer" title="Account"></select>
+            <select id="lpDays" class="btn btn-ghost" style="cursor: pointer" title="Period"><option value="30">Last 30 days</option><option value="90" selected>Last 90 days</option></select>
+            <button class="btn btn-ghost" onclick="loadLandingPage(true)">🔄 Refresh</button>
+            <button class="btn btn-ghost" onclick="exportReportCsv('page-landing', 'landing-pages')">↓ CSV</button>
+            <span class="report-status" id="lpStatus"></span>
+          </div>
+          <div class="summary" id="lpKpis"></div>
+          <div class="table-wrap"><table class="report-table lp-table"><thead><tr><th></th><th>Page</th><th>Clicks</th><th>Spend</th><th>Conv</th><th>Conv rate</th><th>Cost/conv</th><th>GA4 sessions</th><th title="Share of GA4 sessions that engaged (10s+, 2+ pages or a key event)">Engaged</th><th title="GA4 lead_submitted ÷ sessions">GA4 lead rate</th><th title="Google's mobile speed score (1–10)">Speed</th><th>Suggestion</th></tr></thead><tbody id="lpBody"></tbody></table></div>
+          <div class="story-muted" style="margin-top: 6px">Ad data covers Search and Performance Max. GA4 columns count sessions that came from this Google Ads account.</div>
+        </div>
         <div class="page" data-page="zips" id="page-zips" style="display: none">
           <div class="section-head">
             <h2>Zip Codes</h2>
@@ -4219,6 +4284,7 @@
             <button class="btn btn-ghost" onclick="loadZipPage(true)">🔄 Refresh</button>
             <button class="btn btn-ghost" onclick="copyReport('page-zips')">📋 Copy</button>
             <button class="btn btn-ghost" onclick="exportReportCsv('page-zips', 'zip-codes')">↓ CSV</button>
+            <button class="btn btn-primary-ghost" onclick="downloadZipEditorCsv()" title="Location bid adjustments for the franchise's own Search campaigns, for Google Ads Editor">⬇ Zip bid changes for Editor</button>
             <span class="report-status" id="zipStatus"></span>
           </div>
           <div class="summary" id="zipKpis"></div>
@@ -9180,10 +9246,12 @@
         }
 
         // A Map whose entries are also saved to IndexedDB, with expiry.
-        function pcacheMap(name) {
+        function pcacheMap(name, opts) {
+          const maxAge = (opts && opts.maxAgeMs) || Infinity;
+          const ttl = (k) => Math.min(pcacheTtl(k), maxAge);
           const mem = new Map();
           const saved = new Map(); // key → savedAt (ms)
-          const fresh = (k) => mem.has(k) && Date.now() - (saved.get(k) || 0) < pcacheTtl(k);
+          const fresh = (k) => mem.has(k) && Date.now() - (saved.get(k) || 0) < ttl(k);
           const m = {
             has: (k) => fresh(k),
             get: (k) => (fresh(k) ? mem.get(k) : undefined),
@@ -9222,6 +9290,7 @@
               }
             },
           };
+          m._ttl = ttl;
           pcacheMaps.set(name, m);
           return m;
         }
@@ -9248,7 +9317,7 @@
                   const name = full.slice(0, i), key = full.slice(i + 1);
                   const m = pcacheMaps.get(name);
                   const rec = c.value || {};
-                  if (m && Date.now() - (rec.t || 0) < pcacheTtl(key)) {
+                  if (m && Date.now() - (rec.t || 0) < m._ttl(key)) {
                     try {
                       m._restore(key, pcacheDeserialize(rec.v), rec.t);
                     } catch (e) {}
@@ -10118,7 +10187,7 @@
 
         // ============ TIMING & COMPETITION PAGE ============
         const insightsState = { account: "", days: 90, metric: "cpa" };
-        const insightsCache = pcacheMap("insights");
+        const insightsCache = pcacheMap("insights", { maxAgeMs: 2 * 60 * 60 * 1000 });
         let insightsLast = null;
         let insightsSeq = 0;
         const DOW = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"];
@@ -10895,6 +10964,9 @@ ${!wins.length && !probs.length && !health.length ? "<li>No major wins or proble
           const kwTexts = new Set(keywords.map((k) => kwNorm(k.text)));
           const exactTexts = new Set(keywords.filter((k) => k.match === "EXACT").map((k) => kwNorm(k.text)));
           const agName = new Map(keywords.map((k) => [k.adGroupId, k.adGroup]));
+          const foreign = foreignMarketTokens(acctRow);
+          const mentionsOther = (term) => kwNorm(term).split(" ").find((w) => foreign.has(w)) || null;
+          let skippedForeign = [];
           const items = [];
           const round = (x) => Math.round(x * 100) / 100;
           // 1. Raise bids on money keywords losing to rank (quality is fine)
@@ -10925,6 +10997,12 @@ ${!wins.length && !probs.length && !health.length ? "<li>No major wins or proble
           searchTerms.filter((t) => t.kwMatch !== "EXACT" && t.conv >= 2 && t.cost / t.conv <= goal && !kwTexts.has(kwNorm(t.term))).forEach((t) => {
             const key = `${t.adGroupId}|${kwNorm(t.term)}`;
             if (seenNew.has(key)) return;
+            const other = mentionsOther(t.term);
+            if (other) {
+              seenNew.add(key);
+              skippedForeign.push(`${t.term} (“${other}”)`);
+              return;
+            }
             seenNew.add(key);
             const ag = t.adGroup || agName.get(t.adGroupId);
             if (!ag) return;
@@ -10970,7 +11048,31 @@ ${!wins.length && !probs.length && !health.length ? "<li>No major wins or proble
               items.push({ id: `sched|${i}|${l}`, kind: "sched", icon: "🕒", title: "Ad schedule bid adjustment", detail: l.replace(/^[⬆️⬇️\s]+/u, ""), manual: "Set under Campaign → Ad schedule (Search campaigns only).", row: null });
             });
           }
+          items.skippedForeign = skippedForeign;
           return items;
+        }
+
+        // Place words that belong to other GameTruck markets (city names from
+        // the metro list and Portal franchises), minus this account's own.
+        const GENERIC_PLACE_WORDS = new Set(["city", "beach", "county", "north", "south", "east", "west", "port", "fort", "lake", "park", "valley", "springs", "falls", "island", "new", "saint", "san", "santa", "los", "las", "del", "palm", "grand", "rapids", "bay", "point", "heights", "area", "metro", "game", "truck", "party", "video", "mobile", "mid", "cities", "central", "greater", "upper", "lower", "harbor", "river", "hills", "mount", "green", "spring", "little", "rock", "long", "worth", "salt", "high", "twin", "tri", "quad", "white", "cedar", "baton", "corpus", "christi"]);
+        function foreignMarketTokens(acctRow) {
+          const words = (s) => String(s || "").toLowerCase().replace(/\(\d+\)/g, " ").split(/[^a-z]+/).filter((w) => w.length >= 4 && !GENERIC_PLACE_WORDS.has(w));
+          const own = new Set(words(acctRow && acctRow.name));
+          const m = String((acctRow && acctRow.name) || "").match(/\((\d{1,4})\)/);
+          const ownIds = m ? [Number(m[1])].concat(PORTAL_EXTRA_FRANCHISES[String(acctRow.customerId)] || []) : [];
+          const ownMetros = new Set(ownIds.map((id) => FRANCHISE_METRO[id]).filter(Boolean));
+          ownMetros.forEach((mt) => words(METRO_NAMES[mt]).forEach((w) => own.add(w)));
+          const out = new Set();
+          Object.entries(METRO_NAMES).forEach(([mt, name]) => {
+            if (ownMetros.has(Number(mt))) return;
+            words(String(name).split(",")[0]).forEach((w) => { if (!own.has(w)) out.add(w); });
+          });
+          const pd = Array.from(portalRangeCache.values())[0];
+          if (pd && pd.franchises) pd.franchises.forEach((f) => { if (!ownIds.includes(f.id)) words(f.label).forEach((w) => { if (!own.has(w)) out.add(w); }); });
+          const ownDc = Array.from(ownMetros).some((mt) => /washington/i.test(METRO_NAMES[mt] || ""));
+          if (!ownDc) out.add("dc");
+          ["nyc", "brooklyn", "queens", "bronx", "manhattan"].forEach((w) => { if (!ownMetros.has(200501)) out.add(w); });
+          return out;
         }
 
         function renderChangeList() {
@@ -10987,7 +11089,7 @@ ${!wins.length && !probs.length && !health.length ? "<li>No major wins or proble
               <button class="btn btn-primary-ghost" onclick="downloadChangeCsv()">⬇ Download for Google Ads Editor (${counts.csv})</button>
               <button class="btn btn-ghost" onclick="copyChangeList()">📋 Copy as a list</button>
               <span class="report-status">Untick anything you don't want. In Google Ads Editor: Account → Import → From file, review, then Post.</span>
-            </div>` + groups.map(([kind, label]) => {
+            </div>${changeItems.skippedForeign && changeItems.skippedForeign.length ? `<div class="story-muted" style="margin:4px 0 6px">Not suggested as keywords because they name another market: ${escapeHtml(changeItems.skippedForeign.slice(0, 6).join(", "))}${changeItems.skippedForeign.length > 6 ? "…" : ""}</div>` : ""}` + groups.map(([kind, label]) => {
               const xs = changeItems.filter((x) => x.kind === kind);
               if (!xs.length) return "";
               return `<div class="chg-group"><h4>${escapeHtml(label)} <span class="muted-sub">${xs.length}</span></h4>${xs.map((x, i) => {
@@ -11140,7 +11242,7 @@ ${!wins.length && !probs.length && !health.length ? "<li>No major wins or proble
                 portalRpc("tools/call", { name: names.zip, arguments: { start_date: start, end_date: end, group_by: "year", franchise_id: fid } }),
                 runWithConcurrencyLimit(accts, 3, async (a) => {
                   const r = await mcpSearchRows(tools, a.customerId, {
-                    fields: ["segments.geo_target_postal_code", "metrics.cost_micros", "metrics.clicks", "metrics.conversions"],
+                    fields: ["campaign.name", "campaign.advertising_channel_type", "segments.geo_target_postal_code", "metrics.cost_micros", "metrics.clicks", "metrics.conversions"],
                     resource: "geographic_view",
                     conditions: [`segments.date BETWEEN '${start}' AND '${end}'`, "geographic_view.location_type = 'LOCATION_OF_PRESENCE'", "metrics.impressions > 0"],
                     limit: 10000,
@@ -11153,6 +11255,7 @@ ${!wins.length && !probs.length && !health.length ? "<li>No major wins or proble
               const zipLeads = new Map();
               Object.entries((zr && zr.data && zr.data.zipcodes && zr.data.zipcodes.base) || {}).forEach(([z, o]) => zipLeads.set(String(z).slice(0, 5), { leads: Number(o.count) || 0, valueCents: Number(o.sum) || 0 }));
               const byId = new Map();
+              const campZip = []; // own-account Search campaigns per zip (for Editor bid adjustments)
               let failed = 0;
               geo.forEach((x) => {
                 if (x.status !== "fulfilled" || !x.value.ok) return void (failed += 1);
@@ -11162,6 +11265,7 @@ ${!wins.length && !probs.length && !health.length ? "<li>No major wins or proble
                   if (!m) return;
                   const e = byId.get(m[1]) || { cost: 0, clicks: 0, conv: 0, hqCost: 0 };
                   const cost = asNumber(rowValue(r, ["metrics.cost_micros", "metrics.costMicros"]), 0) / 1e6;
+                  if (!hq && String(rowValue(r, ["campaign.advertising_channel_type", "campaign.advertisingChannelType"]) || "") === "SEARCH") campZip.push({ customerId: String(x.value.a.customerId), campaign: String(rowValue(r, ["campaign.name"]) || ""), geoId: m[1] });
                   e.cost += cost; if (hq) e.hqCost += cost;
                   e.clicks += asNumber(rowValue(r, ["metrics.clicks"]), 0);
                   e.conv += asNumber(rowValue(r, ["metrics.conversions"]), 0);
@@ -11192,7 +11296,10 @@ ${!wins.length && !probs.length && !health.length ? "<li>No major wins or proble
                 zips.set(z, cur);
               });
               const rows = Array.from(zips.values()).filter((z) => z.leads > 0 || ownSpend.has(z.zip));
-              zipCache.set(key, { rows, failed, start, end, fid, label: (pd.franchises.get(fid) || {}).label || String(fid), accts: accts.map((a) => a.name) });
+              const geoOfZip = {};
+              byId.forEach((e, id) => { const z = (zipNameCache.get(id) || "").slice(0, 5); if (/^\d{5}$/.test(z)) (geoOfZip[z] = geoOfZip[z] || []).push(id); });
+              const campRows = campZip.map((c) => ({ ...c, zip: (zipNameCache.get(c.geoId) || "").slice(0, 5) })).filter((c) => /^\d{5}$/.test(c.zip));
+              zipCache.set(key, { rows, campRows, failed, start, end, fid, label: (pd.franchises.get(fid) || {}).label || String(fid), accts: accts.map((a) => a.name) });
             }
             if (seq !== zipSeq) return;
             zipLast = zipCache.get(key);
@@ -11238,11 +11345,471 @@ ${!wins.length && !probs.length && !health.length ? "<li>No major wins or proble
           }
         }
 
+        function downloadZipEditorCsv() {
+          if (!zipLast || !zipLast.campRows) return toast("Load the zip codes first (click Refresh)", true);
+          const change = new Map(zipLast.rows.filter((z) => z.kind === "up" || z.kind === "down").map((z) => [z.zip, z.kind === "up" ? "+15%" : /exclude|−20/.test(z.tip) ? "-20%" : "-15%"]));
+          const seen = new Set();
+          const lines = [];
+          zipLast.campRows.forEach((c) => {
+            const adj = change.get(c.zip);
+            const k = `${c.customerId}|${c.campaign}|${c.geoId}`;
+            if (!adj || seen.has(k)) return;
+            seen.add(k);
+            lines.push([String(c.customerId).replace(/(\d{3})(\d{3})(\d{4})/, "$1-$2-$3"), c.campaign, c.zip, c.geoId, adj]);
+          });
+          if (!lines.length) return toast("No zip bid changes for this franchise's own Search campaigns", true);
+          const csv = [["Account", "Campaign", "Location", "Location ID", "Bid adjustment"], ...lines].map((l) => l.map((x) => `"${String(x).replace(/"/g, '""')}"`).join(",")).join("\r\n");
+          const a = document.createElement("a");
+          a.href = URL.createObjectURL(new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8" }));
+          a.download = `editor-zip-bids-${String(zipLast.label).replace(/[^a-z0-9]+/gi, "-").toLowerCase()}-${__localYMD(new Date())}.csv`;
+          a.click();
+          setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+          toast(`Downloaded ${lines.length} zip bid changes — check them in Google Ads Editor before posting`);
+        }
+
         function bindZipControls() {
           const f = document.getElementById("zipFranchise");
           if (f && !f.dataset.boundZip) { f.addEventListener("change", (e) => { zipState.franchise = Number(e.target.value); loadZipPage(false); }); f.dataset.boundZip = "true"; }
           const d = document.getElementById("zipDays");
           if (d && !d.dataset.boundZip) { d.addEventListener("change", (e) => { zipState.days = Number(e.target.value); loadZipPage(false); }); d.dataset.boundZip = "true"; }
+        }
+
+        // ============ AD COPY PAGE ============
+        // Google no longer rates RSA headlines (Best/Good/Low), so each
+        // headline/description is rated against the other assets in the
+        // same ad: CTR and conversions per impression when it was shown.
+        const adState = { account: "", days: 90, open: new Set() };
+        const adCache = pcacheMap("adcopy");
+        let adLast = null;
+        let adSeq = 0;
+        const STALE_PATTERNS = [
+          [/\b(19|20)\d{2}\b/, "mentions a year"],
+          [/\b\d{1,2}\/\d{1,2}(\/\d{2,4})?\b/, "mentions a date"],
+          [/covid|disinfect|sanitiz|social distanc|\bmasks?\b/i, "COVID-era wording"],
+          [/\bwin a\b|giveaway|sweepstake|weekly winner/i, "contest / giveaway"],
+          [/\b\d{1,2}% off|\$\d+ off|limited time|ends (soon|today)|this week only/i, "promotion — check it's still running"],
+          [/christmas|holiday season|halloween|thanksgiving|black friday|new year|easter|valentine/i, "seasonal — check it fits the season"],
+          [/\bsummer\b|spring break|back to school|winter break/i, "seasonal — check it fits the season"],
+        ];
+        function staleReason(text) {
+          for (const [re, why] of STALE_PATTERNS) if (re.test(text)) return why;
+          return null;
+        }
+        function populateAdAccountSelect(id) {
+          const sel = document.getElementById(id);
+          if (!sel) return "";
+          const list = trendAccounts().filter((a) => (a.cost || 0) > 0).sort((a, b) => (b.cost || 0) - (a.cost || 0));
+          const cur = id === "adAccount" ? adState.account : lpState.account;
+          sel.innerHTML = list.map((a) => `<option value="${escapeHtml(a.customerId)}">${escapeHtml(a.name)}</option>`).join("");
+          const v = list.some((a) => a.customerId === cur) ? cur : list.length ? list[0].customerId : "";
+          sel.value = v;
+          return v;
+        }
+
+        async function loadAdCopyPage(force) {
+          const status = document.getElementById("adStatus");
+          if (!status) return;
+          await pcacheLoad();
+          adState.account = populateAdAccountSelect("adAccount");
+          const seq = ++adSeq;
+          const acct = adState.account;
+          const end = ymdAddDays(__localYMD(new Date()), -1);
+          const start = ymdAddDays(end, -(adState.days - 1));
+          const key = `${acct}|${start}|${end}`;
+          try {
+            const token = await ensureAdsMcpAccessToken();
+            if (!token) throw new Error("Connect Ads MCP first (button at the top).");
+            if (!acct) throw new Error("Accounts haven't loaded yet — wait for the live refresh, then try again.");
+            if (force || !adCache.has(key)) {
+              status.textContent = "Loading ads and their headlines…";
+              const tools = await ensureAdsMcpTools();
+              const opt = { loginCustomerId: ADS_MCP_ANCHOR_MCC_ID };
+              const when = `segments.date BETWEEN '${start}' AND '${end}'`;
+              const [ads, assets, kws] = await Promise.all([
+                mcpSearchRows(tools, acct, {
+                  fields: ["campaign.name", "ad_group.name", "ad_group.id", "ad_group_ad.ad.id", "ad_group_ad.ad_strength", "ad_group_ad.ad.type", "ad_group_ad.ad.final_urls", "metrics.impressions", "metrics.clicks", "metrics.conversions", "metrics.cost_micros"],
+                  resource: "ad_group_ad",
+                  conditions: [when, "campaign.status = 'ENABLED'", "ad_group.status = 'ENABLED'", "ad_group_ad.status = 'ENABLED'", "metrics.impressions > 0"],
+                  orderings: ["metrics.cost_micros DESC"],
+                  limit: 500,
+                }, opt),
+                mcpSearchRows(tools, acct, {
+                  fields: ["ad_group.id", "ad_group_ad.ad.id", "ad_group_ad_asset_view.field_type", "ad_group_ad_asset_view.pinned_field", "asset.text_asset.text", "metrics.impressions", "metrics.clicks", "metrics.conversions"],
+                  resource: "ad_group_ad_asset_view",
+                  conditions: [when, "campaign.status = 'ENABLED'", "ad_group_ad.status = 'ENABLED'", "ad_group_ad_asset_view.enabled = TRUE", "ad_group_ad_asset_view.field_type IN ('HEADLINE', 'DESCRIPTION')"],
+                  limit: 10000,
+                }, opt),
+                mcpSearchRows(tools, acct, {
+                  fields: ["ad_group_criterion.keyword.text", "metrics.conversions", "metrics.cost_micros"],
+                  resource: "keyword_view",
+                  conditions: [when, "metrics.conversions > 0"],
+                  orderings: ["metrics.conversions DESC"],
+                  limit: 30,
+                }, opt).catch(() => ({ rows: [] })),
+              ]);
+              if (ads.mode === "empty") throw new Error("Couldn't load ads for this account");
+              const v = (r, k) => rowValue(r, k), n = (r, k) => asNumber(rowValue(r, k), 0);
+              const adMap = new Map();
+              ads.rows.forEach((r) => {
+                const id = String(v(r, ["ad_group_ad.ad.id"]));
+                const urls = v(r, ["ad_group_ad.ad.final_urls"]);
+                adMap.set(id, {
+                  id, campaign: String(v(r, ["campaign.name"]) || ""), adGroup: String(v(r, ["ad_group.name"]) || ""),
+                  strength: String(v(r, ["ad_group_ad.ad_strength"]) || ""), type: String(v(r, ["ad_group_ad.ad.type"]) || ""),
+                  url: Array.isArray(urls) ? urls[0] : String(urls || ""),
+                  impr: n(r, ["metrics.impressions"]), clicks: n(r, ["metrics.clicks"]), conv: n(r, ["metrics.conversions"]), cost: n(r, ["metrics.cost_micros", "metrics.costMicros"]) / 1e6,
+                  assets: [],
+                });
+              });
+              assets.rows.forEach((r) => {
+                const ad = adMap.get(String(v(r, ["ad_group_ad.ad.id"])));
+                if (!ad) return;
+                ad.assets.push({
+                  type: String(v(r, ["ad_group_ad_asset_view.field_type"]) || ""),
+                  pinned: String(v(r, ["ad_group_ad_asset_view.pinned_field"]) || ""),
+                  text: String(v(r, ["asset.text_asset.text"]) || ""),
+                  impr: n(r, ["metrics.impressions"]), clicks: n(r, ["metrics.clicks"]), conv: n(r, ["metrics.conversions"]),
+                });
+              });
+              const topKw = kws.rows.map((r) => ({ text: String(v(r, ["ad_group_criterion.keyword.text"]) || ""), conv: n(r, ["metrics.conversions"]) }));
+              adCache.set(key, { ads: Array.from(adMap.values()), topKw, start, end, acct });
+            }
+            if (seq !== adSeq) return;
+            adLast = adCache.get(key);
+            status.textContent = `${formatDateShort(adLast.start)} – ${formatDateShort(adLast.end)} · live ads in enabled campaigns${savedNote(adCache, key)}`;
+            renderAdCopy();
+          } catch (err) {
+            if (seq === adSeq) status.textContent = `Couldn't load: ${err.message || err}`;
+          }
+        }
+
+        function rateAssets(ad) {
+          ["HEADLINE", "DESCRIPTION"].forEach((t) => {
+            const xs = ad.assets.filter((a) => a.type === t);
+            const T = xs.reduce((s, a) => ({ impr: s.impr + a.impr, clicks: s.clicks + a.clicks, conv: s.conv + a.conv }), { impr: 0, clicks: 0, conv: 0 });
+            const maxImpr = Math.max(0, ...xs.map((a) => a.impr));
+            const ctrAvg = T.impr ? T.clicks / T.impr : 0, cvAvg = T.impr ? T.conv / T.impr : 0;
+            xs.forEach((a) => {
+              a.ctr = a.impr ? a.clicks / a.impr : null;
+              a.cvi = a.impr ? a.conv / a.impr : null;
+              a.stale = staleReason(a.text);
+              if (a.impr < 100 || a.impr < maxImpr * 0.05) { a.rating = maxImpr >= 500 && a.impr < maxImpr * 0.05 ? "rare" : "new"; return; }
+              const ci = ctrAvg ? a.ctr / ctrAvg : 1, vi = cvAvg ? a.cvi / cvAvg : 1;
+              const score = cvAvg > 0 ? 0.4 * ci + 0.6 * vi : ci;
+              a.score = score;
+              a.rating = score >= 1.25 ? "best" : score <= 0.7 ? "low" : "good";
+            });
+          });
+        }
+
+        function headlineIdeas(acctRow, ads, topKw) {
+          const city = String(acctRow.name || "").replace(/\(\d+\)/g, "").replace(/^[A-Z]{2}\s*-\s*/, "").replace(/-/g, " ").replace(/\s+/g, " ").trim();
+          const have = new Set(ads.flatMap((a) => a.assets.filter((x) => x.type === "HEADLINE").map((x) => x.text.toLowerCase())));
+          const title = (s) => s.replace(/\b\w/g, (c) => c.toUpperCase());
+          const ideas = [];
+          const push = (t, why) => {
+            const s = t.trim();
+            if (s.length <= 30 && !have.has(s.toLowerCase()) && !ideas.some((i) => i.text.toLowerCase() === s.toLowerCase())) ideas.push({ text: s, why });
+          };
+          const foreign = foreignMarketTokens(acctRow);
+          topKw.filter((k) => k.conv >= 1 && !kwNorm(k.text).split(" ").some((w) => foreign.has(w))).slice(0, 8).forEach((k) => {
+            const kw = title(kwNorm(k.text));
+            push(kw, `your keyword "${k.text}" — ${fmtN(Math.round(k.conv))} conv`);
+            if (city) push(`${kw} ${title(city)}`, "keyword + your market");
+            push(`${kw} | Book Today`, "keyword + call to action");
+          });
+          if (city) {
+            push(`${title(city)} Video Game Parties`, "market name");
+            push(`Game Truck Rental ${title(city)}`, "market name");
+          }
+          return ideas.slice(0, 12);
+        }
+
+        function renderAdCopy() {
+          if (!adLast) return;
+          const { ads, topKw } = adLast;
+          const acctRow = accounts.find((a) => a.customerId === adLast.acct) || { name: "" };
+          const goal = goalFor(acctRow.customerId ? acctRow : { customerId: adLast.acct });
+          ads.forEach(rateAssets);
+          const allAssets = ads.flatMap((a) => a.assets.map((x) => ({ ...x, ad: a })));
+          const low = allAssets.filter((x) => x.rating === "low");
+          const stale = allAssets.filter((x) => x.stale);
+          const weak = ads.filter((a) => a.strength === "POOR" || a.strength === "AVERAGE");
+          const T = ads.reduce((s, a) => ({ cost: s.cost + a.cost, conv: s.conv + a.conv, clicks: s.clicks + a.clicks, impr: s.impr + a.impr }), { cost: 0, conv: 0, clicks: 0, impr: 0 });
+          document.getElementById("adKpis").innerHTML = [
+            kpiCard("Live ads", String(ads.length), `${fmt$(T.cost)} spend · ${T.impr ? ((T.clicks / T.impr) * 100).toFixed(1) : "—"}% CTR`),
+            kpiCard("Weak ad strength", String(weak.length), "Poor or Average — add unique headlines"),
+            kpiCard("Low headlines/descriptions", String(low.length), "under-perform the rest of their ad"),
+            kpiCard("Copy to check", String(stale.length), "dates, promos, seasonal or COVID wording"),
+          ].join("");
+          const strengthTag = (s) => `<span class="str-tag ${String(s).toLowerCase()}">${escapeHtml((s || "—").replace(/_/g, " ").toLowerCase())}</span>`;
+          const rateTag = { best: `<span class="rate best">Best</span>`, good: `<span class="rate good">Good</span>`, low: `<span class="rate low">Low</span>`, rare: `<span class="rate rare" title="Google rarely shows it">Rarely shown</span>`, new: `<span class="rate new">Not enough data</span>` };
+          document.getElementById("adBody").innerHTML = ads.length
+            ? ads.map((a) => {
+                const h = a.assets.filter((x) => x.type === "HEADLINE"), d = a.assets.filter((x) => x.type === "DESCRIPTION");
+                const issues = [];
+                if (a.strength === "POOR" || a.strength === "AVERAGE") issues.push(`${a.strength.toLowerCase()} ad strength`);
+                if (a.type === "RESPONSIVE_SEARCH_AD" && h.length && h.length < 10) issues.push(`only ${h.length} headlines (aim for 12–15)`);
+                const nl = a.assets.filter((x) => x.rating === "low").length;
+                if (nl) issues.push(`${nl} low asset${nl === 1 ? "" : "s"}`);
+                const ns = a.assets.filter((x) => x.stale).length;
+                if (ns) issues.push(`${ns} to check`);
+                const cpa = a.conv > 0 ? a.cost / a.conv : null;
+                const open = adState.open.has(a.id);
+                const head = `<tr class="${open ? "drill-open" : ""}"><td><button class="drill-btn" onclick="toggleAd('${escapeHtml(a.id)}')">${open ? "▾" : "▸"}</button> <strong>${escapeHtml(a.adGroup)}</strong><div class="delta" style="color:var(--ink-muted)">${escapeHtml(a.campaign)}${a.type && a.type !== "RESPONSIVE_SEARCH_AD" ? ` · ${escapeHtml(a.type.replace(/_/g, " ").toLowerCase())}` : ""}</div></td>
+                  <td>${strengthTag(a.strength)}</td><td>${fmt$(a.cost)}</td><td>${a.impr ? ((a.clicks / a.impr) * 100).toFixed(1) : "—"}%</td><td>${a.clicks ? ((a.conv / a.clicks) * 100).toFixed(1) : "—"}%</td>
+                  <td>${cpa != null ? `<span class="cpa-cell ${cpa <= goal ? "good" : cpa <= goal * 1.25 ? "warn" : "bad"}">${fmt$(cpa)}</span>` : "—"}</td><td>${h.length} / ${d.length}</td><td class="why-cell">${escapeHtml(issues.join(" · ") || "OK")}</td></tr>`;
+                const body = open
+                  ? `<tr class="drill-row"><td colspan="8">${a.url ? `<div class="drill-notes">Final URL: ${escapeHtml(a.url)}</div>` : ""}<table class="drill-table"><thead><tr><th>Type</th><th>Text</th><th>Impr.</th><th>CTR</th><th>Conv</th><th>Rating</th></tr></thead><tbody>${a.assets.slice().sort((x, y) => (x.type < y.type ? -1 : x.type > y.type ? 1 : y.impr - x.impr)).map((x) => `<tr><td>${x.type === "HEADLINE" ? "Headline" : "Description"}${x.pinned && x.pinned !== "UNSPECIFIED" ? ` <span class="muted-sub">📌</span>` : ""}</td><td style="text-align:left;white-space:normal">${escapeHtml(x.text)}${x.stale ? `<div class="stale-note">⚠️ ${escapeHtml(x.stale)}</div>` : ""}</td><td>${fmtN(x.impr)}</td><td>${x.ctr != null ? (x.ctr * 100).toFixed(1) + "%" : "—"}</td><td>${fmtN(Math.round(x.conv * 10) / 10)}</td><td>${rateTag[x.rating] || ""}</td></tr>`).join("")}</tbody></table></td></tr>`
+                  : "";
+                return head + body;
+              }).join("")
+            : `<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--ink-muted)">No live ads with impressions in this period.</td></tr>`;
+          document.getElementById("adLow").innerHTML = low.length || stale.length
+            ? `<table class="report-table"><thead><tr><th>Ad group</th><th>Type</th><th>Text</th><th>Impr.</th><th>Why</th></tr></thead><tbody>${[...stale.map((x) => ({ x, why: `⚠️ ${x.stale}` })), ...low.filter((x) => !x.stale).sort((p, q) => q.impr - p.impr).map((x) => ({ x, why: `Low: ${x.ctr != null ? `CTR ${(x.ctr * 100).toFixed(1)}%` : ""}${x.conv ? `, ${fmtN(Math.round(x.conv * 10) / 10)} conv` : ", no conv"} vs the rest of the ad — replace it` }))].slice(0, 40).map(({ x, why }) => `<tr><td>${escapeHtml(x.ad.adGroup)}</td><td>${x.type === "HEADLINE" ? "Headline" : "Description"}</td><td style="text-align:left;white-space:normal">${escapeHtml(x.text)}</td><td>${fmtN(x.impr)}</td><td class="why-cell">${escapeHtml(why)}</td></tr>`).join("")}</tbody></table>`
+            : `<div class="story-muted">Nothing to replace — no low or outdated headlines and descriptions.</div>`;
+          const ideas = headlineIdeas(acctRow, ads, topKw || []);
+          const best = allAssets.filter((x) => x.rating === "best" && x.type === "HEADLINE").sort((p, q) => q.impr - p.impr).slice(0, 6);
+          document.getElementById("adIdeas").innerHTML = `<div class="overlap-grid"><div><h4>Your best headlines (keep and reuse)</h4>${best.length ? `<ul>${best.map((x) => `<li>${escapeHtml(x.text)} <span class="muted-sub">${escapeHtml(x.ad.adGroup)}</span></li>`).join("")}</ul>` : `<div class="story-muted">Not enough data yet.</div>`}</div>
+            <div><h4>New headline ideas (≤30 characters, review before using)</h4>${ideas.length ? `<ul>${ideas.map((i) => `<li>${escapeHtml(i.text)} <span class="muted-sub">${i.text.length} chars · ${escapeHtml(i.why)}</span></li>`).join("")}</ul>` : `<div class="story-muted">No ideas — no converting keywords in this period.</div>`}</div></div>`;
+          const page = document.getElementById("page-adcopy");
+          if (page) {
+            page._copyRows = [["Campaign", "Ad group", "Type", "Text", "Impressions", "CTR %", "Conv", "Rating", "Check"], ...allAssets.map((x) => [x.ad.campaign, x.ad.adGroup, x.type, x.text, x.impr, x.ctr != null ? (x.ctr * 100).toFixed(2) : "", x.conv.toFixed(1), x.rating || "", x.stale || ""])];
+            page._summaryText = `Ad copy (${acctRow.name || adLast.acct}): ${ads.length} live ads, ${weak.length} with weak ad strength, ${low.length} low headlines/descriptions, ${stale.length} to check.`;
+          }
+        }
+        function toggleAd(id) {
+          if (adState.open.has(id)) adState.open.delete(id);
+          else adState.open.add(id);
+          renderAdCopy();
+        }
+
+        // ============ LANDING PAGES PAGE ============
+        const lpState = { account: "", days: 90 };
+        const lpCache = pcacheMap("landing");
+        let lpLast = null;
+        let lpSeq = 0;
+        function lpPath(url) {
+          try {
+            const u = new URL(String(url));
+            return (u.pathname.replace(/\/+$/, "") || "/").toLowerCase();
+          } catch (e) {
+            return String(url || "").split("?")[0].replace(/^https?:\/\/[^/]+/i, "").replace(/\/+$/, "").toLowerCase() || "/";
+          }
+        }
+
+        async function loadLandingPage(force) {
+          const status = document.getElementById("lpStatus");
+          if (!status) return;
+          await pcacheLoad();
+          lpState.account = populateAdAccountSelect("lpAccount");
+          const seq = ++lpSeq;
+          const acct = lpState.account;
+          const end = ymdAddDays(__localYMD(new Date()), -1);
+          const start = ymdAddDays(end, -(lpState.days - 1));
+          const key = `${acct}|${start}|${end}`;
+          try {
+            const token = await ensureAdsMcpAccessToken();
+            if (!token) throw new Error("Connect Ads MCP first (button at the top).");
+            if (!acct) throw new Error("Accounts haven't loaded yet — wait for the live refresh, then try again.");
+            if (force || !lpCache.has(key)) {
+              status.textContent = `Loading landing pages${isGa4Connected() ? " + GA4" : ""}…`;
+              const tools = await ensureAdsMcpTools();
+              const opt = { loginCustomerId: ADS_MCP_ANCHOR_MCC_ID };
+              const when = `segments.date BETWEEN '${start}' AND '${end}'`;
+              const [exp, unexp, ga4] = await Promise.all([
+                mcpSearchRows(tools, acct, { fields: ["expanded_landing_page_view.expanded_final_url", "campaign.advertising_channel_type", "metrics.clicks", "metrics.cost_micros", "metrics.conversions"], resource: "expanded_landing_page_view", conditions: [when, "metrics.clicks > 0"], limit: 10000 }, opt),
+                mcpSearchRows(tools, acct, { fields: ["landing_page_view.unexpanded_final_url", "metrics.speed_score", "metrics.mobile_friendly_clicks_percentage", "metrics.clicks"], resource: "landing_page_view", conditions: [when, "metrics.clicks > 0"], limit: 2000 }, opt).catch(() => ({ rows: [] })),
+                isGa4Connected()
+                  ? ga4RunReport(["landingPage", "sessionGoogleAdsCustomerId"], ["sessions", "engagedSessions", "averageSessionDuration", "keyEvents:lead_submitted"], { startDate: start, endDate: end }, 20000).catch((e) => ({ error: e.message || String(e) }))
+                  : Promise.resolve(null),
+              ]);
+              if (exp.mode === "empty") throw new Error("Couldn't load landing pages for this account");
+              const v = (r, k) => rowValue(r, k), n = (r, k) => asNumber(rowValue(r, k), 0);
+              const pages = new Map();
+              const ensure = (p) => {
+                if (!pages.has(p)) pages.set(p, { path: p, clicks: 0, cost: 0, conv: 0, searchCost: 0, pmaxCost: 0, speed: null, sessions: 0, engaged: 0, durW: 0, leads: 0 });
+                return pages.get(p);
+              };
+              exp.rows.forEach((r) => {
+                const p = ensure(lpPath(v(r, ["expanded_landing_page_view.expanded_final_url"])));
+                const cost = n(r, ["metrics.cost_micros", "metrics.costMicros"]) / 1e6;
+                p.clicks += n(r, ["metrics.clicks"]); p.cost += cost; p.conv += n(r, ["metrics.conversions"]);
+                if (String(v(r, ["campaign.advertising_channel_type"])) === "PERFORMANCE_MAX") p.pmaxCost += cost; else p.searchCost += cost;
+              });
+              unexp.rows.forEach((r) => {
+                const p = pages.get(lpPath(v(r, ["landing_page_view.unexpanded_final_url"])));
+                const s = n(r, ["metrics.speed_score"]);
+                if (p && s > 0) p.speed = Math.max(p.speed || 0, s);
+              });
+              let ga4Note = null;
+              if (ga4 && ga4.error) ga4Note = `GA4: ${ga4.error}`;
+              else if (Array.isArray(ga4)) {
+                ga4.forEach((r) => {
+                  const id = String(r.sessionGoogleAdsCustomerId || "").replace(/\D+/g, "");
+                  if (id !== String(acct)) return;
+                  const path = lpPath(`https://x${String(r.landingPage || "/").startsWith("/") ? "" : "/"}${r.landingPage || "/"}`);
+                  const p = pages.get(path) || ensure(path);
+                  const s = Number(r.sessions) || 0;
+                  p.sessions += s; p.engaged += Number(r.engagedSessions) || 0; p.durW += (Number(r.averageSessionDuration) || 0) * s;
+                  p.leads += Number(r["keyEvents:lead_submitted"]) || 0;
+                });
+              }
+              lpCache.set(key, { pages: Array.from(pages.values()), start, end, acct, ga4: Array.isArray(ga4), ga4Note });
+            }
+            if (seq !== lpSeq) return;
+            lpLast = lpCache.get(key);
+            status.textContent = `${formatDateShort(lpLast.start)} – ${formatDateShort(lpLast.end)}${lpLast.ga4 ? " · GA4 engagement for Google Ads visitors" : lpLast.ga4Note ? ` · ${lpLast.ga4Note}` : " · connect GA4 to add engagement"}${savedNote(lpCache, key)}`;
+            renderLanding();
+          } catch (err) {
+            if (seq === lpSeq) status.textContent = `Couldn't load: ${err.message || err}`;
+          }
+        }
+
+        function renderLanding() {
+          if (!lpLast) return;
+          const acctRow = accounts.find((a) => a.customerId === lpLast.acct) || { customerId: lpLast.acct };
+          const goal = goalFor(acctRow);
+          const pages = lpLast.pages.filter((p) => p.cost >= 1 || p.sessions >= 20).sort((a, b) => b.cost - a.cost);
+          const T = pages.reduce((s, p) => ({ cost: s.cost + p.cost, conv: s.conv + p.conv, clicks: s.clicks + p.clicks }), { cost: 0, conv: 0, clicks: 0 });
+          const avgCr = T.clicks ? T.conv / T.clicks : 0;
+          const eligible = pages.filter((p) => p.clicks >= 30 && p.conv >= 3);
+          const best = eligible.slice().sort((a, b) => b.conv / b.clicks - a.conv / a.clicks)[0];
+          pages.forEach((p) => {
+            p.cr = p.clicks ? p.conv / p.clicks : null;
+            p.cpa = p.conv ? p.cost / p.conv : null;
+            p.engRate = p.sessions ? p.engaged / p.sessions : null;
+            const tips = [];
+            let kind = "ok";
+            const generic = p.path === "/" || /^\/(locations?|parties|promotions)$/.test(p.path);
+            if (p.clicks >= 30 && avgCr && p.cr >= avgCr * 1.3) { tips.push(`Converts ${Math.round((p.cr / avgCr - 1) * 100)}% better than average — send more ad groups here`); kind = "good"; }
+            else if (p.clicks >= 30 && avgCr && p.cr <= avgCr * 0.6 && p.cost >= goal * 2) {
+              tips.push(`Converts ${Math.round((1 - p.cr / avgCr) * 100)}% worse than average${best && best.path !== p.path ? ` — test sending these clicks to ${best.path}` : ""}`);
+              kind = "bad";
+            }
+            if (generic && p.cost >= goal) { tips.push("Generic page — send ads to the city page instead"); if (kind === "ok") kind = "warn"; }
+            if (p.engRate != null && p.sessions >= 30 && p.engRate < 0.45) { tips.push(`Only ${Math.round(p.engRate * 100)}% of visitors engage — check speed and the mobile layout`); if (kind === "ok") kind = "warn"; }
+            if (p.speed != null && p.speed <= 4) { tips.push(`Google mobile speed score ${p.speed}/10 — slow`); if (kind === "ok") kind = "warn"; }
+            if (p.conv === 0 && p.cost >= goal * 2) { tips.push(`${fmt$(p.cost)} spent, no conversions`); kind = "bad"; }
+            p.tip = tips.join(" · ");
+            p.kind = kind;
+          });
+          document.getElementById("lpKpis").innerHTML = [
+            kpiCard("Pages with ad clicks", String(pages.filter((p) => p.clicks > 0).length), `${fmt$(T.cost)} spend`),
+            kpiCard("Average conv. rate", avgCr ? `${(avgCr * 100).toFixed(1)}%` : "—", T.conv ? `${fmt$(T.cost / T.conv)} / conv` : ""),
+            kpiCard("Best page", best ? best.path : "—", best ? `${((best.conv / best.clicks) * 100).toFixed(1)}% conv. rate · ${fmt$(best.cost / best.conv)}/conv` : "needs 30+ clicks"),
+            kpiCard("Pages to fix", String(pages.filter((p) => p.kind === "bad" || p.kind === "warn").length), "low conversion, generic or slow"),
+          ].join("");
+          const icon = { good: "✅", bad: "🔻", warn: "⚠️", ok: "" };
+          document.getElementById("lpBody").innerHTML = pages.length
+            ? pages.slice(0, 80).map((p) => `<tr><td>${icon[p.kind]}</td><td style="text-align:left"><strong>${escapeHtml(p.path)}</strong>${p.pmaxCost >= 1 && p.searchCost >= 1 ? `<div class="delta" style="color:var(--ink-muted)">Search ${fmt$(p.searchCost)} · PMax ${fmt$(p.pmaxCost)}</div>` : p.pmaxCost >= 1 ? `<div class="delta" style="color:var(--ink-muted)">Performance Max</div>` : ""}</td>
+                <td>${fmtN(p.clicks)}</td><td>${fmt$(p.cost)}</td><td>${fmtN(Math.round(p.conv * 10) / 10)}</td>
+                <td>${p.cr != null ? `<span class="cpa-cell ${avgCr && p.cr >= avgCr * 1.15 ? "good" : avgCr && p.cr <= avgCr * 0.75 ? "bad" : ""}">${(p.cr * 100).toFixed(1)}%</span>` : "—"}</td>
+                <td>${p.cpa != null ? fmt$(p.cpa) : "—"}</td>
+                <td>${lpLast.ga4 ? (p.sessions ? fmtN(p.sessions) : "—") : "—"}</td><td>${p.engRate != null ? `${Math.round(p.engRate * 100)}%` : "—"}</td><td>${p.sessions ? `${((p.leads / p.sessions) * 100).toFixed(1)}%` : "—"}</td>
+                <td>${p.speed != null ? `${p.speed}/10` : "—"}</td><td class="why-cell">${escapeHtml(p.tip)}</td></tr>`).join("")
+            : `<tr><td colspan="12" style="text-align:center;padding:20px;color:var(--ink-muted)">No landing pages with clicks in this period.</td></tr>`;
+          const page = document.getElementById("page-landing");
+          if (page) {
+            page._copyRows = [["Page", "Clicks", "Spend", "Conv", "Conv rate %", "Cost/conv", "GA4 sessions", "Engaged %", "GA4 lead rate %", "Speed score", "Suggestion"], ...pages.map((p) => [p.path, p.clicks, p.cost.toFixed(2), p.conv.toFixed(1), p.cr != null ? (p.cr * 100).toFixed(1) : "", p.cpa != null ? p.cpa.toFixed(2) : "", p.sessions || "", p.engRate != null ? Math.round(p.engRate * 100) : "", p.sessions ? ((p.leads / p.sessions) * 100).toFixed(1) : "", p.speed ?? "", p.tip])];
+            page._summaryText = `Landing pages (${acctRow.name || lpLast.acct}): average conversion rate ${avgCr ? (avgCr * 100).toFixed(1) : "—"}%${best ? `; best page ${best.path} at ${((best.conv / best.clicks) * 100).toFixed(1)}%` : ""}.`;
+          }
+        }
+
+        function bindAdLpControls() {
+          const on = (id, fn) => {
+            const el = document.getElementById(id);
+            if (el && !el.dataset.boundAl) { el.addEventListener("change", fn); el.dataset.boundAl = "true"; }
+          };
+          on("adAccount", (e) => { adState.account = e.target.value; adState.open.clear(); loadAdCopyPage(false); });
+          on("adDays", (e) => { adState.days = Number(e.target.value); loadAdCopyPage(false); });
+          on("lpAccount", (e) => { lpState.account = e.target.value; loadLandingPage(false); });
+          on("lpDays", (e) => { lpState.days = Number(e.target.value); loadLandingPage(false); });
+        }
+
+        // ============ BUDGET SHIFT SIMULATOR (Markets page) ============
+        // Moves a monthly amount between accounts and estimates the lead and
+        // booking change from each account's market cost per lead, assuming
+        // the extra (or removed) money is ~25% less efficient than average,
+        // and that an account can only absorb as much extra as it is losing
+        // to budget.
+        let simAccounts = [];
+        function buildSimAccounts() {
+          if (!marketsLast) return [];
+          const { geo, list, range } = marketsLast;
+          const days = Math.max(1, Math.round((new Date(`${range.endDate}T00:00:00Z`) - new Date(`${range.startDate}T00:00:00Z`)) / 864e5) + 1);
+          const rep = reportCache.get(reportKey(marketsScope, range)) || (liveRange && liveRange.startDate === range.startDate && liveRange.endDate === range.endDate ? { accounts: accounts.filter((a) => a._liveFetchId === liveRange.fetchId) } : null);
+          const byAcct = new Map();
+          geo.rows.forEach((r) => {
+            if (!byAcct.has(r.customerId)) byAcct.set(r.customerId, { customerId: r.customerId, name: r.account, cost: 0, metros: new Map() });
+            const e = byAcct.get(r.customerId);
+            e.cost += r.cost;
+            if (r.metro != null) e.metros.set(r.metro, (e.metros.get(r.metro) || 0) + r.cost);
+          });
+          return Array.from(byAcct.values()).map((e) => {
+            const top = Array.from(e.metros.entries()).sort((a, b) => b[1] - a[1])[0];
+            const mk = top ? list.find((m) => m.metro === top[0]) : null;
+            const ra = rep ? rep.accounts.find((a) => a.customerId === e.customerId) : null;
+            return {
+              customerId: e.customerId, name: e.name, market: mk ? mk.name : "—",
+              monthly: (e.cost / days) * 30.4,
+              cpl: mk && mk.costPerLead != null ? mk.costPerLead : null,
+              bookRate: mk ? mk.bookRate : 0, avgBooking: mk ? mk.avgBooking : 0,
+              is: ra && ra.searchIS != null ? ra.searchIS : null, lb: ra && ra.lostIsBudget != null ? ra.lostIsBudget : null,
+            };
+          }).filter((a) => a.monthly >= 30 && a.cpl != null).sort((a, b) => b.monthly - a.monthly);
+        }
+
+        function renderSimulator() {
+          const box = document.getElementById("budgetSim");
+          if (!box) return;
+          if (!marketsLast || !marketsLast.portal) {
+            box.innerHTML = `<div class="story-muted">Connect Portal and load this page to use the simulator (it needs cost per lead by market).</div>`;
+            return;
+          }
+          simAccounts = buildSimAccounts();
+          if (simAccounts.length < 2) {
+            box.innerHTML = `<div class="story-muted">Need at least two accounts with spend and Portal leads in this period.</div>`;
+            return;
+          }
+          const byCpl = simAccounts.slice().sort((a, b) => b.cpl - a.cpl);
+          const opt = (sel) => simAccounts.map((a) => `<option value="${escapeHtml(a.customerId)}" ${a.customerId === sel ? "selected" : ""}>${escapeHtml(a.name)} — ${fmt$(a.cpl)}/lead</option>`).join("");
+          const from = (box.querySelector("#simFrom") || {}).value || byCpl[0].customerId;
+          const to = (box.querySelector("#simTo") || {}).value || byCpl[byCpl.length - 1].customerId;
+          const amt = (box.querySelector("#simAmt") || {}).value || "500";
+          box.innerHTML = `<div class="sim-row">
+              <label>Move <input id="simAmt" type="number" min="0" step="50" value="${escapeHtml(amt)}" /> per month</label>
+              <label>from <select id="simFrom">${opt(from)}</select></label>
+              <label>to <select id="simTo">${opt(to)}</select></label>
+            </div><div id="simResult"></div>`;
+          ["simAmt", "simFrom", "simTo"].forEach((id) => box.querySelector(`#${id}`).addEventListener("input", runSimulation));
+          runSimulation();
+        }
+
+        function runSimulation() {
+          const box = document.getElementById("budgetSim");
+          const out = document.getElementById("simResult");
+          if (!box || !out) return;
+          const amt = Math.max(0, Number(box.querySelector("#simAmt").value) || 0);
+          const A = simAccounts.find((a) => a.customerId === box.querySelector("#simFrom").value);
+          const B = simAccounts.find((a) => a.customerId === box.querySelector("#simTo").value);
+          if (!A || !B || A === B) return void (out.innerHTML = `<div class="story-muted">Pick two different accounts.</div>`);
+          const cut = Math.min(amt, A.monthly);
+          const capacity = B.is != null && B.is > 0 && B.lb != null ? (B.monthly * B.lb) / B.is : B.monthly * 0.1;
+          const add = Math.min(amt, capacity);
+          const lost = cut / (A.cpl * 1.25), gained = add / (B.cpl * 1.25);
+          const lostB = lost * A.bookRate, gainB = gained * B.bookRate;
+          const lostR = lostB * A.avgBooking, gainR = gainB * B.avgBooking;
+          const net = gained - lost, netB = gainB - lostB, netR = gainR - lostR;
+          const sign = (x, f) => `${x >= 0 ? "+" : "−"}${f(Math.abs(x))}`;
+          const one = (x) => x.toFixed(1);
+          out.innerHTML = `<div class="sim-grid">
+              <div class="sim-card"><div class="kl">${escapeHtml(A.name)}</div><div class="kv">−${fmt$(cut)}/mo</div><div class="ks">${escapeHtml(A.market)} · ${fmt$(A.cpl)}/lead now</div><div>≈ <b>−${one(lost)}</b> leads · −${one(lostB)} bookings${lostR ? ` · −${fmt$(lostR)} revenue` : ""}</div></div>
+              <div class="sim-card"><div class="kl">${escapeHtml(B.name)}</div><div class="kv">+${fmt$(add)}/mo</div><div class="ks">${escapeHtml(B.market)} · ${fmt$(B.cpl)}/lead now${B.lb != null ? ` · losing ${Math.round(B.lb * 100)}% to budget` : ""}</div><div>≈ <b>+${one(gained)}</b> leads · +${one(gainB)} bookings${gainR ? ` · +${fmt$(gainR)} revenue` : ""}</div></div>
+              <div class="sim-card net ${net >= 0 ? "up" : "down"}"><div class="kl">Net per month</div><div class="kv">${sign(net, one)} leads</div><div>${sign(netB, one)} bookings${netR ? ` · ${sign(netR, fmt$)} revenue` : ""}</div></div>
+            </div>
+            ${add < amt ? `<div class="sim-warn">⚠️ ${escapeHtml(B.name)} can only use about ${fmt$(capacity)} more a month — ${B.lb != null ? `it loses ${Math.round(B.lb * 100)}% of impressions to budget` : "it isn't held back by budget"}. Beyond that, extra budget buys little; raise bids or add keywords there instead.</div>` : ""}
+            <div class="story-muted">Estimate: added or removed money is assumed ~25% less efficient than the account's average (it buys or drops the least efficient clicks). Based on this page's period; use it to decide, then watch the next 2–3 weeks.</div>`;
         }
 
         // ============ REPORT PAGES (Weekly · Month to Date · Markets) ============
@@ -11738,13 +12305,14 @@ ${!wins.length && !probs.length && !health.length ? "<li>No major wins or proble
             status.textContent = portal ? savedNote(marketGeoCache, key).replace(/^ · /, "") : "Connect Portal (button at the top) to add real leads, bookings and cost per booking.";
             renderMarketsTable();
             renderLeadQuality();
+            renderSimulator();
           } catch (err) {
             status.textContent = `Couldn't load: ${err.message || err}`;
           }
         }
 
         // ---------- Page router ----------
-        const PAGES = ["today", "weekly", "mtd", "markets", "traffic", "accounts", "search", "trends", "insights", "keywords", "zips", "changes", "health"];
+        const PAGES = ["today", "weekly", "mtd", "markets", "traffic", "accounts", "search", "trends", "insights", "keywords", "zips", "adcopy", "landing", "changes", "health"];
         let activePage = "today";
 
         function renderCurrentPage(force) {
@@ -11757,6 +12325,8 @@ ${!wins.length && !probs.length && !health.length ? "<li>No major wins or proble
           if (activePage === "insights") return loadInsightsPage(force);
           if (activePage === "keywords") return loadKeywordsPage(force);
           if (activePage === "zips") return loadZipPage(force);
+          if (activePage === "adcopy") return loadAdCopyPage(force);
+          if (activePage === "landing") return loadLandingPage(force);
         }
 
         function showPage(name, opts) {
@@ -13229,6 +13799,7 @@ ${!wins.length && !probs.length && !health.length ? "<li>No major wins or proble
           bindInsightsControls();
           bindKeywordControls();
           bindZipControls();
+          bindAdLpControls();
           pcacheLoad();
           initPageRouter();
           refreshViewSelects();
