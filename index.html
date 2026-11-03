@@ -7107,6 +7107,7 @@
                 "campaign.id",
                 "campaign.name",
                 "campaign.status",
+                "campaign.serving_status",
                 "campaign.advertising_channel_type",
                 "campaign_budget.id",
                 "campaign_budget.amount_micros",
@@ -7193,6 +7194,9 @@
               id: String(rowValue(row, ["campaign.id", "id"]) ?? ""),
               name: String(rowValue(row, ["campaign.name", "name"]) ?? "Campaign"),
               status: String(rowValue(row, ["campaign.status", "status"]) ?? "").toUpperCase(),
+              servingStatus: String(
+                rowValue(row, ["campaign.serving_status", "campaign.servingStatus", "serving_status"]) ?? "",
+              ).toUpperCase(),
               type: String(
                 rowValue(row, ["campaign.advertising_channel_type", "campaign.advertisingChannelType", "advertising_channel_type"]) ?? "",
               ).toUpperCase(),
@@ -7256,6 +7260,10 @@
           campaigns
             .filter((c) => c.status === "ENABLED")
             .forEach((c) => {
+              // Enabled but finished (e.g. an ended experiment arm still
+              // pointing at the original campaign's budget), suspended, or not
+              // started yet — never part of the active budget, whatever the range.
+              if (["ENDED", "SUSPENDED", "PENDING"].includes(c.servingStatus)) return;
               const idle = enoughDays && c.impr === 0;
               if (idle) {
                 idleCampaigns.push({ name: c.name, dailyBudget: c.dailyBudget, type: c.type });
