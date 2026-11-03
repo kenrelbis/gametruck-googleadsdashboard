@@ -3926,6 +3926,18 @@
             <span class="report-status"></span>
           </div>
           <div class="summary report-kpis"></div>
+          <!-- SLACK PACING UPDATE -->
+          <div id="slackPacingBox" style="display: none; margin: 0 0 24px; padding: 16px 18px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg-soft)">
+            <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 10px">
+              <strong style="font-family: 'Jost'; font-size: 15px">💬 Slack pacing update</strong>
+              <label style="font-size: 12px; color: var(--ink-muted)">To
+                <input id="slackPacingName" type="text" value="Celeste" oninput="onSlackPacingNameInput()" style="margin-left: 4px; width: 110px; padding: 5px 8px; border: 1px solid var(--line); border-radius: 6px; font: inherit; color: var(--ink); background: var(--panel)" />
+              </label>
+              <button class="btn btn-primary-ghost" style="margin-left: auto" onclick="copySlackPacing()">📋 Copy for Slack</button>
+            </div>
+            <textarea id="slackPacingText" rows="4" style="width: 100%; box-sizing: border-box; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; font: 14px/1.5 'Jost', Arial, sans-serif; color: var(--ink); background: var(--panel); resize: vertical"></textarea>
+            <div id="slackPacingMeta" style="margin-top: 6px; font-size: 11px; color: var(--ink-muted)"></div>
+          </div>
           <div class="table-wrap"><table class="report-table"></table></div>
         </div>
 
@@ -12010,15 +12022,118 @@ ${!wins.length && !probs.length && !health.length ? "<li>No major wins or proble
           if (cached && !force) {
             status.textContent = "";
             renderPerformanceReport(el, cached, opts);
+            if (pageId === "page-weekly") renderSlackPacing(cached);
             return;
           }
+          if (pageId === "page-weekly") renderSlackPacing(null);
           status.textContent = `Loading ${rangeLabel(range)} from Google Ads… (about a minute for all accounts)`;
           try {
             const entry = await getReport(scope, force);
             status.textContent = "";
             renderPerformanceReport(el, entry, opts);
+            if (pageId === "page-weekly") renderSlackPacing(entry);
           } catch (err) {
             status.textContent = `Couldn't load: ${err.message || err}`;
+          }
+        }
+
+        // ============ SLACK PACING UPDATE ============
+        // Builds the weekly "Hey Celeste! quick pacing update…" message from the
+        // same live Google Ads pull as the Weekly Report. Target = sum of each
+        // account's expected spend (daily budget of enabled, serving campaigns ×
+        // days in the range), so it's the total from all active campaigns.
+        const SLACK_PACING_NAME_KEY = "gt_slack_pacing_name";
+        const SLACK_ON_PACE_BAND = 1; // within ±1% of target counts as "on pace"
+        let slackPacingEntry = null;
+
+        function slackPacingName() {
+          const input = document.getElementById("slackPacingName");
+          const v = input ? input.value.trim() : "";
+          return v || "Celeste";
+        }
+
+        function onSlackPacingNameInput() {
+          try {
+            localStorage.setItem(SLACK_PACING_NAME_KEY, slackPacingName());
+          } catch (e) {}
+          if (slackPacingEntry) renderSlackPacing(slackPacingEntry);
+        }
+
+        function slackRangeLabel(r) {
+          // "Oct 26–Nov 1", or "Nov 2–8" when both ends are in the same month
+          const a = formatDateShort(r.startDate);
+          const b = formatDateShort(r.endDate);
+          if (a === b) return a;
+          const [am] = a.split(" ");
+          const [bm, bd] = b.split(" ");
+          return am === bm ? `${a}–${bd}` : `${a}–${b}`;
+        }
+
+        function buildSlackPacing(entry) {
+          if (!entry || !entry.range) return null;
+          const all = (entry.accounts || []).filter(Boolean);
+          const rows = all.filter(
+            (a) => Number(a.dailyBudget) > 0 && Number(a.expectedSpendToDate) > 0,
+          );
+          const spent = rows.reduce((s, a) => s + (Number(a.cost) || 0), 0);
+          const target = rows.reduce((s, a) => s + (Number(a.expectedSpendToDate) || 0), 0);
+          if (!(target > 0)) return null;
+          const noBudget = all.filter((a) => !rows.includes(a) && Number(a.cost) > 0);
+          const noBudgetSpend = noBudget.reduce((s, a) => s + (Number(a.cost) || 0), 0);
+
+          const diff = (spent / target - 1) * 100;
+          const pct = `${diff >= 0 ? "+" : "-"}${Math.abs(diff).toFixed(1)}%`;
+          const pace =
+            Math.abs(diff) <= SLACK_ON_PACE_BAND
+              ? `right on pace (${pct})`
+              : diff < 0
+                ? `approximately ${pct} under pace`
+                : `approximately ${pct} over pace`;
+          const soFar = entry.scope === "weekly" ? " (week so far)" : "";
+
+          const text =
+            `Hey ${slackPacingName()}! quick pacing update for ${slackRangeLabel(entry.range)}${soFar}:\n\n` +
+            `We spent ${fmt$(spent)} vs. ${fmt$(target)} target, putting us ${pace}.`;
+          const meta =
+            `${rows.length} accounts with active budgets` +
+            (noBudget.length
+              ? ` · ${noBudget.length} account${noBudget.length === 1 ? "" : "s"} with spend but no active budget left out (${fmt$(noBudgetSpend)})`
+              : "") +
+            ` · pulled ${new Date(entry.fetchedAt || Date.now()).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}`;
+          return { text, meta };
+        }
+
+        function renderSlackPacing(entry) {
+          const box = document.getElementById("slackPacingBox");
+          if (!box) return;
+          const input = document.getElementById("slackPacingName");
+          if (input && !input.dataset.loaded) {
+            input.dataset.loaded = "1";
+            try {
+              const saved = localStorage.getItem(SLACK_PACING_NAME_KEY);
+              if (saved) input.value = saved;
+            } catch (e) {}
+          }
+          slackPacingEntry = entry;
+          const built = buildSlackPacing(entry);
+          if (!built) {
+            box.style.display = "none";
+            return;
+          }
+          document.getElementById("slackPacingText").value = built.text;
+          document.getElementById("slackPacingMeta").textContent = built.meta;
+          box.style.display = "";
+        }
+
+        function copySlackPacing() {
+          const ta = document.getElementById("slackPacingText");
+          const text = ta ? ta.value : "";
+          if (!text) return toast("Nothing loaded yet", true);
+          const done = () => toast("Copied — paste it into Slack");
+          try {
+            navigator.clipboard.writeText(text).then(done, () => window.prompt("Copy:", text));
+          } catch (e) {
+            window.prompt("Copy:", text);
           }
         }
 
