@@ -5881,6 +5881,7 @@
             authorizationEndpoint: authMeta.authorization_endpoint,
             tokenEndpoint: authMeta.token_endpoint,
             registrationEndpoint: authMeta.registration_endpoint,
+            tokenAuthMethods: Array.isArray(authMeta.token_endpoint_auth_methods_supported) ? authMeta.token_endpoint_auth_methods_supported : null,
             scope: scopes.join(" "),
           };
         }
@@ -5896,7 +5897,9 @@
             redirect_uris: [getAdsRedirectUri()],
             grant_types: ["authorization_code", "refresh_token"],
             response_types: ["code"],
-            token_endpoint_auth_method: "client_secret_post",
+            // The server may only allow public clients (PKCE, no secret).
+            token_endpoint_auth_method:
+              !discovery.tokenAuthMethods || discovery.tokenAuthMethods.includes("client_secret_post") ? "client_secret_post" : "none",
             scope: discovery.scope,
           };
           const registered = await fetchJsonOrThrow(
@@ -5909,15 +5912,15 @@
             "OAuth dynamic registration",
           );
 
-          if (!registered.client_id || !registered.client_secret) {
+          if (!registered.client_id) {
             throw new Error(
-              "OAuth registration succeeded but did not return client credentials",
+              "OAuth registration succeeded but did not return a client id",
             );
           }
 
           return {
             clientId: registered.client_id,
-            clientSecret: registered.client_secret,
+            clientSecret: registered.client_secret || "",
           };
         }
 
@@ -6123,7 +6126,7 @@
             normalizeOAuthCredential(pending && pending.clientSecret) ||
             normalizeOAuthCredential(adsMcpAuth && adsMcpAuth.clientSecret);
 
-          if (!pending || !clientId || !clientSecret) {
+          if (!pending || !clientId) {
             throw new Error(
               "OAuth request is missing client credentials. Click Connect Ads MCP and try again.",
             );
@@ -6139,7 +6142,7 @@
                 code,
                 redirect_uri: pending.redirectUri,
                 client_id: clientId,
-                client_secret: clientSecret,
+                ...(clientSecret ? { client_secret: clientSecret } : {}),
                 code_verifier: pending.codeVerifier,
               }),
             },
@@ -6160,7 +6163,7 @@
           const clientSecret = normalizeOAuthCredential(
             adsMcpAuth.clientSecret,
           );
-          if (!clientId || !clientSecret) {
+          if (!clientId) {
             throw new Error(
               "Ads MCP client credentials are missing. Disconnect and reconnect Ads MCP.",
             );
@@ -6175,7 +6178,7 @@
                 grant_type: "refresh_token",
                 refresh_token: adsMcpAuth.refreshToken,
                 client_id: clientId,
-                client_secret: clientSecret,
+                ...(clientSecret ? { client_secret: clientSecret } : {}),
               }),
             },
             "OAuth token refresh",
@@ -7776,19 +7779,15 @@
             setAdsAuthStatus("Connecting Ads MCP...", "var(--ink-muted)");
             const discovery = await discoverAdsMcpOAuth();
 
-            let clientId = normalizeOAuthCredential(adsMcpAuth?.clientId);
-            let clientSecret = normalizeOAuthCredential(
-              adsMcpAuth?.clientSecret,
-            );
-            if (!clientId || !clientSecret) {
-              const registered = await registerAdsMcpClient(discovery);
-              clientId = normalizeOAuthCredential(registered.clientId);
-              clientSecret = normalizeOAuthCredential(registered.clientSecret);
-            }
+            // Always register fresh: the server forgets clients when it's
+            // redeployed, and a stale client id fails at the sign-in page.
+            const registered = await registerAdsMcpClient(discovery);
+            const clientId = normalizeOAuthCredential(registered.clientId);
+            const clientSecret = normalizeOAuthCredential(registered.clientSecret) || "";
 
-            if (!clientId || !clientSecret) {
+            if (!clientId) {
               throw new Error(
-                "OAuth registration did not provide usable client credentials.",
+                "OAuth registration did not provide a usable client id.",
               );
             }
 
