@@ -6211,6 +6211,15 @@
               hasRefreshToken: !!adsMcpAuth.refreshToken,
               expiresAt: Number(adsMcpAuth.expiresAt || 0),
             });
+            // The Ads MCP server forgot this dashboard's registration (it
+            // happens when the server is redeployed). Drop the dead client
+            // and tokens so "Connect Ads MCP" registers again from scratch.
+            if (/invalid_client|invalid client|invalid_grant/i.test(String((err && err.message) || err))) {
+              await clearAdsMcpAuthState();
+              setAdsAuthStatus("Ads MCP sign-in was reset by the server — click 🔐 Connect Ads MCP to sign in again", "var(--bad)");
+              toast("Ads MCP needs you to sign in again (the server reset its logins)", true);
+              return null;
+            }
             updateAdsMcpUi();
             return null;
           }
