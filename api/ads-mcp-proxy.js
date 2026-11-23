@@ -1,5 +1,5 @@
-const ADS_MCP_URL = "https://ads-mcp.microservices.gametrucksys.com/mcp";
-const ADS_MCP_ORIGIN = "https://ads-mcp.microservices.gametrucksys.com";
+const ADS_MCP_URL = "https://ads-mcp.gametrucksys.com/mcp";
+const ADS_MCP_ORIGIN = "https://ads-mcp.gametrucksys.com";
 
 function normalizeForwardUrl(rawUrl) {
   if (!rawUrl || typeof rawUrl !== "string") return null;
