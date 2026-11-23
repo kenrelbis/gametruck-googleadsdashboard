@@ -5577,7 +5577,7 @@
         // Google Ads now comes from user-scoped MCP OAuth directly in the browser.
         // GA4 + Portal continue to be served by /api/dashboard-data (unchanged).
         const ADS_MCP_BASE_URL =
-          "https://ads-mcp.microservices.gametrucksys.com/mcp";
+          "https://ads-mcp.gametrucksys.com/mcp";
         const ADS_MCP_AUTH_KEY = "gt_ads_mcp_auth_v1";
         const ADS_MCP_AUTH_DEBUG_KEY = "gt_ads_mcp_auth_debug_v1";
         const ADS_MCP_PENDING_KEY = "gt_ads_mcp_auth_pending_v1";
@@ -5991,6 +5991,19 @@
             else delete loaded.clientSecret;
           }
 
+          // A login saved for a different Ads MCP server (e.g. the old
+          // domain before the move to Cloudflare) can't be used here.
+          if (loaded) {
+            const origin = (u) => { try { return new URL(String(u)).origin; } catch (e) { return ""; } };
+            const want = origin(ADS_MCP_BASE_URL);
+            const had = origin(loaded.resource) || origin(loaded.tokenEndpoint);
+            if (had && want && had !== want) {
+              try { localStorage.removeItem(ADS_MCP_AUTH_KEY); sessionStorage.removeItem(ADS_MCP_AUTH_KEY); } catch (e) {}
+              try { await storage.set(ADS_MCP_AUTH_KEY, ""); } catch (e) {}
+              loaded = null;
+              source = "moved-server";
+            }
+          }
           adsMcpAuth = loaded;
           if (!adsMcpAuth) adsMcpSessionId = null;
 
